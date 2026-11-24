@@ -157,7 +157,7 @@ function InboxThread({
   };
   return (
     <section
-      className="workspace-conversation flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card"
+      className="workspace-conversation flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card"
       aria-label="Selected conversation"
     >
       <header className="shrink-0 border-b bg-card px-4 py-3 sm:px-6">
@@ -490,7 +490,14 @@ export default function OutreachInbox() {
   const [origin, setOrigin] = useState<InboxOriginFilter | null>(null);
   const [sort, setSort] = useState<InboxSort>("newest");
   const [totals, setTotals] = useState(emptyCounts);
-  const [originCounts, setOriginCounts] = useState<Partial<Record<InboxOriginFilter, number>>>({});
+  const [originFacets, setOriginFacets] = useState<{
+    channel: typeof channel;
+    leadId: typeof leadId;
+    counts: NonNullable<InboxPage["originCounts"]>;
+  }>();
+  const originCounts = originFacets?.channel === channel && originFacets.leadId === leadId
+    ? originFacets.counts
+    : undefined;
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<InboxItem[]>([]);
@@ -615,7 +622,7 @@ export default function OutreachInbox() {
         }
         setCounts(page.unreadThreads);
         if (page.totalThreads) setTotals(page.totalThreads);
-        if (page.originCounts) setOriginCounts(page.originCounts);
+        if (page.originCounts) setOriginFacets({ channel, leadId, counts: page.originCounts });
         setCountsLoaded(true);
         setError(null);
       } catch (e) {
@@ -737,13 +744,12 @@ export default function OutreachInbox() {
     setSelectionError(null);
     router.replace(inboxUrl(keepSelection ? selected.key : undefined, value), { scroll: false });
   };
-  const clearFilters = () => {
+  const clearDrawerFilters = () => {
     setSearch("");
     setQuery("");
     setUnread(false);
     setOrigin(null);
     setSort("newest");
-    changeChannel("all");
   };
   const select = (item: InboxItem) => {
     setSelected(item);
@@ -766,7 +772,7 @@ export default function OutreachInbox() {
     if (item.unreadCount > 0) void refreshRef.current();
   }, []);
   const onChanged = useCallback(() => refreshRef.current(), []);
-  const activeFilters = Number(channel !== "all") + Number(unread) + Number(Boolean(origin)) + Number(Boolean(search.trim()));
+  const activeFilters = Number(unread) + Number(Boolean(origin)) + Number(Boolean(search.trim()));
   const visibleItems = items.filter(
     (item) => !unread || item.unreadCount > 0 || item.key === selected?.key,
   );
@@ -782,10 +788,10 @@ export default function OutreachInbox() {
     visibleItems.unshift(selected);
   return (
     <div
-      className="outreach-workspace outreach-inbox flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden bg-background p-3 sm:p-5 lg:p-6"
+      className="outreach-workspace flex h-full min-h-0 w-full flex-col overflow-hidden bg-background"
       data-testid="outreach-inbox"
     >
-      <header className="flex shrink-0 flex-wrap items-start justify-between gap-3">
+      <header className="flex shrink-0 flex-wrap items-start justify-between gap-2 px-3 py-3">
         <div><h1 className="text-2xl font-semibold tracking-tight">Inbox</h1><p className="mt-1 text-sm text-muted-foreground">Customer conversations across channels</p></div>
         <div className="flex max-w-full flex-wrap items-center gap-2">
           <Sheet>
@@ -799,7 +805,7 @@ export default function OutreachInbox() {
             <SheetContent className="outreach-workspace flex w-full flex-col gap-0 p-0 sm:max-w-md">
               <SheetHeader className="border-b py-4 pl-5 pr-12 text-left">
                 <SheetTitle>Inbox filters</SheetTitle>
-                <SheetDescription className="sr-only">Search, sort, and filter conversations.</SheetDescription>
+                <SheetDescription>{channel === "all" ? "All channels" : INBOX_LABELS[channel]}</SheetDescription>
               </SheetHeader>
               <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
                 <div className="space-y-2">
@@ -822,18 +828,6 @@ export default function OutreachInbox() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 id="inbox-channel-label" className="text-sm font-medium">Channel</h3>
-                  <div role="group" aria-labelledby="inbox-channel-label" className="flex flex-wrap gap-2">
-                    {(["all", ...INBOX_CHANNELS] as const).map(value => (
-                      <Button key={value} type="button" size="sm" variant="outline" aria-pressed={channel === value}
-                        onClick={() => changeChannel(value)} className={cn("min-h-10", channel === value && "border-primary bg-primary/10 text-primary")}>
-                        {value === "all" ? <Inbox className="size-4" aria-hidden="true" /> : <ChannelIcon channel={value} />}
-                        {value === "all" ? "All channels" : INBOX_LABELS[value]}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <h3 id="inbox-show-label" className="text-sm font-medium">Show conversations</h3>
                   <div role="group" aria-labelledby="inbox-show-label" className="inline-flex rounded-lg border bg-muted/40 p-0.5">
                     {([false, true] as const).map(value => (
@@ -852,14 +846,14 @@ export default function OutreachInbox() {
                       <Button key={value} type="button" size="sm" variant="outline" aria-pressed={origin === value}
                         onClick={() => setOrigin(origin === value ? null : value)} className={cn("min-h-10 rounded-full text-xs", origin === value && "border-primary bg-primary/10 text-primary")}>
                         {INBOX_ORIGIN_LABELS[value]}
-                        {originCounts[value] !== undefined && <span className="tabular-nums">{originCounts[value].toLocaleString()}</span>}
+                        {originCounts && <span className="tabular-nums">{originCounts[value].toLocaleString()}</span>}
                       </Button>
                     ))}
                   </div>
                 </div>
               </div>
               <SheetFooter className="flex-row justify-between border-t px-5 py-4 sm:justify-between">
-                <Button type="button" variant="ghost" onClick={clearFilters} disabled={!activeFilters && sort === "newest"}>Clear filters</Button>
+                <Button type="button" variant="ghost" onClick={clearDrawerFilters} disabled={!activeFilters && sort === "newest"}>Clear filters</Button>
                 <SheetClose asChild><Button type="button">Done</Button></SheetClose>
               </SheetFooter>
             </SheetContent>
@@ -870,14 +864,23 @@ export default function OutreachInbox() {
           <Button size="sm" asChild><Link href={`/dashboard/outreach/create${channel === 'all' ? '' : `?channel=${channel}`}`}><Plus className="mr-2 h-4 w-4" />New outreach</Link></Button>
         </div>
       </header>
+      <div role="group" aria-label="Filter by channel" className="flex shrink-0 flex-wrap gap-1.5 px-3 pb-3">
+        {(["all", ...INBOX_CHANNELS] as const).map(value => (
+          <Button key={value} type="button" size="sm" variant={channel === value ? "default" : "outline"}
+            aria-pressed={channel === value} onClick={() => changeChannel(value)}>
+            {value === "all" ? <Inbox className="size-4" aria-hidden="true" /> : <ChannelIcon channel={value} />}
+            {value === "all" ? "All channels" : INBOX_LABELS[value]}
+          </Button>
+        ))}
+      </div>
       {leadId && <div className="flex items-center justify-between border-b px-4 py-2 text-sm">
         <span>Conversations for the selected contact</span>
         <Button variant="ghost" size="sm" onClick={() => router.replace(`/dashboard/outreach/inbox${channel === 'all' ? '' : `?channel=${channel}`}`, { scroll: false })}>Show all contacts</Button>
       </div>}
-      <div className="flex min-h-0 min-w-0 w-full flex-1 gap-3">
+      <div className="flex min-h-0 min-w-0 w-full flex-1 border-t">
       <aside
         className={cn(
-          "flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-lg border bg-card md:w-[310px] xl:w-[350px]",
+          "flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden bg-card md:w-[310px] md:border-r xl:w-[350px]",
           selected && "hidden md:flex",
         )}
         aria-label="Inbox conversations"
@@ -939,7 +942,7 @@ export default function OutreachInbox() {
                   variant="ghost"
                   size="sm"
                   className="mt-3"
-                  onClick={clearFilters}
+                  onClick={() => { clearDrawerFilters(); changeChannel("all"); }}
                 >
                   Clear filters
                 </Button>

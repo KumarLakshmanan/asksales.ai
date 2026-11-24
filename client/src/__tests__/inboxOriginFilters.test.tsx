@@ -53,6 +53,26 @@ it('shows all and unread totals with origin chips, and filters the list by origi
   expect(screen.getByRole('button', { name: /AI handled/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
+it('shows only the selected channel’s origin counts while changing channels', async () => {
+  let resolveEmail!: (value: typeof page) => void;
+  mocks.get.mockImplementation(async (url: string) => {
+    if (new URL(url, window.location.origin).searchParams.get('channel') === 'email') {
+      return new Promise<typeof page>(resolve => { resolveEmail = resolve; });
+    }
+    return page;
+  });
+  render(<OutreachInbox />);
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+  await screen.findByRole('button', { name: /Customer started\s*200/ });
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Email' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+  expect(screen.getByRole('button', { name: 'Customer started' })).toBeVisible();
+  expect(screen.getByRole('button', { name: /^All\s*0$/ })).toBeVisible();
+  await act(async () => resolveEmail({ ...page, items: [], originCounts: { ...page.originCounts, customer: 0 } }));
+  expect(await screen.findByRole('button', { name: /^Customer started\s*0$/ })).toBeVisible();
+});
+
 it('keeps the reply bar one line when the window is closed and opens templates in a side panel', async () => {
   mocks.params = new URLSearchParams('channel=whatsapp&thread=conversation:7');
   render(<OutreachInbox />);

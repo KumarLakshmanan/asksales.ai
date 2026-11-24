@@ -391,10 +391,9 @@ test('Clear filters updates the URL and survives reload without dropping unrelat
   await expect(page).toHaveURL(url => !url.searchParams.has('channel') && url.searchParams.getAll('source').join(',') === 'crm,work' && url.hash === '#conversation-list');
   await expect(page.getByRole('button', { name: 'Open Asha Raman on Email' })).toBeVisible();
   await page.reload();
-  const drawer = await openFilters(page);
-  await expect(drawer.getByRole('button', { name: 'All channels', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(drawer.getByRole('button', { name: 'SMS', exact: true })).toHaveAttribute('aria-pressed', 'false');
-  await drawer.getByRole('button', { name: 'Done' }).click();
+  const channels = page.getByRole('group', { name: 'Filter by channel' });
+  await expect(channels.getByRole('button', { name: 'All channels', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(channels.getByRole('button', { name: 'SMS', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByRole('button', { name: 'Open Asha Raman on Email' })).toBeVisible();
   expect(mock.requests).toHaveLength(0);
 });
@@ -471,16 +470,18 @@ test("Outreach opens the unified Inbox with channel filters, pagination and sear
   await expect(
     inbox.getByRole("heading", { name: "Inbox", exact: true }),
   ).toBeVisible();
-  const drawer = await openFilters(page);
-  const filters = drawer.getByRole("group", { name: "Channel" });
+  const filters = inbox.getByRole("group", { name: "Filter by channel" });
   for (const label of labels) await expect(filters.getByRole("button", { name: label, exact: true })).toBeVisible();
   await expect(filters.getByRole("button")).toHaveCount(6);
-  await drawer.getByRole('button', { name: 'Done' }).click();
   await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(7);
   await expectNoHorizontalOverflow(page);
+  const workspace = await page.getByRole('main').boundingBox();
+  const list = await inbox.getByRole('complementary', { name: 'Inbox conversations' }).boundingBox();
+  expect(Math.abs(list!.x - workspace!.x)).toBeLessThanOrEqual(1);
   await page.screenshot({
     path: testInfo.outputPath("inbox-list.png"),
     fullPage: true,
+    scale: 'css',
     style: 'nextjs-portal, [data-sonner-toaster] { visibility: hidden !important; }',
   });
   // Reaching the list end triggers the existing automatic pagination. Waiting
@@ -567,7 +568,10 @@ test('conversation origins filter the list and identify sent messages', async ({
   const inbox = page.getByTestId('outreach-inbox');
   const conversations = inbox.getByRole('button', { name: /^Open / });
   await expect(conversations.first()).toHaveAccessibleName('Open Ben Carter on WhatsApp');
+  const channels = inbox.getByRole('group', { name: 'Filter by channel' });
+  await expect(channels.getByRole('button', { name: 'WhatsApp' })).toHaveAttribute('aria-pressed', 'true');
   const drawer = await openFilters(page);
+  await expect(drawer).toHaveAccessibleDescription('WhatsApp');
   const counts = drawer.getByRole('group', { name: 'Show conversations' });
   await expect(counts.getByRole('button', { name: /^All\s*2$/ })).toBeVisible();
   await expect(counts.getByRole('button', { name: /^Unread\s*1$/ })).toBeVisible();

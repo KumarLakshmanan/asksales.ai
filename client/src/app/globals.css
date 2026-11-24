@@ -741,7 +741,6 @@
 @media (max-width: 639px) {
   .campaign-coordinator .campaign-workspace-heading { padding: 0.75rem; }
   .campaign-coordinator .campaign-workspace-heading h1 { font-size: 1.125rem; }
-  .outreach-inbox { padding: 0.75rem; }
   .outreach-workspace .workspace-heading h1 { font-size: 1.5rem; }
   .outreach-workspace .workspace-action-bar { padding: 0.75rem; }
   .outreach-workspace .workspace-channel-tabs [role="tab"] { flex-basis: 30%; }

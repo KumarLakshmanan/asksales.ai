@@ -40,9 +40,7 @@ it('ignores a superseded startup failure after switching to Instagram and avoids
   mocks.get.mockImplementationOnce(() => new Promise((_resolve, reject) => { failStartup = reject; }))
     .mockImplementationOnce(() => new Promise(resolve => { finishInstagram = resolve; }));
   render(<OutreachInbox />);
-  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Instagram' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   fireEvent.click(screen.getByRole('button', { name: 'Refresh inbox' }));
   expect(mocks.get).toHaveBeenCalledTimes(2);
   await act(async () => finishInstagram({ items: [{ ...item(1), channel: 'instagram' }], nextCursor: null, unreadThreads: counts }));
