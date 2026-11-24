@@ -13,7 +13,11 @@ vi.mock('@/lib/api', () => {
 });
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock('@/lib/authHeaders', () => ({ getAuthHeaders: () => ({ Authorization: 'Bearer t', 'x-business-profile-id': '11' }) }));
-beforeAll(() => { vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); });
+beforeAll(() => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  // jsdom has no scrollIntoView; an opened select scrolls its chosen option into view.
+  if (!Element.prototype.scrollIntoView) Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() });
+});
 const { ApiError } = await import('@/lib/api');
 
 const ID = '0b0f3c1e-8a55-4a57-9d0f-2f1f0c4f6a10';
@@ -238,6 +242,26 @@ describe('Message tracking by day', () => {
       params: { from: addDays(today, -6), to: today, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
     }));
     expect(await screen.findByText(/counted on the day it happened/)).toBeInTheDocument();
+  });
+
+  it('shows follow-ups or every outbound message when asked, starting with initial outreach', async () => {
+    window.history.replaceState(null, '', '/dashboard/outreach/tracking?view=days');
+    mocks.get.mockImplementation(async (url: string) => url.endsWith('/daily') ? daily() : list([]));
+    render(<TrackingHome />);
+    const kind = await screen.findByRole('combobox', { name: 'Outbound messages' });
+    expect(kind).toHaveTextContent('Initial outreach');
+    const dailyCalls = () => mocks.get.mock.calls.filter(([url]) => url === '/api/outreach/daily');
+    await waitFor(() => expect(dailyCalls().length).toBeGreaterThan(0));
+    // Initial outreach is the API's default, so the first request does not name a kind.
+    expect(dailyCalls()[0][1].params.kind).toBeUndefined();
+
+    fireEvent.keyDown(kind, { key: 'ArrowDown' });
+    for (const label of ['Initial outreach', 'Follow-ups', 'Outreach and follow-ups']) {
+      expect(await screen.findByRole('option', { name: label })).toBeVisible();
+    }
+    fireEvent.click(screen.getByRole('option', { name: 'Follow-ups' }));
+    await waitFor(() => expect(dailyCalls().at(-1)![1].params).toMatchObject({ kind: 'follow_up' }));
+    expect(screen.getByRole('combobox', { name: 'Outbound messages' })).toHaveTextContent('Follow-ups');
   });
 });
 
