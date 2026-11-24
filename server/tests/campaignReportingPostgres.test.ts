@@ -66,6 +66,12 @@ run('shared campaign reporting with real PostgreSQL',()=>{
     expect(report.failures).toEqual([{channel:'whatsapp',code:null,reason:'The confirmed official provider account is not ready or no longer matches.',count:1}]);
     const rows=await database.execute(sql`SELECT id,${messageProviderCode} AS code FROM outreach_messages m WHERE id IN(4,5) ORDER BY id`);
     expect(rows.rows).toEqual([{id:4,code:null},{id:5,code:'131049'}]);
+    // A failure receipt's own code is shown while its text is still the error, and not after.
+    await client.query(`UPDATE outreach_messages SET error_message='Message undeliverable',
+      metadata=metadata||'{"providerFailure":{"code":"131026","message":"Message undeliverable"}}' WHERE id=4`);
+    expect((await read({messageKind:'all'})).failures).toEqual([{channel:'whatsapp',code:'131026',reason:'Message undeliverable',count:1}]);
+    await client.query(`UPDATE outreach_messages SET error_message='Insufficient credits. Please recharge your wallet.' WHERE id=4`);
+    expect((await read({messageKind:'all'})).failures).toEqual([{channel:'whatsapp',code:null,reason:'Insufficient credits. Please recharge your wallet.',count:1}]);
   });
   it('keeps separate prepared campaigns distinct even when they use the same imported audience',async()=>{
     const first=randomUUID(),other=randomUUID(),foreign=randomUUID();

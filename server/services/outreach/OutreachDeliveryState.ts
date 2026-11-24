@@ -103,8 +103,14 @@ export const messageNextAttemptAt = sql`(CASE WHEN ${nextAttemptText} ~ '^[0-9]{
  * business, 5,800 failures read "Provider code 131049" beside "the sending
  * account was disconnected" or "insufficient credits", attempts that never
  * reached WhatsApp.
+ *
+ * A failure receipt saves WhatsApp's own code with its text
+ * (`providerFailure`); that code is shown while the text is still the error.
  */
-export const messageProviderCode = sql`(CASE WHEN m.status IN(${list([...rawStatuses.waiting, ...rawStatuses.sending])})
+export const messageProviderCode = sql`(CASE
+  WHEN NULLIF(m.error_message,'') IS NOT NULL AND m.metadata->'providerFailure'->>'message'=m.error_message
+    THEN m.metadata->'providerFailure'->>'code'
+  WHEN m.status IN(${list([...rawStatuses.waiting, ...rawStatuses.sending])})
     OR m.metadata->'outreachQueue'->>'enqueueNeeded'='true' OR NULLIF(m.error_message,'') IS NULL
   THEN m.metadata->'outreachQueue'->>'providerCode' END)`;
 

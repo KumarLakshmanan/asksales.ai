@@ -103,6 +103,16 @@ describe('billing from the delivery webhook', () => {
     expect(settleWhatsAppChargeFromStatus).toHaveBeenCalledWith(expect.objectContaining({ status: 'failed', errors }));
   });
 
+  it("saves WhatsApp's failure code beside the error text it explains", async () => {
+    const { PgDialect } = await import('drizzle-orm/pg-core');
+    await processWhatsAppStatus(9, { id: 'wamid.fixture', status: 'failed', timestamp: '1763450000', recipient_id: '919900000002',
+      errors: [{ code: 131026, message: 'Message undeliverable' }] }, { phone_number_id: account });
+    const update = execute.mock.calls.map(([query]) => new PgDialect().sqlToQuery(query as never))
+      .find(query => /UPDATE outreach_messages/.test(query.sql))!;
+    expect(update.sql).toContain("'providerFailure',jsonb_build_object('code'");
+    expect(update.params).toEqual(expect.arrayContaining(['131026', 'Message undeliverable']));
+  });
+
   it('fails the webhook so Meta retries when settlement fails', async () => {
     settleWhatsAppChargeFromStatus.mockRejectedValue(new Error('Fixture wallet unavailable'));
     await expect(processWhatsAppStatus(9, { id: 'wamid.fixture', status: 'delivered', timestamp: '1763450000', pricing },

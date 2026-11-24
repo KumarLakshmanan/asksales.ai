@@ -195,6 +195,11 @@ export async function processWhatsAppStatus(userId: number, status: any, metadat
   const failureReason = statusName === 'failed'
     ? String(status.errors?.[0]?.message || 'WhatsApp delivery failed').slice(0, 1000)
     : null;
+  // WhatsApp's own code for this failure, saved beside the text it explains.
+  // Reports show it only while that text is still the message's error, so a
+  // later attempt that fails differently never inherits it.
+  const failureCode = statusName === 'failed' && Number.isFinite(Number(status.errors?.[0]?.code))
+    ? String(Number(status.errors[0].code)) : null;
 
   logger.info({
     userId,
@@ -224,6 +229,9 @@ export async function processWhatsAppStatus(userId: number, status: any, metadat
             read_at = CASE WHEN ${statusName} = 'read' THEN COALESCE(read_at, ${statusTimestamp}) ELSE read_at END,
             failed_at = CASE WHEN ${statusName} = 'failed' THEN COALESCE(failed_at, ${statusTimestamp}) ELSE failed_at END,
             error_message = CASE WHEN ${statusName} = 'failed' THEN ${failureReason} WHEN ${statusName} IN ('delivered', 'read') THEN NULL ELSE error_message END,
+            metadata = CASE WHEN ${statusName} = 'failed' AND ${failureCode}::text IS NOT NULL
+              THEN COALESCE(metadata,'{}'::jsonb)||jsonb_build_object('providerFailure',jsonb_build_object('code',${failureCode}::text,'message',${failureReason}::text))
+              ELSE metadata END,
             updated_at = NOW()
         WHERE user_id = ${userId}
           AND direction = 'outbound'

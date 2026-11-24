@@ -164,9 +164,13 @@ export async function invalidateAssistantBinding(
         OR (assistant_provenance IS NULL AND ${binding.surface === "private"} AND conversation_id IN (${selector})))`);
   await tx.execute(sql`UPDATE outreach_assistant_follow_up_schedules SET status='cancelled',version=version+1,cancellation_reason=${reason},updated_at=NOW()
     WHERE user_id=${scope.userId} AND binding_id=${Number(binding.id)} AND status IN ('active','queued')`);
+  // Follow-up sends do not record provider_call_state, so a follow-up that went
+  // out and then got a failure receipt still reads 'not_started'. A provider
+  // message id or send time proves it left; its failure must stay a failure.
   await tx.execute(sql`UPDATE outreach_messages SET status='cancelled',updated_at=NOW()
     WHERE user_id=${scope.userId} AND status IN ('pending','scheduled','queued','draft','drafted','failed')
       AND COALESCE(provider_call_state,'not_started')='not_started' AND message_kind IN ('reply','follow_up')
+      AND sent_at IS NULL AND COALESCE(external_message_id,provider_message_id,waba_message_id) IS NULL
       AND (metadata->'assistant'->>'bindingId'=${String(binding.id)}
         OR (metadata->'assistant' IS NULL AND ${binding.surface === "private"} AND conversation_id IN (${selector})))`);
   await tx.execute(sql`UPDATE support_playbook_runs SET status='superseded',updated_at=NOW()
