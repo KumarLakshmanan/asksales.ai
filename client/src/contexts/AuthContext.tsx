@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
 import { shouldSkipOwnerAuthCheck } from "@/lib/authSurface";
 import { sessionCheckRetryDelays, withSessionCheckRetry } from "@/lib/sessionCheckRetry";
+import { prefetchDashboardGates } from "@/lib/startup-queries";
 import { toast } from "@/hooks/use-toast";
 
 interface User {
@@ -88,6 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setIsLoading(true);
+    // Dashboard pages wait on plan access and the business profiles after
+    // sign-in. Ask for both now, for the account this browser last signed in
+    // as; they are only read once this check confirms that account.
+    if (window.location.pathname.startsWith("/dashboard")) {
+      let cachedUserId: unknown;
+      try { cachedUserId = JSON.parse(localStorage.getItem("user") || "null")?.id; } catch { /* No usable cached account. */ }
+      if (typeof cachedUserId === "number") prefetchDashboardGates(queryClient, cachedUserId);
+    }
     try {
       // Transient failures (network, timeout, 5xx) do not decide the session,
       // so retry them before showing the error card. Loading stays on the

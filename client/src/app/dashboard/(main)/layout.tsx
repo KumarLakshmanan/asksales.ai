@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { PageLoadingState } from "@/components/ui/page-state";
 import { usePlatformAccess } from "@/hooks/use-platform-access";
+import { useBusinessProfiles } from "@/hooks/use-business-profiles";
 import { getModuleUnavailableMessage, isHiddenDashboardPath, moduleForDashboardPath } from "@/lib/platform-access";
 import { PlatformAccessState } from "@/components/PlatformAccessState";
 import { BRAND_NAME } from "@/lib/brand";
@@ -23,6 +24,10 @@ export default function MainDashboardLayout({
   const { isApproved, isLoading: authLoading, checkAuth } = useAuth();
   const { shouldShowOnboarding, isLoading: setupLoading, setupRedirectPath } = useSetupComplete();
   const access = usePlatformAccess(!authLoading && isApproved);
+  // DashboardLayout gates every page on the business profile, but it mounts
+  // only after the access check. Asking here loads both at once; the layout
+  // reads the same cached query.
+  useBusinessProfiles();
   const hiddenDashboardPath = isHiddenDashboardPath(pathname);
   const businessManagementPath = pathname.startsWith('/dashboard/business-profiles') || pathname.startsWith('/dashboard/settings/company');
   const needsOnboarding = shouldShowOnboarding && !businessManagementPath;

@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { gateQueryRetry, gateQueryRetryDelay } from "@/lib/queryRetry";
+import { BUSINESS_PROFILES_STALE_MS, businessProfilesQueryKey, fetchBusinessProfiles } from "@/lib/startup-queries";
 import { businessProfileAccountId, selectedBusinessProfileId, selectBusinessProfile, subscribeBusinessProfile, openBusinessDashboard } from '@/lib/business-profile';
 
 export interface BusinessProfileSummary {
@@ -42,10 +43,10 @@ export function useBusinessProfiles() {
   const sessionReady = !!user && !authLoading && !authError && storedAccountId === user.id;
   const [isSwitching, setIsSwitching] = useState(false);
   const query = useQuery({
-    queryKey: ["business-profiles", user?.id],
-    queryFn: () => api.get<BusinessProfileSummary[]>("/api/settings/business-profiles"),
+    queryKey: businessProfilesQueryKey(user?.id),
+    queryFn: () => fetchBusinessProfiles(),
     enabled: sessionReady,
-    staleTime: 30_000,
+    staleTime: BUSINESS_PROFILES_STALE_MS,
     // Every main dashboard page waits on this list. Ride out a short server
     // outage, and recover by itself if the error screen does appear.
     retry: gateQueryRetry,
