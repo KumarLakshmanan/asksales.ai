@@ -17,6 +17,7 @@ jest.unstable_mockModule('../services/InboundContactResolver.js', () => ({ inbou
 jest.unstable_mockModule('../services/OutreachAttachmentService.js', () => ({ outreachAttachmentService: {} }));
 jest.unstable_mockModule('../services/agents/orchestration/PrivacyVaultService.js', () => ({
   redactPiiWithStableTokens: (text: string) => ({ redactedText: text }),
+  whatsappDisplayText: (text: string) => text,
   privacyVaultService: { protectInbound: jest.fn<any>().mockImplementation(async ({ rawText }: { rawText: string }) => ({ redactedText: rawText, vaultId: 1 })) },
 }));
 jest.unstable_mockModule('../services/socialFollowUpService.js', () => ({ cancelSocialFollowUpsForConversation: jest.fn<any>().mockResolvedValue(undefined) }));

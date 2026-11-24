@@ -1,6 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "../../models/db.js";
-import { redactPiiWithStableTokens } from "../agents/orchestration/PrivacyVaultService.js";
+import { hasContactDetailTokens, redactPiiWithStableTokens, whatsappDisplayText } from "../agents/orchestration/PrivacyVaultService.js";
 import {
   resolveOfficialProviderBinding,
   type OfficialProviderChannel,
@@ -10,7 +10,7 @@ import { currentBusinessScope } from "../../tenancy/businessContext.js";
 import { normalizeMSG91Phone } from "../../../shared/msg91.js";
 import { emailDisplayText, legacyEmailFormat } from '../../utils/emailDisplay.js';
 import type { EmailTextFormat } from '../../../shared/emailDisplay.js';
-import { inboxEmailDisplayText } from './InboxEmailPresentation.js';
+import { inboxEmailDisplayText, inboxWhatsAppDisplayText } from './InboxEmailPresentation.js';
 import { customerDeliveryReadiness } from '../assistants/CustomerDeliveryGate.js';
 import {
   INBOX_CHANNELS,
@@ -18,6 +18,7 @@ import {
   INBOX_START_ORIGINS,
   type InboxChannel,
   type InboxOriginFilter,
+  type InboxSort,
   type InboxStartOrigin,
   type InboxItem,
   type InboxPage,
@@ -29,13 +30,15 @@ export interface InboxQuery {
   leadId?: number;
   unread?: boolean;
   origin?: InboxOriginFilter;
+  sort?: InboxSort;
   search: string;
   limit: number;
   cursor?: { at: string; kind: string; id: number };
 }
 
 export function parseInboxQuery(query: Record<string, unknown>): InboxQuery {
-  const { channel, leadId, unread, origin, search = "", limit = "50", cursor } = query;
+  const { channel, leadId, unread, origin, sort = "newest", search = "", limit = "50", cursor } = query;
+  if (sort !== "newest" && sort !== "oldest") throw new Error("Invalid inbox sort.");
   if (origin !== undefined && origin !== "all" && !INBOX_ORIGIN_FILTERS.includes(origin as InboxOriginFilter))
     throw new Error("Invalid inbox origin.");
   if (leadId !== undefined && (typeof leadId !== 'string' || !/^\d+$/.test(leadId)
@@ -81,6 +84,7 @@ export function parseInboxQuery(query: Record<string, unknown>): InboxQuery {
       channel && channel !== "all" ? (channel as InboxChannel) : undefined,
     unread: unread === "true",
     origin: origin && origin !== "all" ? (origin as InboxOriginFilter) : undefined,
+    sort,
     search: search.trim(),
     limit: Number(limit),
     cursor: decoded,
@@ -206,8 +210,9 @@ function inboxRows(userId: number): SQL {
     ${FIRST_MESSAGE}
     LEFT JOIN LATERAL (
       SELECT CASE WHEN m.direction='inbound' AND m.privacy_vault_id IS NOT NULL THEN m.id END AS message_id,
-        COALESCE(m.redacted_content,NULLIF(m.html_content,''),m.content) AS preview_body,
-        (m.redacted_content IS NULL AND NULLIF(m.html_content,'') IS NOT NULL) AS preview_is_html
+        CASE WHEN c.channel='whatsapp' THEN COALESCE(m.content,m.redacted_content)
+          ELSE COALESCE(m.redacted_content,NULLIF(m.html_content,''),m.content) END AS preview_body,
+        (c.channel<>'whatsapp' AND m.redacted_content IS NULL AND NULLIF(m.html_content,'') IS NOT NULL) AS preview_is_html
       FROM outreach_messages m WHERE m.conversation_id=c.id
       ORDER BY COALESCE(m.sent_at,m.created_at) DESC,m.id DESC LIMIT 1
     ) preview ON true
@@ -369,7 +374,11 @@ export async function replyAvailability(
   return {
     ...result,
     canReply: true,
-    accountLabel: result.accountLabel || binding.accountName || account,
+    // Email labels are the verified sender address. Other channels start with
+    // the provider's account ID, so the connected account's name wins there.
+    accountLabel: row.channel === "email"
+      ? result.accountLabel || binding.accountName || account
+      : binding.accountName?.trim() || account,
     requiresTemplate:
       row.channel === "whatsapp" &&
       !(await hasActiveWhatsAppWindow(userId, row.lead_id, account)),
@@ -392,7 +401,9 @@ async function presentRow(userId: number, row: Row, actorUserId?: number): Promi
   }
   const display = row.kind === 'conversation' && row.channel === 'email'
     ? await inboxEmailDisplayText(userId, actorUserId, row.id, row.preview_message_id)
-    : null;
+    : row.channel === 'whatsapp'
+      ? await inboxWhatsAppPreviewText(userId, actorUserId, row)
+      : null;
   return {
     key: `${row.kind}:${row.id}`,
     kind: row.kind,
@@ -422,6 +433,17 @@ async function presentRow(userId: number, row: Row, actorUserId?: number): Promi
   };
 }
 
+/** WhatsApp previews show contact details. Older rows were stored with vault
+ * tokens; reveal those (only when a token is present) while the vault keeps them. */
+async function inboxWhatsAppPreviewText(userId: number, actorUserId: number | undefined, row: Row): Promise<string> {
+  const stored = row.preview_body || '';
+  if (row.kind === 'conversation' && row.preview_message_id && hasContactDetailTokens(stored)) {
+    const revealed = await inboxWhatsAppDisplayText(userId, actorUserId, row.id, row.preview_message_id);
+    if (revealed !== null) return revealed;
+  }
+  return whatsappDisplayText(stored);
+}
+
 export async function listInbox(
   userId: number,
   query: InboxQuery,
@@ -438,6 +460,8 @@ export async function listInbox(
       AND to_tsvector('simple',COALESCE(m.inbox_search_text,'')) @@ plainto_tsquery('simple',${query.search})))
     OR (r.kind='legacy' AND EXISTS(SELECT 1 FROM sent_messages s WHERE s.id=r.id AND s.user_id=${userId}
       AND to_tsvector('simple',COALESCE(s.inbox_search_text,'')) @@ plainto_tsquery('simple',${query.search}))))`;
+  const direction = query.sort === "oldest" ? sql`ASC` : sql`DESC`;
+  const afterCursor = query.sort === "oldest" ? sql`>` : sql`<`;
   const rows = (
     await db.execute(sql`WITH inbox AS (${inboxRows(userId)}) SELECT r.*,
       to_char(r.activity_at,'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_at FROM inbox r WHERE true
@@ -445,8 +469,8 @@ export async function listInbox(
       ${query.leadId ? sql`AND r.lead_id=${query.leadId}` : sql``}
       ${query.unread ? sql`AND r.unread_count>0` : sql``}
       ${query.origin === "ai" ? sql`AND r.ai_handled` : query.origin ? sql`AND r.origin=${query.origin}` : sql``} ${searchFilter}
-      ${query.cursor ? sql`AND (r.activity_at,r.kind,r.id)<(${query.cursor.at}::timestamptz AT TIME ZONE 'UTC',${query.cursor.kind},${query.cursor.id})` : sql``}
-      ORDER BY r.activity_at DESC,r.kind DESC,r.id DESC LIMIT ${query.limit + 1}`)
+      ${query.cursor ? sql`AND (r.activity_at,r.kind,r.id) ${afterCursor} (${query.cursor.at}::timestamptz AT TIME ZONE 'UTC',${query.cursor.kind},${query.cursor.id})` : sql``}
+      ORDER BY r.activity_at ${direction},r.kind ${direction},r.id ${direction} LIMIT ${query.limit + 1}`)
   ).rows as Row[];
   const counts = (
     await db.execute(sql`SELECT CASE WHEN c.channel='gmail' THEN 'email' ELSE c.channel END AS channel,COUNT(*)::int AS count
@@ -542,7 +566,9 @@ export async function getInboxItem(
             origin: row.origin === "outreach"
               ? { kind: "outreach", label: "AskSales outreach" }
               : { kind: "manual", label: "Sent from AskSales" },
-            content: safeInboxText(row.preview_body, legacyEmailFormat(row.preview_body || '', row.channel, row.message_format)),
+            content: row.channel === 'whatsapp'
+              ? whatsappDisplayText(row.preview_body || '')
+              : safeInboxText(row.preview_body, legacyEmailFormat(row.preview_body || '', row.channel, row.message_format)),
             subject: row.subject,
             status: row.status,
             createdAt: item.activityAt,

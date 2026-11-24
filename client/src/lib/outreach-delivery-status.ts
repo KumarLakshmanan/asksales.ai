@@ -37,6 +37,28 @@ export function outboundDeliveryDetail(status: string | null | undefined, errorM
   return null;
 }
 
+/** The two reasons WhatsAppProviderRetry writes when it queues an automatic retry. */
+const QUEUED_RETRY_TEXT: Array<[RegExp, string]> = [
+  [/^Meta marketing limit reached\. Queued to retry/i,
+    "Meta's limit on marketing messages to this contact was reached, so this is queued. It will be retried automatically"],
+  [/^App sending capacity reached/i,
+    "Sending capacity is full right now, so this is queued. It will go out automatically when the limit resets"],
+];
+
+/** Plain note for a message that is waiting for an automatic retry; null otherwise.
+ * Only the known queue reasons are shown: other text on a pending row is internal. */
+export function outboundQueueDetail(status: string | null | undefined, errorMessage: string | null | undefined, retryAt?: string | null): string | null {
+  if (!['pending', 'queued'].includes(status || '')) return null;
+  const reason = errorMessage?.trim() || '';
+  const known = QUEUED_RETRY_TEXT.find(([pattern]) => pattern.test(reason));
+  if (!known) return null;
+  const at = retryAt ? new Date(retryAt) : null;
+  const when = at && Number.isFinite(at.getTime()) && at.getTime() > Date.now()
+    ? ` after ${at.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} IST`
+    : '';
+  return `${known[1]}${when}.`;
+}
+
 /** Use for any provider reason shown to people, e.g. tracking rows that mix old and new wording. */
 export function plainDeliveryReason(reason: string): string {
   if (INTERNAL_UNCERTAIN_REASON.test(reason)) return UNCONFIRMED_DELIVERY_DETAIL;

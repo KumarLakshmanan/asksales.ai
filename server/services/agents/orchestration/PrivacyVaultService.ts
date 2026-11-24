@@ -6,6 +6,9 @@ import { supportPrivacyVaultTable, supportPrivacyAccessLogsTable, type PiiType }
 import { logger } from '../../../utils/logger.js';
 
 const DEFAULT_RAW_RETENTION_DAYS = 30;
+const NO_VISIBLE_TYPES: ReadonlySet<PiiType> = new Set();
+const EMAIL_VISIBLE_TYPES: ReadonlySet<PiiType> = new Set<PiiType>(['name', 'email']);
+const WHATSAPP_VISIBLE_TYPES: ReadonlySet<PiiType> = new Set<PiiType>(['name', 'email', 'phone', 'address']);
 const KEY_VERSION = Math.max(1, Number.parseInt(process.env.SUPPORT_PII_KEY_VERSION || '1', 10) || 1);
 const ephemeralTokenKey = crypto.randomBytes(32);
 
@@ -325,10 +328,10 @@ function normalizeCardCandidate(value: string): boolean {
   return sum % 10 === 0;
 }
 
-function collectMatches(text: string, visibleEmailContacts = false): DetectedValue[] {
+function collectMatches(text: string, visibleTypes: ReadonlySet<PiiType> = NO_VISIBLE_TYPES): DetectedValue[] {
   const matches: DetectedValue[] = collectCredentialMatches(text);
   for (const { type, regex, mode } of PATTERNS) {
-    if (visibleEmailContacts && (type === 'name' || type === 'email')) continue;
+    if (visibleTypes.has(type)) continue;
     regex.lastIndex = 0;
     for (const match of text.matchAll(regex)) {
       if (match.index === undefined) continue;
@@ -378,7 +381,21 @@ export function redactPiiWithStableTokens(text: string, scope?: { userId: number
  * contact details; other sensitive values remain protected, including secrets.
  * Never use this projection for model input, search, or persisted history. */
 export function redactSensitiveInboxEmailText(text: string, scope: { userId: number; conversationId: number }): string {
-  return redactDetectedValues(text, collectMatches(text, true), scope).redactedText;
+  return redactDetectedValues(text, collectMatches(text, EMAIL_VISIBLE_TYPES), scope).redactedText;
+}
+
+/** WhatsApp has no contact-detail masking for the people working the inbox:
+ * names, phone numbers, emails and addresses are shown as the customer sent
+ * them. Payment cards, government IDs, SSNs, OTPs and credentials stay masked.
+ * Model input keeps using redacted_content / redactPiiWithStableTokens. */
+export function whatsappDisplayText(text: string, scope?: { userId: number; conversationId: number }): string {
+  if (!text) return '';
+  return redactDetectedValues(text, collectMatches(text, WHATSAPP_VISIBLE_TYPES), scope).redactedText;
+}
+
+/** Stored WhatsApp text still carries vault tokens for contact details. */
+export function hasContactDetailTokens(text: string | null | undefined): boolean {
+  return typeof text === 'string' && /\[(?:NAME|PHONE|EMAIL|ADDRESS)_\d+\]/.test(text);
 }
 
 function redactDetectedValues(text: string, matches: DetectedValue[], scope?: { userId: number; conversationId: number }): RedactionResult {
@@ -584,7 +601,8 @@ export class PrivacyVaultService {
       if (messageId) {
         const updated = await tx.update(outreachMessagesTable)
           .set({
-            content: redaction.redactedText,
+            // WhatsApp shows contact details to people; the model reads redactedContent.
+            content: input.channel === 'whatsapp' ? whatsappDisplayText(input.rawText, input) : redaction.redactedText,
             redactedContent: redaction.redactedText,
             privacyVaultId: vaultId,
             htmlContent: null,

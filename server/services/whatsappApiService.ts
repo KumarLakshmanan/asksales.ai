@@ -553,11 +553,13 @@ export class WhatsAppApiService {
     return result;
   }
 
-  async downloadMedia(userId: number, mediaId: string, phoneNumberId?: string): Promise<{
+  async downloadMedia(userId: number, mediaId: string, phoneNumberId?: string, options: { maxBytes?: number } = {}): Promise<{
     buffer: Buffer;
     mimeType: string;
     fileSize: number;
   }> {
+    const maxBytes = options.maxBytes ?? MAX_OUTREACH_ATTACHMENT_SIZE;
+    const tooLarge = `WhatsApp attachment exceeds the ${Math.floor(maxBytes / 1024 / 1024)} MB application limit.`;
     const creds = await this.resolveAndValidate(userId, phoneNumberId, true);
     const token = await this.ensureTokenValidity(creds);
     const metadataResponse = await fetch(`https://graph.facebook.com/${creds.apiVersion}/${encodeURIComponent(mediaId)}`, {
@@ -565,12 +567,12 @@ export class WhatsAppApiService {
     });
     const metadata = await metadataResponse.json() as { url?: string; mime_type?: string; file_size?: number; error?: { message?: string } };
     if (!metadataResponse.ok || !metadata.url) throw new Error(metadata.error?.message || 'WhatsApp media metadata could not be loaded.');
-    if (Number(metadata.file_size || 0) > MAX_OUTREACH_ATTACHMENT_SIZE) throw new Error('WhatsApp attachment exceeds the 10 MB application limit.');
+    if (Number(metadata.file_size || 0) > maxBytes) throw new Error(tooLarge);
     const fileResponse = await fetch(metadata.url, { headers: { Authorization: `Bearer ${token}` } });
     if (!fileResponse.ok) throw new Error(`WhatsApp media download failed with HTTP ${fileResponse.status}`);
     const contentLength = Number(fileResponse.headers.get('content-length') || 0);
-    if (contentLength > MAX_OUTREACH_ATTACHMENT_SIZE) throw new Error('WhatsApp attachment exceeds the 10 MB application limit.');
-    const buffer = await readResponseBuffer(fileResponse, MAX_OUTREACH_ATTACHMENT_SIZE);
+    if (contentLength > maxBytes) throw new Error(tooLarge);
+    const buffer = await readResponseBuffer(fileResponse, maxBytes);
     return {
       buffer,
       mimeType: metadata.mime_type || fileResponse.headers.get('content-type')?.split(';')[0] || 'application/octet-stream',

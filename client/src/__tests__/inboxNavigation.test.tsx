@@ -36,7 +36,8 @@ it('clears SMS to All in the URL and keeps the cleared channel after a fresh mou
   view.unmount();
   render(<OutreachInbox />);
   await screen.findByRole('button', { name: 'Open Ada on Email' });
-  expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+  expect(screen.getByRole('button', { name: 'All channels' })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('button', { name: 'SMS' })).toHaveAttribute('aria-pressed', 'false');
   expect(window.location.hash).toBe('#conversation-list');
 });
@@ -47,19 +48,22 @@ it('clears local filters while keeping a selected conversation, contact scope, u
   render(<OutreachInbox />);
   await screen.findByRole('region', { name: 'Selected conversation' });
   mocks.get.mockImplementation(async (url: string) => url.includes('/inbox/conversation/') ? { item } : { items: [], nextCursor: null, unreadThreads: { all: 0 } });
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.change(screen.getByLabelText('Search inbox'), { target: { value: 'no-match' } });
-  const clear = await screen.findByRole('button', { name: 'Clear filters' });
-  await act(async () => fireEvent.click(clear));
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Clear filters' })));
   expect(mocks.replace).toHaveBeenLastCalledWith('/dashboard/outreach/inbox?leadId=3&thread=conversation%3A7&source=crm#reply', { scroll: false });
-  expect(screen.getByRole('region', { name: 'Selected conversation' })).toBeInTheDocument();
   expect(screen.getByLabelText('Search inbox')).toHaveValue('');
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+  expect(screen.getByRole('region', { name: 'Selected conversation' })).toBeInTheDocument();
   await waitFor(() => expect(mocks.get.mock.calls.at(-1)?.[0]).toContain('channel=all&unread=false&search=&'));
 });
 
 it('writes channel changes to the URL, preserves the contact filter and clears an incompatible thread', async () => {
   render(<OutreachInbox />);
   await screen.findByRole('region', { name: 'Selected conversation' });
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.click(screen.getByRole('button', { name: 'SMS' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   expect(mocks.replace).toHaveBeenLastCalledWith('/dashboard/outreach/inbox?channel=sms&leadId=3', { scroll: false });
   expect(screen.queryByRole('region', { name: 'Selected conversation' })).not.toBeInTheDocument();
 });

@@ -4,7 +4,7 @@ import { EmailDeliveryActivity } from './EmailDeliveryActivity';
  * Supports dark mode and channel-specific theming
  */
 
-import { outboundDeliveryDetail } from "@/lib/outreach-delivery-status";
+import { outboundDeliveryDetail, outboundQueueDetail } from "@/lib/outreach-delivery-status";
 import { 
   Clock, CheckCircle2, Circle, AlertCircle, Check, CheckCheck, Pencil, Paperclip, Download,
   FileText, FileSpreadsheet, ImageIcon, File, AudioLines, Film
@@ -18,6 +18,7 @@ import DOMPurify from "dompurify";
 import { DraftRecommendationCard } from "@/components/conversation/DraftRecommendationCard";
 import { ConversationMessageFrame } from "@/components/conversation/ConversationMessageFrame";
 import { EmailMessageContent } from "./EmailMessageContent";
+import { WhatsAppText, whatsAppDisplayBody } from "./WhatsAppText";
 import { messageOriginText } from "@/lib/outreach-message-origin";
 
 interface OutreachMessageBubbleProps {
@@ -69,6 +70,19 @@ function getFileType(filename: string = "", mimeType: string = ""): { type: stri
   return { type: 'file', color: 'text-primary', bg: 'bg-primary/10', icon: Paperclip };
 }
 
+/** Why an attachment cannot be opened, in plain words; never the raw internal error. */
+function unavailableAttachmentReason(att: Attachment): string {
+  const reason = att.extractionError || "";
+  if (/exceeds the \d+ MB/i.test(reason)) {
+    const limit = /exceeds the (\d+ MB)/i.exec(reason)?.[1];
+    return `Too large to save${limit ? ` (over ${limit})` : ""}`;
+  }
+  if (/is not allowed/i.test(reason)) return "This file type isn't supported";
+  if (/does not match its contents/i.test(reason)) return "Blocked: the file's contents don't match its type";
+  if (/empty/i.test(reason)) return "The file was empty";
+  return att.status === "quarantined" ? "Blocked for safety" : "Couldn't be saved";
+}
+
 function AttachmentList({ attachments }: { attachments?: Attachment[] | null }) {
   if (!attachments || attachments.length === 0) return null;
   
@@ -88,7 +102,7 @@ function AttachmentList({ attachments }: { attachments?: Attachment[] | null }) 
               <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
               <div className="min-w-0">
                 <p className="text-[11px] font-bold truncate">{filename}</p>
-                <p className="text-[9px] text-destructive">Attachment unavailable or blocked</p>
+                <p className="text-[10px] text-destructive">{unavailableAttachmentReason(att)}</p>
               </div>
             </div>
           );
@@ -200,25 +214,28 @@ export function OutreachMessageBubble({
   const isDraft = message.status === "draft";
   // Plain wording for failed and unconfirmed sends; never the internal reason text.
   const deliveryError = isOutbound ? outboundDeliveryDetail(message.status, message.errorMessage) || "" : "";
+  const outreachQueue = message.metadata?.outreachQueue as { nextAttemptAt?: unknown } | undefined;
+  const queuedRetryAt = typeof outreachQueue?.nextAttemptAt === "string" ? outreachQueue.nextAttemptAt : null;
+  const queueNote = isOutbound ? outboundQueueDetail(message.status, message.errorMessage, queuedRetryAt) : null;
 
   // WhatsApp-style status icons (single/double check)
   const getWhatsAppStatusIcon = () => {
     if (!isOutbound) return null;
     switch (message.status) {
       case "sent":
-        return <Check className="h-3 w-3 text-muted-foreground" />;
+        return <Check className="h-3 w-3 text-muted-foreground" role="img" aria-label="Sent" />;
       case "delivered":
-        return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
+        return <CheckCheck className="h-3 w-3 text-muted-foreground" role="img" aria-label="Delivered" />;
       case "read":
-        return <CheckCheck className="h-3 w-3 text-blue-500" />;
+        return <CheckCheck className="h-3 w-3 text-blue-500" role="img" aria-label="Read" />;
       case "failed":
-        return <AlertCircle className="h-3 w-3 text-red-500" />;
+        return <AlertCircle className="h-3 w-3 text-red-500" role="img" aria-label="Failed" />;
       case "manual_review":
-        return <Clock className="h-3 w-3 text-amber-500" aria-label="Pending confirmation" />;
+        return <Clock className="h-3 w-3 text-amber-500" role="img" aria-label="Pending confirmation" />;
       case "draft":
-        return <Pencil className="h-3 w-3 text-amber-500" />;
+        return <Pencil className="h-3 w-3 text-amber-500" role="img" aria-label="Draft" />;
       default:
-        return <Clock className="h-3 w-3 text-muted-foreground" />;
+        return <Clock className={`h-3 w-3 ${queueNote ? "text-amber-600" : "text-muted-foreground"}`} role="img" aria-label={queueNote ? "Queued for retry" : "Sending"} />;
     }
   };
 
@@ -321,6 +338,7 @@ export function OutreachMessageBubble({
 
   // WhatsApp keeps its time and delivery marks inside each message.
   if (channel === "whatsapp") {
+    const whatsAppBody = whatsAppDisplayBody(cleanedDisplayContent || "", Boolean(message.attachments?.length));
     const messageTime = message.sentAt
       ? formatShortTimeIST(message.sentAt)
       : formatShortTimeIST(message.createdAt);
@@ -329,9 +347,14 @@ export function OutreachMessageBubble({
       <article role="listitem" aria-label={`${isOutbound ? "Outbound" : "Inbound"} WhatsApp message`} className={`flex ${isOutbound ? "justify-end" : "justify-start"}`}>
         <div className={`min-w-0 max-w-[88%] rounded-lg px-3 py-2 text-sm shadow-sm sm:max-w-[72%] ${isOutbound ? "rounded-tr-sm bg-[#d9fdd3] text-[#172b24] dark:bg-[#175c4b] dark:text-white" : "rounded-tl-sm bg-white text-[#172b24] dark:bg-slate-800 dark:text-white"}`}>
           {originLabel ? <span className="mb-1 block text-[10px] opacity-70">{originLabel}</span> : null}{message.metadata?.replySurface === "comment" ? <span className="mb-1 block text-[10px] opacity-70">Public comment</span> : null}{followUpLabel}
-          <p className="text-sm whitespace-pre-wrap break-words">{cleanedDisplayContent}</p>
+          {whatsAppBody === null ? null : (
+            <p className={`text-sm whitespace-pre-wrap break-words ${whatsAppBody === cleanedDisplayContent ? "" : "italic opacity-75"}`}>
+              {whatsAppBody === cleanedDisplayContent ? <WhatsAppText text={whatsAppBody} /> : whatsAppBody}
+            </p>
+          )}
           <AttachmentList attachments={message.attachments} />
           {deliveryError ? <p role="alert" className="mt-2 max-w-80 break-words border-t border-current/20 pt-2 text-xs font-medium text-red-700 dark:text-red-200">{deliveryError}</p> : null}
+          {queueNote ? <p role="status" className="mt-2 max-w-80 break-words border-t border-current/20 pt-2 text-xs font-medium text-amber-800 dark:text-amber-200">{queueNote}</p> : null}
           <div className="flex items-center gap-1 justify-end mt-1">
             <time dateTime={message.sentAt || message.createdAt} className="text-[10px] tabular-nums opacity-65" title={formatDateTimeIST(message.sentAt || message.createdAt)}>{messageTime}</time>
             {getWhatsAppStatusIcon()}

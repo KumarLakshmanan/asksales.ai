@@ -24,6 +24,10 @@ const labels = [
   "SMS",
 ];
 const browserErrors = new WeakMap<Page, string[]>();
+async function openFilters(page: Page) {
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  return page.getByRole('dialog', { name: 'Inbox filters' });
+}
 test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   browserErrors.set(page, errors);
@@ -283,6 +287,9 @@ async function installInbox(page: Page) {
         ]),
       );
       const offset = Number(url.searchParams.get("cursor") || 0);
+      if (url.searchParams.get("sort") === "oldest") {
+        filtered.sort((a, b) => a.activityAt.localeCompare(b.activityAt) || a.kind.localeCompare(b.kind) || a.id - b.id);
+      }
       const nextCursor =
         filtered.length > offset + 7 ? String(offset + 7) : null;
       filtered = filtered.slice(offset, offset + 7);
@@ -382,11 +389,12 @@ test('Clear filters updates the URL and survives reload without dropping unrelat
   await expect(page.getByText('No conversations yet', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
   await expect(page).toHaveURL(url => !url.searchParams.has('channel') && url.searchParams.getAll('source').join(',') === 'crm,work' && url.hash === '#conversation-list');
-  await expect(page.getByRole('button', { name: 'All', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Open Asha Raman on Email' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('button', { name: 'All', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', { name: 'SMS', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  const drawer = await openFilters(page);
+  await expect(drawer.getByRole('button', { name: 'All channels', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(drawer.getByRole('button', { name: 'SMS', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await drawer.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('button', { name: 'Open Asha Raman on Email' })).toBeVisible();
   expect(mock.requests).toHaveLength(0);
 });
@@ -453,7 +461,7 @@ test.describe('email provider evidence', () => {
   });
 });
 
-test("Outreach opens the unified Inbox with one-row channel filters, pagination and search", async ({
+test("Outreach opens the unified Inbox with channel filters, pagination and search", async ({
   page,
 }, testInfo) => {
   const mock = await installInbox(page);
@@ -463,18 +471,11 @@ test("Outreach opens the unified Inbox with one-row channel filters, pagination 
   await expect(
     inbox.getByRole("heading", { name: "Inbox", exact: true }),
   ).toBeVisible();
-  for (const label of labels)
-    await expect(
-      inbox
-        .getByRole("group", { name: "Filter by channel" })
-        .getByRole("button", { name: new RegExp(`^${label}(?:\\s*[0-9]+)?$`) }),
-    ).toBeVisible();
-  const filters = inbox.getByRole("group", { name: "Filter by channel" });
+  const drawer = await openFilters(page);
+  const filters = drawer.getByRole("group", { name: "Channel" });
+  for (const label of labels) await expect(filters.getByRole("button", { name: label, exact: true })).toBeVisible();
   await expect(filters.getByRole("button")).toHaveCount(6);
-  const filterTops = await filters.getByRole("button").evaluateAll((buttons) =>
-    buttons.map((button) => Math.round(button.getBoundingClientRect().top)),
-  );
-  expect(new Set(filterTops).size).toBe(1);
+  await drawer.getByRole('button', { name: 'Done' }).click();
   await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(7);
   await expectNoHorizontalOverflow(page);
   await page.screenshot({
@@ -496,9 +497,9 @@ test("Outreach opens the unified Inbox with one-row channel filters, pagination 
   ).toHaveCount(0);
   if (testInfo.project.name.includes("mobile"))
     await selected.getByRole("button", { name: "Back to inbox" }).click();
-  await inbox
-    .getByRole("textbox", { name: "Search inbox" })
-    .fill("Older campaign");
+  const searchDrawer = await openFilters(page);
+  await searchDrawer.getByRole("textbox", { name: "Search inbox" }).fill("Older campaign");
+  await searchDrawer.getByRole('button', { name: 'Done' }).click();
   await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(1);
   expect(mock.searches).toContain("Older campaign");
 });
@@ -564,15 +565,22 @@ test('conversation origins filter the list and identify sent messages', async ({
   });
   await page.goto('/dashboard/outreach/inbox?channel=whatsapp');
   const inbox = page.getByTestId('outreach-inbox');
-  const counts = inbox.getByRole('group', { name: 'Show conversations' });
+  const conversations = inbox.getByRole('button', { name: /^Open / });
+  await expect(conversations.first()).toHaveAccessibleName('Open Ben Carter on WhatsApp');
+  const drawer = await openFilters(page);
+  const counts = drawer.getByRole('group', { name: 'Show conversations' });
   await expect(counts.getByRole('button', { name: /^All\s*2$/ })).toBeVisible();
   await expect(counts.getByRole('button', { name: /^Unread\s*1$/ })).toBeVisible();
-  await expect(inbox.getByText('Outreach · AI', { exact: true })).toBeVisible();
-  await inbox.getByRole('button', { name: /^AI handled\s*1$/ }).click();
-  const conversations = inbox.getByRole('button', { name: /^Open / });
-  await expect(conversations).toHaveCount(1);
+  await drawer.getByRole('combobox', { name: 'Sort by' }).selectOption('oldest');
+  await drawer.getByRole('button', { name: 'Done' }).click();
+  await expect(conversations.first()).toHaveAccessibleName('Open Farah Ali on WhatsApp');
+  const originDrawer = await openFilters(page);
+  await originDrawer.getByRole('button', { name: /^AI handled\s*1$/ }).click();
   await expectNoHorizontalOverflow(page);
-  await inbox.getByRole('region', { name: 'Conversation filters' }).screenshot({ path: testInfo.outputPath('inbox-origin-filters.png'), animations: 'disabled' });
+  await page.screenshot({ path: testInfo.outputPath('inbox-filter-drawer.png'), animations: 'disabled', scale: 'css', style: 'nextjs-portal { visibility: hidden }' });
+  await originDrawer.getByRole('button', { name: 'Done' }).click();
+  await expect(conversations).toHaveCount(1);
+  await expect(inbox.getByText('Outreach · AI', { exact: true })).toBeVisible();
   await conversations.first().click();
   await expect(page.getByText('AskSales outreach · Proposal review · Template proposal_update · Follow-up 2')).toBeVisible();
 });
@@ -743,7 +751,9 @@ test("unread counts threads, opening marks read and selection remains until leav
   await installInbox(page);
   await page.goto("/dashboard/outreach/inbox");
   const inbox = page.getByTestId("outreach-inbox");
-  await inbox.getByRole("button", { name: /^Unread\s*2$/ }).click();
+  const drawer = await openFilters(page);
+  await drawer.getByRole("button", { name: /^Unread\s*2$/ }).click();
+  await drawer.getByRole('button', { name: 'Done' }).click();
   await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(2);
   await inbox.getByRole("button", { name: "Open Asha Raman on Email" }).click();
   await expect(page.getByText("History for Asha Raman")).toBeVisible();
@@ -751,9 +761,9 @@ test("unread counts threads, opening marks read and selection remains until leav
     await page.getByRole("button", { name: "Back to inbox" }).click();
     await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(1);
   } else {
-    await expect(
-      inbox.getByRole("button", { name: /^Unread\s*1$/ }),
-    ).toBeVisible();
+    const updated = await openFilters(page);
+    await expect(updated.getByRole("button", { name: /^Unread\s*1$/ })).toBeVisible();
+    await updated.getByRole('button', { name: 'Done' }).click();
     await expect(
       inbox.getByRole("button", { name: "Open Asha Raman on Email" }),
     ).toBeVisible();

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
+  ChevronDown,
   Clock,
   Facebook,
   FileText,
@@ -19,11 +20,12 @@ import {
   RefreshCw,
   Search,
   Send,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from '@/components/ui/textarea';
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import api from "@/lib/api";
@@ -36,8 +38,10 @@ import {
   type InboxItem,
   type InboxOriginFilter,
   type InboxPage,
+  type InboxSort,
 } from "@/lib/outreach-inbox";
 import { OutreachMessageTimeline } from "../OutreachMessageTimeline";
+import { whatsAppPreviewText } from "../WhatsAppText";
 import { ConversationEventTimeline } from "@/components/support/ConversationEventTimeline";
 import { OutreachComposeArea } from "../OutreachComposeArea";
 import { readLibraryDraft } from "@/lib/libraryDraft";
@@ -66,6 +70,18 @@ const order = (a: InboxItem, b: InboxItem) =>
   b.activityAt.localeCompare(a.activityAt) ||
   b.kind.localeCompare(a.kind) ||
   b.id - a.id;
+
+/** The sending account in words. A bare provider ID (WhatsApp phone number ID)
+ * means the connected account has no saved name, so show only its last digits. */
+function sendingAccountText(item: InboxItem): string | null {
+  const label = item.reply.accountLabel?.trim();
+  if (!label) return null;
+  if (item.channel !== "email" && /^\d{9,}$/.test(label))
+    return `${INBOX_LABELS[item.channel]} account ending ${label.slice(-4)}`;
+  return label;
+}
+
+const FAILED_SEND = new Set(["failed", "bounced", "rejected", "undelivered"]);
 
 function ChannelIcon({
   channel,
@@ -205,7 +221,7 @@ function InboxThread({
             <span>
               From{" "}
               <span className="font-medium text-foreground">
-                {item.reply.accountLabel || "Original account unavailable"}
+                {sendingAccountText(item) || "Original account unavailable"}
               </span>
             </span>
           )}
@@ -472,6 +488,7 @@ export default function OutreachInbox() {
   useEffect(() => { setChannel(initialChannel); }, [initialChannel]);
   const [unread, setUnread] = useState(false);
   const [origin, setOrigin] = useState<InboxOriginFilter | null>(null);
+  const [sort, setSort] = useState<InboxSort>("newest");
   const [totals, setTotals] = useState(emptyCounts);
   const [originCounts, setOriginCounts] = useState<Partial<Record<InboxOriginFilter, number>>>({});
   const [search, setSearch] = useState("");
@@ -536,6 +553,7 @@ export default function OutreachInbox() {
         unread: String(unread),
         search: query,
         limit: "50",
+        sort,
       });
       if (leadId) queryParams.set("leadId", leadId);
       if (origin) queryParams.set("origin", origin);
@@ -570,6 +588,7 @@ export default function OutreachInbox() {
           const firstVisible = Array.from(list.querySelectorAll<HTMLElement>("[data-inbox-key]")).find(row => row.getBoundingClientRect().bottom > top);
           viewportAnchor.current = firstVisible ? { key: firstVisible.dataset.inboxKey!, top: firstVisible.getBoundingClientRect().top - top } : null;
         }
+        const compare = sort === "oldest" ? (a: InboxItem, b: InboxItem) => order(b, a) : order;
         setItems((previous) => {
           if (mode === "reset" || restartWindow) return page.items;
           const boundary = page.items.at(-1);
@@ -577,13 +596,13 @@ export default function OutreachInbox() {
             mode === "more"
               ? previous
               : page.nextCursor && boundary
-                ? previous.filter((item) => order(item, boundary) > 0)
+                ? previous.filter((item) => compare(item, boundary) > 0)
                 : [];
           return [
             ...new Map(
               [...retained, ...page.items].map((item) => [item.key, item]),
             ).values(),
-          ].sort(order);
+          ].sort(compare);
         });
         if (
           mode !== "refresh" ||
@@ -618,7 +637,7 @@ export default function OutreachInbox() {
         }
       }
     },
-    [channel, unread, origin, query, leadId],
+    [channel, unread, origin, query, leadId, sort],
   );
   useEffect(() => {
     viewportAnchor.current = null;
@@ -718,6 +737,14 @@ export default function OutreachInbox() {
     setSelectionError(null);
     router.replace(inboxUrl(keepSelection ? selected.key : undefined, value), { scroll: false });
   };
+  const clearFilters = () => {
+    setSearch("");
+    setQuery("");
+    setUnread(false);
+    setOrigin(null);
+    setSort("newest");
+    changeChannel("all");
+  };
   const select = (item: InboxItem) => {
     setSelected(item);
     setSelectionError(null);
@@ -739,6 +766,7 @@ export default function OutreachInbox() {
     if (item.unreadCount > 0) void refreshRef.current();
   }, []);
   const onChanged = useCallback(() => refreshRef.current(), []);
+  const activeFilters = Number(channel !== "all") + Number(unread) + Number(Boolean(origin)) + Number(Boolean(search.trim()));
   const visibleItems = items.filter(
     (item) => !unread || item.unreadCount > 0 || item.key === selected?.key,
   );
@@ -760,6 +788,82 @@ export default function OutreachInbox() {
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-2xl font-semibold tracking-tight">Inbox</h1><p className="mt-1 text-sm text-muted-foreground">Customer conversations across channels</p></div>
         <div className="flex max-w-full flex-wrap items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" aria-label={activeFilters ? `Filters, ${activeFilters} active` : "Filters"}>
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+                Filters
+                {activeFilters > 0 && <span aria-hidden="true" className="rounded bg-primary/10 px-1.5 tabular-nums text-primary">{activeFilters}</span>}
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="outreach-workspace flex w-full flex-col gap-0 p-0 sm:max-w-md">
+              <SheetHeader className="border-b py-4 pl-5 pr-12 text-left">
+                <SheetTitle>Inbox filters</SheetTitle>
+                <SheetDescription className="sr-only">Search, sort, and filter conversations.</SheetDescription>
+              </SheetHeader>
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+                <div className="space-y-2">
+                  <label htmlFor="inbox-search" className="block text-sm font-medium">Search inbox</label>
+                  <div className="relative">
+                    <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" />
+                    <Input id="inbox-search" placeholder="Search contacts or messages" value={search} maxLength={200}
+                      onChange={(event) => setSearch(event.target.value)} className="h-10 pl-9" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="inbox-sort" className="block text-sm font-medium">Sort by</label>
+                  <div className="relative">
+                    <select id="inbox-sort" value={sort} onChange={(event) => setSort(event.target.value === "oldest" ? "oldest" : "newest")}
+                      className="h-10 w-full appearance-none rounded-lg border border-input bg-background px-3 pr-9 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                      <option value="newest">Newest activity first</option>
+                      <option value="oldest">Oldest activity first</option>
+                    </select>
+                    <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-3 size-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 id="inbox-channel-label" className="text-sm font-medium">Channel</h3>
+                  <div role="group" aria-labelledby="inbox-channel-label" className="flex flex-wrap gap-2">
+                    {(["all", ...INBOX_CHANNELS] as const).map(value => (
+                      <Button key={value} type="button" size="sm" variant="outline" aria-pressed={channel === value}
+                        onClick={() => changeChannel(value)} className={cn("min-h-10", channel === value && "border-primary bg-primary/10 text-primary")}>
+                        {value === "all" ? <Inbox className="size-4" aria-hidden="true" /> : <ChannelIcon channel={value} />}
+                        {value === "all" ? "All channels" : INBOX_LABELS[value]}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 id="inbox-show-label" className="text-sm font-medium">Show conversations</h3>
+                  <div role="group" aria-labelledby="inbox-show-label" className="inline-flex rounded-lg border bg-muted/40 p-0.5">
+                    {([false, true] as const).map(value => (
+                      <button key={String(value)} type="button" aria-pressed={unread === value} onClick={() => setUnread(value)}
+                        className={cn("flex min-h-10 items-center gap-1.5 rounded-md px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring", unread === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                        {value ? "Unread" : "All"}
+                        {countsLoaded && <span className="tabular-nums text-muted-foreground">{((value ? counts[channel] : totals[channel]) ?? 0).toLocaleString()}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 id="inbox-origin-label" className="text-sm font-medium">Conversation origin</h3>
+                  <div role="group" aria-labelledby="inbox-origin-label" className="flex flex-wrap gap-2">
+                    {ORIGIN_CHIPS.map(value => (
+                      <Button key={value} type="button" size="sm" variant="outline" aria-pressed={origin === value}
+                        onClick={() => setOrigin(origin === value ? null : value)} className={cn("min-h-10 rounded-full text-xs", origin === value && "border-primary bg-primary/10 text-primary")}>
+                        {INBOX_ORIGIN_LABELS[value]}
+                        {originCounts[value] !== undefined && <span className="tabular-nums">{originCounts[value].toLocaleString()}</span>}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <SheetFooter className="flex-row justify-between border-t px-5 py-4 sm:justify-between">
+                <Button type="button" variant="ghost" onClick={clearFilters} disabled={!activeFilters && sort === "newest"}>Clear filters</Button>
+                <SheetClose asChild><Button type="button">Done</Button></SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
           <Button variant="outline" size="sm" asChild><Link href="/dashboard/outreach/follow-ups">Follow-ups</Link></Button>
           <Button variant="outline" size="sm" asChild><Link href="/dashboard/outreach/activity">Activity</Link></Button>
           <Button variant="outline" size="icon" aria-label="Refresh inbox" loading={refreshing} disabled={loading || loadingMore} onClick={refresh}><RefreshCw className="h-4 w-4" /></Button>
@@ -770,46 +874,6 @@ export default function OutreachInbox() {
         <span>Conversations for the selected contact</span>
         <Button variant="ghost" size="sm" onClick={() => router.replace(`/dashboard/outreach/inbox${channel === 'all' ? '' : `?channel=${channel}`}`, { scroll: false })}>Show all contacts</Button>
       </div>}
-      <div
-        className="workspace-channels flex w-full shrink-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pb-1"
-        role="group"
-        aria-label="Filter by channel"
-      >
-        <button
-          type="button"
-          aria-pressed={channel === "all"}
-          onClick={() => changeChannel("all")}
-          className={cn(
-            "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium",
-            channel === "all"
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border text-muted-foreground hover:bg-muted",
-          )}
-        >
-          <Inbox className="h-3.5 w-3.5" />
-          All
-        </button>
-        {INBOX_CHANNELS.map((value) => (
-          <button
-            type="button"
-            key={value}
-            aria-pressed={channel === value}
-            onClick={() => changeChannel(value)}
-            className={cn(
-              "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium",
-              channel === value
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border text-muted-foreground hover:bg-muted",
-            )}
-          >
-            <ChannelIcon channel={value} className="h-3.5 w-3.5" />
-            {INBOX_LABELS[value]}
-            {counts[value] > 0 && (
-              <span className="font-mono text-[11px]">{counts[value]}</span>
-            )}
-          </button>
-        ))}
-      </div>
       <div className="flex min-h-0 min-w-0 w-full flex-1 gap-3">
       <aside
         className={cn(
@@ -818,67 +882,6 @@ export default function OutreachInbox() {
         )}
         aria-label="Inbox conversations"
       >
-        <section aria-label="Conversation filters" className="shrink-0 space-y-2.5 border-b p-3">
-          <div className="relative">
-            <Search
-              aria-hidden="true"
-              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-            />
-            <Input
-              aria-label="Search inbox"
-              placeholder="Search contacts or messages"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="h-10 rounded-lg bg-card pl-9"
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <div role="group" aria-label="Show conversations" className="inline-flex rounded-lg border bg-muted/40 p-0.5">
-              {([false, true] as const).map((value) => (
-                <button
-                  key={String(value)}
-                  type="button"
-                  aria-pressed={unread === value}
-                  onClick={() => setUnread(value)}
-                  className={cn(
-                    "flex min-h-11 md:min-h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors",
-                    unread === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {value ? "Unread" : "All"}
-                  {countsLoaded ? (
-                    <span className={cn("tabular-nums", value && (counts[channel] ?? 0) > 0 ? "text-primary" : "text-muted-foreground")}>
-                      {((value ? counts[channel] : totals[channel]) ?? 0).toLocaleString()}
-                    </span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-            <span className="text-[11px] text-muted-foreground">Latest first</span>
-          </div>
-          <div role="group" aria-label="Filter by conversation origin or AI activity" className="flex flex-wrap gap-1.5">
-            {ORIGIN_CHIPS.map((value) => {
-              const active = origin === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setOrigin(active ? null : value)}
-                  className={cn(
-                    "flex min-h-11 md:min-h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium transition-colors",
-                    active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  {INBOX_ORIGIN_LABELS[value]}
-                  {countsLoaded && originCounts[value] !== undefined ? (
-                    <span className="tabular-nums">{originCounts[value]!.toLocaleString()}</span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </section>
         <div ref={conversationList} className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           onScroll={event => {
             const list = event.currentTarget;
@@ -936,13 +939,7 @@ export default function OutreachInbox() {
                   variant="ghost"
                   size="sm"
                   className="mt-3"
-                  onClick={() => {
-                    setSearch("");
-                    setQuery("");
-                    setUnread(false);
-                    setOrigin(null);
-                    changeChannel("all");
-                  }}
+                  onClick={clearFilters}
                 >
                   Clear filters
                 </Button>
@@ -997,13 +994,15 @@ export default function OutreachInbox() {
                       </p>
                     )}
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                      {item.preview || "Attachment or message"}
+                      {(item.channel === "whatsapp" && item.preview ? whatsAppPreviewText(item.preview) : item.preview) || "Attachment or message"}
                     </p>
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <span className="truncate text-[11px] text-muted-foreground">
+                      <span className={cn("truncate text-[11px]", item.kind === "legacy" && FAILED_SEND.has(item.status) ? "text-destructive" : "text-muted-foreground")}>
                         {item.kind === "legacy"
-                          ? "Historical send · read only"
-                          : item.reply.accountLabel ||
+                          ? FAILED_SEND.has(item.status)
+                            ? "Not delivered · read only"
+                            : "Historical send · read only"
+                          : sendingAccountText(item) ||
                             INBOX_LABELS[item.channel]}
                       </span>
                       {item.origin && (

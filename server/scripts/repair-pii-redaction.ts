@@ -12,13 +12,14 @@
  * and web-widget messages; inbound email rows in sent_messages are not linked
  * to a vault row and are not touched. Output never contains message text.
  * Decrypting a vault row is recorded in support_privacy_access_logs, in dry
- * runs too.
+ * runs too. WhatsApp rows keep contact details visible in `content`; only
+ * `redacted_content` (the model copy) is re-redacted.
  */
 import 'dotenv/config';
 import { sql } from 'drizzle-orm';
 import { db, pgPool } from '../models/db.js';
 import { withBusinessScope, withSystemScope } from '../tenancy/businessContext.js';
-import { privacyVaultService } from '../services/agents/orchestration/PrivacyVaultService.js';
+import { privacyVaultService, whatsappDisplayText } from '../services/agents/orchestration/PrivacyVaultService.js';
 import { planRedactionRepair } from '../services/agents/orchestration/PiiRedactionRepair.js';
 
 const apply = process.argv.includes('--apply');
@@ -42,6 +43,7 @@ interface VaultRow {
   message_id: number | null;
   entity_type: string | null;
   entity_id: number | null;
+  channel: string | null;
 }
 
 const counts: Record<string, number> = {};
@@ -84,7 +86,8 @@ async function repairRow(row: VaultRow): Promise<string> {
             metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify({ piiProtected: plan.tokensAfter > 0, piiTypes: plan.piiTypes })}::jsonb
         WHERE id = ${targetId} AND privacy_vault_id = ${row.id} AND content = ${storedContent} RETURNING id`)
     : await db.execute(sql`UPDATE outreach_messages
-        SET content = ${plan.content}, redacted_content = ${plan.content}, updated_at = NOW()
+        SET content = ${row.channel === 'whatsapp' ? whatsappDisplayText(revealed.rawText, { userId: row.user_id, conversationId: row.conversation_id }) : plan.content},
+            redacted_content = ${plan.content}, updated_at = NOW()
         WHERE id = ${targetId} AND user_id = ${row.user_id} AND conversation_id = ${row.conversation_id}
           AND privacy_vault_id = ${row.id} AND content = ${storedContent} RETURNING id`);
   return updated.rows.length === 1 ? 'updated' : 'changed_concurrently';
@@ -97,7 +100,7 @@ async function main(): Promise<void> {
     const size = limit ? Math.min(BATCH, limit - seen) : BATCH;
     if (size <= 0) break;
     const page = await withSystemScope('PII redaction repair: list unexpired vault rows', () => db.execute(sql`
-      SELECT id, user_id, business_profile_id, conversation_id, message_id, entity_type, entity_id
+      SELECT id, user_id, business_profile_id, conversation_id, message_id, entity_type, entity_id, channel
       FROM support_privacy_vault
       WHERE id > ${afterId} AND expires_at > NOW()
         AND (${onlyUserId ?? null}::int IS NULL OR user_id = ${onlyUserId ?? null})

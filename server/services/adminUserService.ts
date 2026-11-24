@@ -27,6 +27,7 @@ import { chatThreadsTable } from '../models/chatThreads/schema';
 import { chatMessagesTable } from '../models/chatMessages/schema';
 import { outreachCampaignsTable } from '../models/outreachCampaigns/schema';
 import { outreachConversationsTable, outreachMessagesTable } from '../models/outreachConversations/schema';
+import { redactPiiWithStableTokens } from './agents/orchestration/PrivacyVaultService.js';
 import { icpProfilesTable } from '../models/icpData/schema';
 import { contentAssetsTable } from '../models/contentAssets/schema';
 import { brandToolkitsTable } from '../models/brandToolkits/schema';
@@ -681,7 +682,11 @@ export async function listAllOutreachConversations(filter: OutreachListFilter): 
     .$dynamic();
 
   const filtered = conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
-  const items = await filtered.limit(limit).offset(offset);
+  const rows = await filtered.limit(limit).offset(offset);
+  // Platform administrators see the masked WhatsApp preview (see getOutreachConversationMessages).
+  const items = rows.map((row: typeof rows[number]) => row.channel === 'whatsapp' && row.lastMessagePreview
+    ? { ...row, lastMessagePreview: redactPiiWithStableTokens(row.lastMessagePreview).redactedText }
+    : row);
   const [{ totalCount }] = await db.select({ totalCount: count() }).from(outreachConversationsTable);
   // @ts-expect-error -- legacy offset pagination uses limit/offset instead of page/pageSize
   return { items, pagination: { total: Number(totalCount), limit, offset } };
@@ -714,7 +719,14 @@ export async function getOutreachConversationMessages(conversationId: number): P
   const [conversation] = await db.select().from(outreachConversationsTable).where(eq(outreachConversationsTable.id, conversationId));
   if (!conversation) return null;
   const messages = await db.select().from(outreachMessagesTable).where(eq(outreachMessagesTable.conversationId, conversationId)).orderBy(outreachMessagesTable.createdAt);
-  return { conversation, messages };
+  // WhatsApp shows contact details only to the business's own team; platform
+  // administrators keep reading the masked copy.
+  return {
+    conversation,
+    messages: conversation.channel === 'whatsapp'
+      ? messages.map((message: typeof messages[number]) => ({ ...message, content: message.redactedContent ?? message.content }))
+      : messages,
+  };
 }
 
 export interface TemplatesFilter {

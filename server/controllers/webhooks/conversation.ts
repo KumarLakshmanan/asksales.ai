@@ -36,7 +36,7 @@ export async function saveWebhookToConversation(
     if (['facebook','instagram'].includes(data.channel)) await assertSocialAccountOwner(userId, data.channel as 'facebook' | 'instagram', data.providerAccountId!);
     const inboundPreview = redactPiiWithStableTokens(data.messageText || '');
     const duplicate = await db.execute(sql`
-      SELECT message.id, message.conversation_id, message.content
+      SELECT message.id, message.conversation_id, COALESCE(message.redacted_content, message.content) AS content
       FROM outreach_messages message
       JOIN outreach_conversations conversation
         ON conversation.id = message.conversation_id
@@ -50,6 +50,7 @@ export async function saveWebhookToConversation(
     `);
     if (duplicate.rows.length) {
       if (duplicate.rows.length > 1) throw new Error('Inbound provider identity is bound to multiple conversations.');
+      // Compare the masked copy: WhatsApp keeps contact details visible in content.
       const prior = duplicate.rows[0] as { id: number; conversation_id: number; content: string };
       if (prior.content !== inboundPreview.redactedText) throw new Error('Inbound provider identity was replayed with different content.');
       await privacyVaultService.protectInbound({

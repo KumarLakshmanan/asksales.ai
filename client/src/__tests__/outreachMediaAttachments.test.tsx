@@ -44,7 +44,19 @@ describe('outreach media attachment rendering', () => {
       id: 'failed-1', fileName: 'instagram-story-mention-1', mimeType: 'application/octet-stream',
       url: '/download/failed-1', status: 'failed',
     }])} />);
-    expect(screen.getByText('Attachment unavailable or blocked')).toBeInTheDocument();
+    expect(screen.getByText("Couldn't be saved")).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ status: 'failed', extractionError: 'WhatsApp attachment exceeds the 10 MB application limit.' }, 'Too large to save (over 10 MB)'],
+    [{ status: 'quarantined', extractionError: 'File type "application/x-msdownload" is not allowed.' }, "This file type isn't supported"],
+    [{ status: 'quarantined', extractionError: 'The attachment type does not match its contents.' }, "Blocked: the file's contents don't match its type"],
+    [{ status: 'quarantined', extractionError: null }, 'Blocked for safety'],
+  ])('explains why an attachment is unavailable: %o', (state, reason) => {
+    render(<OutreachMessageBubble channel="whatsapp" message={message([{
+      id: 'blocked-1', fileName: 'Deck.pdf', mimeType: 'application/pdf', url: '/download/blocked-1', ...state,
+    }])} />);
+    expect(screen.getByText(reason)).toBeInTheDocument();
   });
 
   it.each(['whatsapp', 'instagram'] as const)('shows the provider failure reason for %s messages', (channel) => {

@@ -87,7 +87,7 @@ export function ConversationEventTimeline({ conversationId, refreshToken = 0, in
         {context && <div className="mt-1 space-y-1 text-xs text-muted-foreground">
           <p className="break-words">{context.assistantId ? "Assigned assistant" : "No published assistant assigned"} · {human ? "Human support" : readable(context.mode)} · Session {readable(context.sessionStatus)}
             <span> · {({ whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Messenger", email: "Email", web: "Web chat" } as Record<string, string>)[context.channel] || context.channel}</span>
-            {context.accountId && <span> · Account {context.accountId}</span>}</p>
+            {context.accountId && <span> · {/^\d{9,}$/.test(context.accountId) ? `Account ending ${context.accountId.slice(-4)}` : `Account ${context.accountId}`}</span>}</p>
           {context.playbook && <p>Playbook: {context.playbook.name} · {readable(context.playbook.status)}{context.playbook.nodeId && <span> · Step {context.playbook.nodeId}</span>}</p>}
           {context.followUp && <p>Support check-in: {readable(context.followUp.status)}{context.followUp.scheduledAt && <span> · {formatNumericDateTimeIST(context.followUp.scheduledAt)}</span>}</p>}
           {human && <Link href="/dashboard/support" className="inline-flex items-center gap-1 text-primary hover:underline">Open support tickets<ArrowUpRight className="h-3 w-3" /></Link>}

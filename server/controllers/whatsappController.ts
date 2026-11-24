@@ -33,9 +33,11 @@ import { logWebhookEvent } from '../utils/webhookLogger.js';
 import { getRedisConnection } from '../infrastructure/redis.js';
 import { outreachAttachmentService } from '../services/OutreachAttachmentService.js';
 import { inboundContactResolver } from '../services/InboundContactResolver.js';
+import { MAX_INBOUND_VIDEO_SIZE } from '../utils/outreachAttachmentPolicy.js';
 import {
   privacyVaultService,
   redactPiiWithStableTokens,
+  whatsappDisplayText,
 } from '../services/agents/orchestration/PrivacyVaultService.js';
 import {
   decryptChannelCredentialSession,
@@ -686,6 +688,8 @@ export async function handleWebhook(req: Request, res: Response) {
             const normalizedInbound = normalizeWhatsAppInboundText(message);
             const messageContent = normalizedInbound.text;
             const inboundPreview = redactPiiWithStableTokens(messageContent);
+            // People working the inbox see WhatsApp contact details unmasked.
+            const inboundDisplay = whatsappDisplayText(messageContent);
             const messageTimestamp = message.timestamp ? new Date(parseInt(message.timestamp) * 1000) : new Date();
 
             // Idempotency DB check — check both waba_message_id and external_message_id columns
@@ -807,7 +811,7 @@ export async function handleWebhook(req: Request, res: Response) {
                   status: 'active',
                   lastMessageAt: messageTimestamp,
                   lastMessageBy: 'lead',
-                  lastMessagePreview: inboundPreview.redactedText.substring(0, 200),
+                  lastMessagePreview: inboundDisplay.substring(0, 200),
                   totalMessages: 0,
                   unreadCount: 0,
                   metadata: { phoneNumber: senderPhone, phoneNumberId: phoneNumberId },
@@ -826,7 +830,7 @@ export async function handleWebhook(req: Request, res: Response) {
                     AND m.direction='inbound' AND (m.waba_message_id=${messageId} OR m.external_message_id=${messageId}) LIMIT 1`)).rows[0];
                 if (prior) return {id:Number(prior.id),conversationId:Number(prior.conversation_id)};
                 const [created] = await tx.insert(outreachMessagesTable).values({
-                  conversationId,userId,direction:'inbound',content:inboundPreview.redactedText,
+                  conversationId,userId,direction:'inbound',content:inboundDisplay,redactedContent:inboundPreview.redactedText,
                   externalMessageId:messageId,wabaMessageId:messageId,providerMessageId:messageId,
                   phoneNumberId,providerAccountId:phoneNumberId,messageType:message.type,status:'delivered',
                   sentAt:messageTimestamp,deliveredAt:messageTimestamp,
@@ -834,7 +838,7 @@ export async function handleWebhook(req: Request, res: Response) {
                 }).returning();
                 await tx.execute(sql`UPDATE outreach_conversations
                   SET last_message_at=GREATEST(last_message_at,${messageTimestamp}),last_message_by='lead',
-                    last_message_preview=${inboundPreview.redactedText.substring(0,200)},
+                    last_message_preview=${inboundDisplay.substring(0,200)},
                     total_messages=COALESCE(total_messages,0)+1,unread_count=COALESCE(unread_count,0)+1,updated_at=NOW()
                   WHERE id=${conversationId} AND user_id=${userId}`);
                 return {id:created.id,conversationId};
@@ -875,14 +879,17 @@ export async function handleWebhook(req: Request, res: Response) {
               let attachmentContext = '';
               const voiceReplyRequested = message.type === 'audio';
               let audioTranscriptionUnavailable = voiceReplyRequested;
-              if (['image', 'document', 'audio'].includes(message.type)) {
+              if (['image', 'document', 'audio', 'video'].includes(message.type)) {
                 try {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const media = (message as any)[message.type] as { id?: string; filename?: string; mime_type?: string; voice?: boolean } | undefined;
                   if (media?.id) {
-                    const downloaded = await whatsappApiService.downloadMedia(userId, media.id, phoneNumberId);
+                    const downloaded = await whatsappApiService.downloadMedia(userId, media.id, phoneNumberId,
+                      message.type === 'video' ? { maxBytes: MAX_INBOUND_VIDEO_SIZE } : {});
                     const extension = message.type === 'image'
                       ? (downloaded.mimeType === 'image/png' ? 'png' : 'jpg')
+                      : message.type === 'video'
+                        ? (downloaded.mimeType.includes('3gpp') ? '3gp' : 'mp4')
                       : message.type === 'audio'
                         ? (downloaded.mimeType.includes('ogg') ? 'ogg' : downloaded.mimeType.includes('mp4') ? 'm4a' : 'mp3')
                         : 'bin';

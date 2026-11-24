@@ -41,10 +41,13 @@ afterEach(cleanup);
 
 it('shows all and unread totals with origin chips, and filters the list by origin', async () => {
   render(<OutreachInbox />);
+  expect(await screen.findByText('Outreach · AI')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   expect(await screen.findByRole('button', { name: /All\s*1,234/ })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('button', { name: /Unread\s*2/ })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Customer started\s*200/ })).toBeInTheDocument();
-  expect(screen.getByText('Outreach · AI')).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Sort by' }), { target: { value: 'oldest' } });
+  await waitFor(() => expect(mocks.get).toHaveBeenLastCalledWith(expect.stringContaining('sort=oldest'), expect.anything()));
   await act(async () => fireEvent.click(screen.getByRole('button', { name: /AI handled\s*12/ })));
   await waitFor(() => expect(mocks.get).toHaveBeenLastCalledWith(expect.stringContaining('origin=ai'), expect.anything()));
   expect(screen.getByRole('button', { name: /AI handled/ })).toHaveAttribute('aria-pressed', 'true');

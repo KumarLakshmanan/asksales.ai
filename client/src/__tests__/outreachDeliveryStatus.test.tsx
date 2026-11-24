@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { outboundDeliveryDetail, outboundDeliveryLabel, plainDeliveryReason, UNCONFIRMED_DELIVERY_DETAIL } from '@/lib/outreach-delivery-status';
+import { outboundDeliveryDetail, outboundDeliveryLabel, outboundQueueDetail, plainDeliveryReason, UNCONFIRMED_DELIVERY_DETAIL } from '@/lib/outreach-delivery-status';
 import { failureExplanation } from '@/components/outreach/tracking/status';
 import { emailGenerationErrorMessage } from '@/lib/emailGenerationRecovery';
 import { ApiError } from '@/lib/api-client';
@@ -19,6 +19,15 @@ describe('outbound delivery status wording', () => {
     expect(outboundDeliveryDetail('manual_review', '')).toBe(UNCONFIRMED_DELIVERY_DETAIL);
     expect(plainDeliveryReason('The provider did not return a delivery receipt. Manual review is required before retrying.')).toBe(UNCONFIRMED_DELIVERY_DETAIL);
     expect(failureExplanation(null, legacy)).not.toMatch(/authoritatively/);
+  });
+  it('explains a queued WhatsApp retry and hides other text on pending rows', () => {
+    const retryAt = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+    expect(outboundQueueDetail('pending', 'Meta marketing limit reached. Queued to retry in 4 hours.', retryAt))
+      .toMatch(/^Meta's limit on marketing messages to this contact was reached, so this is queued\. It will be retried automatically after .+ IST\.$/);
+    expect(outboundQueueDetail('pending', 'App sending capacity reached. Waiting for the rate-limit window to reset.'))
+      .toBe('Sending capacity is full right now, so this is queued. It will go out automatically when the limit resets.');
+    expect(outboundQueueDetail('pending', 'INTERNAL_CLAIM: worker lost lease')).toBeNull();
+    expect(outboundQueueDetail('failed', 'Meta marketing limit reached. Queued to retry in 4 hours.')).toBeNull();
   });
   it('keeps a real provider rejection reason and explains nothing for delivered messages', () => {
     expect(outboundDeliveryDetail('failed', 'Mailbox does not exist')).toBe('Mailbox does not exist');

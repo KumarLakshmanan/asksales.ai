@@ -1,5 +1,5 @@
 export { INBOX_CHANNELS, INBOX_ORIGIN_FILTERS } from '../../../shared/outreachInbox';
-export type { InboxChannel, InboxItem, InboxOriginFilter, InboxPage, InboxReplyAvailability, OutreachMessageOrigin } from '../../../shared/outreachInbox';
+export type { InboxChannel, InboxItem, InboxOriginFilter, InboxPage, InboxReplyAvailability, InboxSort, OutreachMessageOrigin } from '../../../shared/outreachInbox';
 
 /** Filter chip names: how a conversation started, plus threads the AI replied in. */
 export const INBOX_ORIGIN_LABELS = {

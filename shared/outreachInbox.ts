@@ -6,6 +6,7 @@ export const INBOX_CHANNELS = [
   "sms",
 ] as const;
 export type InboxChannel = (typeof INBOX_CHANNELS)[number];
+export type InboxSort = "newest" | "oldest";
 
 /** How a conversation started, from its first message. Exactly one per thread. */
 export const INBOX_START_ORIGINS = ["outreach", "customer", "manual", "native_app"] as const;

@@ -60,7 +60,8 @@ const mockMessage = { id: 956, conversationId: 58, direction: 'inbound', content
 const mockInboxItem = jest.fn<any>();
 jest.unstable_mockModule('../services/outreach/InboxService.js', () => ({ getInboxItem: mockInboxItem }));
 const mockEmailDisplay = jest.fn<any>().mockResolvedValue(null);
-jest.unstable_mockModule('../services/outreach/InboxEmailPresentation.js', () => ({ inboxEmailDisplayText: mockEmailDisplay }));
+const mockWhatsAppDisplay = jest.fn<any>().mockResolvedValue(null);
+jest.unstable_mockModule('../services/outreach/InboxEmailPresentation.js', () => ({ inboxEmailDisplayText: mockEmailDisplay, inboxWhatsAppDisplayText: mockWhatsAppDisplay }));
 
 jest.unstable_mockModule('../models/outreachConversations/functions', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -529,10 +530,27 @@ describe('Outreach Conversations Controller', () => {
       const headers = jest.spyOn(res, 'setHeader');
       await getConversationWithMessages(mockAuthRequest(1, { params: { conversationId: '58' }, query: {} }) as any, res);
       expect(res._status).toBe(200);
-      expect(res._json.messages[0]).toMatchObject({ content: display, redactedContent: stored.redactedContent, htmlContent: null });
+      expect(res._json.messages[0]).toMatchObject({ content: display, htmlContent: null });
+      expect(res._json.messages[0]).not.toHaveProperty('redactedContent');
       expect(stored.content).toContain('[NAME_1]');
       expect(mockEmailDisplay).toHaveBeenCalledWith(1, 1, 58, mockMessage.id);
       expect(headers).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    });
+
+    it('shows WhatsApp contact details for older tokenised messages', async () => {
+      const stored = { ...mockMessage, privacyVaultId: 73, content: 'Full name: [NAME_1]\nPhone: [PHONE_1]', redactedContent: 'Full name: [NAME_1]\nPhone: [PHONE_1]' };
+      const plain = { ...mockMessage, id: 99, content: 'Full name: Priya Shah' };
+      const display = 'Full name: Priya Shah\nPhone: +91 98765 43210';
+      OutreachConversationModel.getConversationWithMessages.mockResolvedValueOnce({ conversation: { ...mockConv, channel: 'whatsapp' }, messages: [stored, plain] });
+      mockWhatsAppDisplay.mockResolvedValueOnce(display);
+      const res = mockResponse();
+      await getConversationWithMessages(mockAuthRequest(1, { params: { conversationId: '58' }, query: {} }) as any, res);
+      expect(res._status).toBe(200);
+      expect(res._json.messages[0]).toMatchObject({ content: display });
+      expect(res._json.messages[0]).not.toHaveProperty('redactedContent');
+      expect(res._json.messages[1].content).toBe('Full name: Priya Shah');
+      expect(mockWhatsAppDisplay).toHaveBeenCalledTimes(1);
+      expect(mockWhatsAppDisplay).toHaveBeenCalledWith(1, 1, 58, mockMessage.id);
     });
 
     it('retains readable masked history when the original email is unavailable', async () => {
@@ -588,6 +606,20 @@ describe('Outreach Conversations Controller', () => {
       expect(res._json.conversation).toBeDefined();
       expect(res._json.messages).toHaveLength(1);
       expect(OutreachConversationModel.markMessagesAsRead).toHaveBeenCalledWith(58);
+    });
+
+    it('keeps send bookkeeping and the masked model copy on the server', async () => {
+      const internal = { aiPrompt: 'prompt', idempotencyKey: 'k', inboxSearchText: 's', privacyVaultId: 4, redactedContent: 'r',
+        sendIntentId: 'i', sendClaimedAt: new Date(), sendAttemptCount: 2, providerCallState: 'confirmed',
+        confirmationExpiresAt: new Date(), confirmedAt: new Date(), deliveryActionId: 9 };
+      OutreachConversationModel.getConversationWithMessages.mockResolvedValueOnce({
+        conversation: { ...mockConv, userId: 1 }, messages: [{ ...mockMessage, ...internal, metadata: { origin: 'ai' } }],
+      });
+      const res = mockResponse();
+      await getConversationWithMessages(mockAuthRequest(1, { params: { conversationId: '58' }, query: {} }) as any, res);
+      expect(res._status).toBe(200);
+      for (const field of Object.keys(internal)) expect(res._json.messages[0]).not.toHaveProperty(field);
+      expect(res._json.messages[0]).toMatchObject({ id: mockMessage.id, content: mockMessage.content, metadata: { origin: 'ai' } });
     });
 
     it('does not mark anything read when the reader opts out', async () => {

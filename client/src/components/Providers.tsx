@@ -15,10 +15,12 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { preserveFollowUpRecoveryNavigation } from "@/lib/follow-up-save-recovery";
 import { installUnsavedNavigation } from "@/hooks/use-unsaved-changes";
+import { installCancelledRequestGuard } from "@/lib/ignore-cancelled-requests";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   useEffect(installUnsavedNavigation, []);
+  useEffect(installCancelledRequestGuard, []);
   useEffect(preserveFollowUpRecoveryNavigation, [pathname]);
   return (
     <ThemeProvider

@@ -309,18 +309,20 @@ suite("Unified inbox PostgreSQL integration", () => {
   });
 
   it("paginates ties without dropping microsecond timestamps and searches beyond the first page", async () => {
-    const keys: string[] = [];
-    let cursor: string | null = null;
-    do {
-      const page = await listInbox(
-        1,
-        parseInboxQuery({ limit: "2", ...(cursor ? { cursor } : {}) }),
-      );
-      keys.push(...page.items.map((i) => i.key));
-      cursor = page.nextCursor;
-    } while (cursor);
+    const allPages = async (sort: string) => {
+      const keys: string[] = [];
+      let cursor: string | null = null;
+      do {
+        const page = await listInbox(1, parseInboxQuery({ sort, limit: "2", ...(cursor ? { cursor } : {}) }));
+        keys.push(...page.items.map((i) => i.key));
+        cursor = page.nextCursor;
+      } while (cursor);
+      return keys;
+    };
+    const keys = await allPages("newest");
     expect(keys).toHaveLength(7);
     expect(new Set(keys).size).toBe(7);
+    expect(await allPages("oldest")).toEqual([...keys].reverse());
     const result = await listInbox(1, parseInboxQuery({ search: "renewal" }));
     expect(result.items.map((i) => i.kind)).toEqual(["legacy"]);
     const contact = await listInbox(
@@ -657,6 +659,7 @@ describe("Inbox query validation", () => {
     for (const query of [
       { channel: "web" },
       { unread: "yes" },
+      { sort: "subject" },
       { limit: "0" },
       { limit: "1000" },
       { search: ["x"] },

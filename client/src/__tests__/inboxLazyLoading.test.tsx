@@ -40,7 +40,9 @@ it('ignores a superseded startup failure after switching to Instagram and avoids
   mocks.get.mockImplementationOnce(() => new Promise((_resolve, reject) => { failStartup = reject; }))
     .mockImplementationOnce(() => new Promise(resolve => { finishInstagram = resolve; }));
   render(<OutreachInbox />);
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Instagram' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   fireEvent.click(screen.getByRole('button', { name: 'Refresh inbox' }));
   expect(mocks.get).toHaveBeenCalledTimes(2);
   await act(async () => finishInstagram({ items: [{ ...item(1), channel: 'instagram' }], nextCursor: null, unreadThreads: counts }));
@@ -62,8 +64,10 @@ it('ends a timed-out search with a recoverable error and retries the same search
   });
   render(<OutreachInbox />);
   await screen.findByRole('button', { name: 'Open Contact 1 on WhatsApp' });
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   vi.useFakeTimers();
   fireEvent.change(screen.getByLabelText('Search inbox'), { target: { value: 'slow' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   await act(async () => { await vi.advanceTimersByTimeAsync(350); });
   await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
   expect(searchSignal?.aborted).toBe(true);
@@ -103,12 +107,16 @@ it('cancels a superseded search and prevents refresh from discarding an in-fligh
   });
   render(<OutreachInbox />);
   await screen.findByRole('button', { name: 'Open Contact 1 on WhatsApp' });
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.change(screen.getByLabelText('Search inbox'), { target: { value: 'slow' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   await waitFor(() => expect(searchSignal).toBeDefined());
   const calls = mocks.get.mock.calls.length;
   fireEvent.click(screen.getByRole('button', { name: 'Refresh inbox' }));
   expect(mocks.get).toHaveBeenCalledTimes(calls);
+  fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
   fireEvent.change(screen.getByLabelText('Search inbox'), { target: { value: '' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   await screen.findByRole('button', { name: 'Open Contact 1 on WhatsApp' });
   expect(searchSignal?.aborted).toBe(true);
   await act(async () => resolveSearch({ items: [item(2)], nextCursor: null, unreadThreads: counts }));

@@ -23,7 +23,7 @@ import { LeadModel } from '../models/leads/functions';
 import { logger } from '../utils/logger.js';
 import { agentRouter } from '../services/agents/AgentRouter.js';
 import { presentSupportComposerReply } from '../services/agents/SupportComposerPresentation.js';
-import { redactPiiWithStableTokens } from '../services/agents/orchestration/PrivacyVaultService.js';
+import { hasContactDetailTokens, redactPiiWithStableTokens } from '../services/agents/orchestration/PrivacyVaultService.js';
 import { CHANNEL_THROTTLE_CONFIGS } from '../utils/rateLimitConstants.js';
 import { idempotencyService } from '../services/IdempotencyService.js';
 import { createHash } from 'node:crypto';
@@ -48,7 +48,7 @@ import {
 } from '../services/OutreachAttachmentService.js';
 import { normalizeOutreachAttachmentMime } from '../utils/outreachAttachmentPolicy.js';
 import { getInboxItem } from '../services/outreach/InboxService.js';
-import { inboxEmailDisplayText } from '../services/outreach/InboxEmailPresentation.js';
+import { inboxEmailDisplayText, inboxWhatsAppDisplayText } from '../services/outreach/InboxEmailPresentation.js';
 import { INBOX_CHANNELS, type InboxChannel } from '../../shared/outreachInbox.js';
 import { WHATSAPP_NUMBER_HELP, firstWhatsAppNumberSource, normalizeWhatsAppNumber } from '../../shared/whatsappPhone.js';
 import type { OutreachFollowUp, OutreachTemplate } from '../../shared/outreachCompose.js';
@@ -227,6 +227,18 @@ export async function getConversationsByChannel(req: AuthenticatedRequest, res: 
   }
 }
 
+/** Send bookkeeping, search projections and the model's masked copy stay on the server. */
+const INTERNAL_MESSAGE_FIELDS = [
+  'aiPrompt', 'idempotencyKey', 'inboxSearchText', 'privacyVaultId', 'redactedContent', 'sendIntentId',
+  'sendClaimedAt', 'sendAttemptCount', 'providerCallState', 'confirmationExpiresAt', 'confirmedAt', 'deliveryActionId',
+] as const;
+
+export function publicOutreachMessage<T extends object>(message: T): Omit<T, typeof INTERNAL_MESSAGE_FIELDS[number]> {
+  const visible = { ...message } as Record<string, unknown>;
+  for (const field of INTERNAL_MESSAGE_FIELDS) delete visible[field];
+  return visible as Omit<T, typeof INTERNAL_MESSAGE_FIELDS[number]>;
+}
+
 /** The approved WhatsApp template a person picked in the inbox, kept on the
  * message so the thread can say which template was sent. */
 function inboxTemplateFields(channel: string, body: Record<string, unknown> | undefined) {
@@ -304,6 +316,16 @@ export async function getConversationWithMessages(req: AuthenticatedRequest, res
         const display = await inboxEmailDisplayText(userId, req.user!.id, result.conversation!.id, message.id);
         return display === null ? message : { ...message, content: display, htmlContent: null };
       }));
+    } else if (result.conversation.channel === 'whatsapp') {
+      // No contact-detail masking on WhatsApp for people. Older rows were
+      // stored with vault tokens; reveal those while the vault retains them.
+      result.messages = await Promise.all(result.messages.map(async message => {
+        if (!hasContactDetailTokens(message.content)) return message;
+        const display = message.privacyVaultId
+          ? await inboxWhatsAppDisplayText(userId, req.user?.id, result.conversation!.id, message.id)
+          : null;
+        return display === null ? message : { ...message, content: display };
+      }));
     }
 
     // The normalized attachment table is authoritative. Hydrating in one
@@ -327,7 +349,7 @@ export async function getConversationWithMessages(req: AuthenticatedRequest, res
 
     const { withMessageOrigins } = await import('../services/outreach/MessageOrigin.js');
     const labelled = await withMessageOrigins(userId, result.conversation.channel, result.messages);
-    return res.json({ ...result, messages: labelled });
+    return res.json({ ...result, messages: labelled.map(publicOutreachMessage) });
   } catch (error) {
     logger.error({ err: error }, 'Error fetching conversation messages');
     return res.status(500).json({ error: 'Unable to retrieve conversation messages. Please try again.' });
