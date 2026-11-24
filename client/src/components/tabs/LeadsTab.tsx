@@ -1110,13 +1110,16 @@ export default function LeadsTab({ threadId, executionId, onSendMessage }: Leads
  if (!importLeads.length) return;
  setImportSaving(true);
  try {
- const result = await api.post<{ success: boolean; imported: number }>('/api/leads/import/save', {
+ const result = await api.post<{ success: boolean; imported: number; matchedExisting?: number }>('/api/leads/import/save', {
  leads: importLeads,
  fileName: importFile?.name || 'Lead upload',
  ...(importRequestId.current ? { requestId: importRequestId.current } : {}),
  ...(threadId ? { threadId } : {}),
  });
- toast({ title: 'Import successful', description: `${result.imported} leads imported` });
+ const matched = result.matchedExisting || 0;
+ toast({ title: 'Import successful', description: matched
+ ? `${result.imported} leads imported; ${matched} matched contacts you already had, so no duplicates were created.`
+ : `${result.imported} leads imported` });
  setImportDialogOpen(false);
  setImportStep('upload');
  setImportFile(null);

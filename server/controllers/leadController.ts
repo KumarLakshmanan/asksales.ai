@@ -351,7 +351,8 @@ export const bulkImportLeads = async (req: Request, res: Response) => {
     // Save in-app notification
     if (!saved.replayed) NotificationService.leadsImported(userId, saved.count);
     void invalidateUserDashboardCache(userId);
-    return res.json({ success: true, importId: saved.importId, imported: saved.count, replayed: saved.replayed, message: `Imported ${saved.count} leads` });
+    return res.json({ success: true, importId: saved.importId, imported: saved.count, matchedExisting: saved.matchedExisting ?? 0,
+      replayed: saved.replayed, message: `Imported ${saved.count} leads` });
   } catch (error) {
     logger.error({ err: error }, '[bulkImportLeads] Error');
     if (error instanceof CampaignWorkspaceError) return res.status(404).json({ error: 'Campaign workspace not found.' });
