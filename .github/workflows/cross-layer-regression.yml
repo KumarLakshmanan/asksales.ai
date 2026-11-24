@@ -107,6 +107,10 @@ jobs:
   browser:
     needs: contracts
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     timeout-minutes: ${{ inputs.release_checks && 60 || 30 }}
     env:
       E2E_BASE_URL: ${{ inputs.release_checks && 'http://127.0.0.1:3200' || 'http://127.0.0.1:3000' }}
@@ -125,7 +129,7 @@ jobs:
       - run: pnpm --dir client exec playwright install --with-deps chromium
       - name: Full browser suite
         if: '!inputs.release_checks'
-        run: pnpm --dir client test:e2e
+        run: pnpm --dir client test:e2e --shard=${{ matrix.shard }}/8 --timeout=60000 --retries=0
       # Any failure blocks the deploy, so stop at the first one (after its
       # retry) instead of spending up to 6 minutes on each further test.
       - name: Release browser regression on desktop and mobile

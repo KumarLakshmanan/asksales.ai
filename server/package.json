@@ -11,7 +11,7 @@
     "dev": "cross-env NODE_ENV=development nodemon index.ts",
     "build": "esbuild index.ts --platform=node --packages=external --bundle --format=esm --minify --outdir=dist",
     "build:worker": "esbuild workers/worker-entry.ts --platform=node --packages=external --bundle --format=esm --minify --outdir=dist",
-    "build:all": "npm run build && npm run build:worker",
+    "build:all": "pnpm run build && pnpm run build:worker",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "lint": "cross-env NODE_OPTIONS='--max-old-space-size=4096' eslint . --ext .ts",
     "typecheck": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tsc --noEmit",

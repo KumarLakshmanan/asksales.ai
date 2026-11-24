@@ -16,9 +16,6 @@ COPY server/package.json ./server/
 # Install all workspace dependencies
 RUN pnpm install --frozen-lockfile
 
-# Remove pnpm-created symlinks in server/node_modules before copying source
-RUN rm -rf server/node_modules
-
 # Copy server source
 COPY server/ ./server/
 
@@ -26,67 +23,67 @@ COPY server/ ./server/
 COPY shared/ ./shared/
 
 # Build with esbuild (bundles local code, externalizes node_modules packages)
-RUN cd server && npx esbuild index.ts \
+RUN cd server && pnpm exec esbuild index.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
     --outdir=dist && \
-    npx esbuild utils/browserAutomation.ts \
+    pnpm exec esbuild utils/browserAutomation.ts \
       --platform=node --packages=external --bundle --format=esm \
       --outfile=dist/browserAutomation.js && \
-    npx esbuild scripts/migrate-knowledge-v2.ts \
+    pnpm exec esbuild scripts/migrate-knowledge-v2.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
     --outfile=dist/migrate-knowledge-v2.js && \
-    npx esbuild scripts/run-knowledge-maintenance.ts \
+    pnpm exec esbuild scripts/run-knowledge-maintenance.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
     --outfile=dist/run-knowledge-maintenance.js && \
-    npx esbuild scripts/migrate-support-playbook-template.ts \
+    pnpm exec esbuild scripts/migrate-support-playbook-template.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/migrate-support-playbook-template.js && \
-    npx esbuild scripts/publish-code-support-template.ts \
+    pnpm exec esbuild scripts/publish-code-support-template.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/publish-code-support-template.js && \
-    npx esbuild scripts/diagnose-support-preview.ts \
+    pnpm exec esbuild scripts/diagnose-support-preview.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/diagnose-support-preview.js && \
-    npx esbuild scripts/backfill-crm-channel-identities.ts \
+    pnpm exec esbuild scripts/backfill-crm-channel-identities.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/backfill-crm-channel-identities.js && \
-    npx esbuild scripts/sync-staging-meta-oauth.ts \
+    pnpm exec esbuild scripts/sync-staging-meta-oauth.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/sync-staging-meta-oauth.js && \
-    npx esbuild scripts/check-social-echo-subscriptions.ts \
+    pnpm exec esbuild scripts/check-social-echo-subscriptions.ts \
       --platform=node \
       --packages=external \
       --bundle \
       --format=esm \
       --outfile=dist/check-social-echo-subscriptions.js && \
-    npx esbuild scripts/recover-whatsapp-app-rate-limits.ts \
+    pnpm exec esbuild scripts/recover-whatsapp-app-rate-limits.ts \
       --platform=node --packages=external --bundle --format=esm \
       --outfile=dist/recover-whatsapp-app-rate-limits.js && \
-    npx esbuild scripts/requeue-whatsapp-marketing-retries.ts \
+    pnpm exec esbuild scripts/requeue-whatsapp-marketing-retries.ts \
       --platform=node --packages=external --bundle --format=esm \
       --outfile=dist/requeue-whatsapp-marketing-retries.js
 
