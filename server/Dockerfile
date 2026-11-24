@@ -68,6 +68,12 @@ RUN cd server && pnpm exec esbuild index.ts \
       --bundle \
       --format=esm \
       --outfile=dist/backfill-crm-channel-identities.js && \
+    pnpm exec esbuild scripts/backfill-outreach-batches.ts \
+      --platform=node \
+      --packages=external \
+      --bundle \
+      --format=esm \
+      --outfile=dist/backfill-outreach-batches.js && \
     pnpm exec esbuild scripts/sync-staging-meta-oauth.ts \
       --platform=node \
       --packages=external \

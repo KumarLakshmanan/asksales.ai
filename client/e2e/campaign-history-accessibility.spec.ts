@@ -1,4 +1,4 @@
-import type { Page, Route, TestInfo } from '@playwright/test';
+import type { Page, Request, Route, TestInfo } from '@playwright/test';
 import { expect, expectNoHorizontalOverflow, installAppShellMocks, test } from './fixtures/app';
 import { campaignRecords, campaignTargets } from './fixtures/icon-actions';
 
@@ -133,25 +133,27 @@ test('List primary entry follows native links and keeps Delete focus and activat
     await entry.tap();
     await expectDestination(page);
   } else {
-    const popupPromise = page.context().waitForEvent('page');
-    await entry.click({ modifiers: ['Control'] });
-    const popup = await popupPromise;
-    // Headless Chromium can hold a background tab before its first navigation
-    // until it is activated (seen on the release runner as a URL of "" for 90s).
-    // Activating it doesn't change what is checked: a native link opened the
-    // destination in a new tab and left this list where it was.
-    await popup.bringToFront();
-    await expect(popup).toHaveURL(new RegExp(`${firstDestination}$`));
-    await popup.close();
-    await page.bringToFront();
-    await expect(page).toHaveURL(/\/dashboard\/chats\?fixture-query=retained$/);
-    const middlePromise = page.context().waitForEvent('page');
-    await entry.click({ button: 'middle' });
-    const middle = await middlePromise;
-    await middle.bringToFront();
-    await expect(middle).toHaveURL(new RegExp(`${firstDestination}$`));
-    await middle.close();
-    await page.bringToFront();
+    // Headless Chromium on the release runner can leave a background tab
+    // mid-navigation for minutes, even after activating it (its URL stays "").
+    // What matters is that a native link sent a new tab to the destination and
+    // left this list where it was, so check the tab's own navigation request.
+    const opened = async (open: () => Promise<void>) => {
+      const tabRequests: string[] = [];
+      const record = (request: Request) => {
+        if (request.isNavigationRequest() && request.frame().page() !== page) tabRequests.push(new URL(request.url()).pathname);
+      };
+      page.context().on('request', record);
+      const tabPromise = page.context().waitForEvent('page');
+      await open();
+      const tab = await tabPromise;
+      await expect.poll(() => tabRequests.at(-1) ?? (tab.url().startsWith('http') ? new URL(tab.url()).pathname : '')).toBe(firstDestination);
+      page.context().off('request', record);
+      await tab.close();
+      await page.bringToFront();
+      await expect(page).toHaveURL(/\/dashboard\/chats\?fixture-query=retained$/);
+    };
+    await opened(() => entry.click({ modifiers: ['Control'] }));
+    await opened(() => entry.click({ button: 'middle' }));
     await entry.click({ button: 'right' });
     await page.keyboard.press('Escape');
     await expect(page).toHaveURL(/\/dashboard\/chats\?fixture-query=retained$/);

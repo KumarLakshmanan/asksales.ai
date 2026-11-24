@@ -29,7 +29,10 @@ const batch = {
   requested: 402, skipped: 2, receiptSupport: 'full',
 } as const;
 const sending = counts({ total: 400, sent: 40, delivered: 200, read: 60, waitingLimit: 90, failed: 8, expired: 2 });
-const list = (items: OutreachBatchList['items']): OutreachBatchList => ({ items, page: 1, pageSize: 20, total: items.length });
+const list = (items: OutreachBatchList['items']): OutreachBatchList => ({
+  items, page: 1, pageSize: 20, total: items.length,
+  totals: items.reduce((sum, item) => counts(Object.fromEntries(Object.keys(sum).map(key => [key, sum[key as keyof BatchCounts] + item.counts[key as keyof BatchCounts]]))), emptyBatchCounts()),
+});
 const summary = (): OutreachBatchSummary => ({
   batch, counts: sending, followUps: emptyBatchCounts(), skippedReasons: [{ reason: 'Lead has opted out or is blocked from outreach', count: 2 }],
   nextAttemptAt: '2026-11-11T00:00:01Z', lastActivityAt: '2026-11-11T08:00:00Z', checkedAt: '2026-11-10T09:00:00Z',
@@ -100,6 +103,31 @@ describe('Message tracking list', () => {
     fireEvent.keyDown(search, { key: 'Enter' });
     await waitFor(() => expect(mocks.get).toHaveBeenLastCalledWith('/api/outreach/batches', { params: { q: 'holi', state: 'all', page: 1, pageSize: 20 } }));
     expect(await screen.findByText('No outreach matches these filters')).toBeInTheDocument();
+  });
+
+  it('totals sent, delivered, read and failed for every outreach the filters match', async () => {
+    mocks.get.mockResolvedValue(list([{ ...batch, counts: sending }]));
+    render(<TrackingHome />);
+    const totals = await screen.findByLabelText('Totals for these filters');
+    await waitFor(() => expect(within(totals).getByText('of 400 messages')).toBeInTheDocument());
+    const tile = (label: string) => within(totals).getByText(label).closest('article')!;
+    expect(within(tile('Messages sent')).getByText('300')).toBeInTheDocument();
+    expect(within(tile('Delivered')).getByText('87% of sent')).toBeInTheDocument();
+    expect(within(tile('Read')).getByText('23% of delivered')).toBeInTheDocument();
+    expect(within(tile('Failed')).getByText('10')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh these numbers' })).toBeEnabled();
+  });
+
+  it('searches templates by name in the template report', async () => {
+    window.history.replaceState(null, '', '/dashboard/outreach/tracking?view=templates');
+    mocks.get.mockImplementation(async (url: string) => url.endsWith('/templates/performance') ? templates() : list([]));
+    render(<TrackingHome />);
+    await screen.findByRole('button', { name: 'Show outreaches that used diwali_sale' });
+    const search = screen.getByRole('searchbox', { name: 'Search template names' });
+    fireEvent.change(search, { target: { value: 'diwali' } });
+    fireEvent.keyDown(search, { key: 'Enter' });
+    await waitFor(() => expect(mocks.get).toHaveBeenLastCalledWith('/api/outreach/templates/performance',
+      { params: expect.objectContaining({ q: 'diwali' }) }));
   });
 
   it('lets the person retry when the list cannot be loaded', async () => {

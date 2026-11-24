@@ -97,6 +97,8 @@ export async function listOutreachBatches(userId: number, input: unknown = {}): 
   if (filters.channel) clauses.push(sql`b.channel=${filters.channel}`);
   if (filters.q) clauses.push(sql`b.name ILIKE ${likeText(filters.q)}`);
   if (filters.templateName) clauses.push(sql`b.template_name=${filters.templateName}`);
+  if (filters.from) clauses.push(sql`b.created_at>=((${filters.from}::date)::timestamp AT TIME ZONE ${filters.tz})`);
+  if (filters.to) clauses.push(sql`b.created_at<((${filters.to}::date + 1)::timestamp AT TIME ZONE ${filters.tz})`);
   if (filters.state !== 'all') {
     const active = sql`((b.status='admitting' AND b.updated_at>now()-make_interval(mins=>${ADMISSION_STALE_MINUTES})) OR EXISTS(SELECT 1 FROM outreach_messages m WHERE m.batch_id=b.id
       AND m.message_kind='outreach' AND m.status IN('pending','sending')))`;
@@ -108,13 +110,38 @@ export async function listOutreachBatches(userId: number, input: unknown = {}): 
       ORDER BY b.created_at DESC,b.id DESC LIMIT ${filters.pageSize} OFFSET ${(filters.page - 1) * filters.pageSize}`),
     db.execute(sql`SELECT COUNT(*)::int AS total FROM outreach_batches b WHERE ${where}`),
   ]);
-  // The list shows stored counts. Only an outreach the background job has never counted is counted here.
+  // The list shows stored counts, recounting only the rows on this page that are known or likely to be behind.
   const rows = await Promise.all((page.rows as Record<string, unknown>[]).map(async row =>
-    row.counts ? row : (await recountOutreachBatch(String(row.id)).catch(() => null)) ?? row));
+    listCountsBehind(row) ? (await recountOutreachBatch(String(row.id)).catch(() => null)) ?? row : row));
+  // Totals add up the stored counts after this page's recounts, so the page and the totals agree.
+  const sums = await db.execute(sql`SELECT counted.key,SUM(CASE WHEN counted.value ~ '^[0-9]+$' THEN counted.value::bigint ELSE 0 END)::bigint AS count
+    FROM outreach_batches b CROSS JOIN LATERAL jsonb_each_text(COALESCE(b.counts,'{}'::jsonb)) counted WHERE ${where} GROUP BY counted.key`);
+  const totals = emptyBatchCounts();
+  for (const item of sums.rows as Array<{ key: string; count: unknown }>) {
+    if (item.key in totals) totals[item.key as keyof BatchCounts] = Number(item.count) || 0;
+  }
   return {
     items: rows.map(row => ({ ...toBatch(row), counts: storedCounts(row.counts) ?? emptyBatchCounts() })),
-    page: filters.page, pageSize: filters.pageSize, total: Number(total.rows[0]?.total) || 0,
+    page: filters.page, pageSize: filters.pageSize, total: Number(total.rows[0]?.total) || 0, totals,
   };
+}
+
+/** How long stored counts that show messages going out now may go unchecked, in case a change never marked them dirty. */
+export const ACTIVE_COUNTS_RECHECK_SECONDS = 120;
+
+/**
+ * Whether a listed outreach's stored counts should be recounted before they
+ * are shown: never counted, marked dirty with the background job late, or
+ * still showing messages going out and not checked for a while. A recount
+ * stamps `counts_at`, so the last case runs at most once per interval.
+ */
+export function listCountsBehind(row: Record<string, unknown>, now = Date.now()): boolean {
+  const counts = storedCounts(row.counts);
+  if (!counts) return true;
+  const age = now - (row.counts_at ? new Date(row.counts_at as string).getTime() : 0);
+  if (row.counts_dirty && age > COUNTS_FRESH_SECONDS * 1000) return true;
+  // Scheduled and limit-held messages can rightly sit for days, so only messages due now or mid-send count here.
+  return counts.waiting + counts.sending > 0 && age > ACTIVE_COUNTS_RECHECK_SECONDS * 1000;
 }
 
 interface CountedBatch {
@@ -432,14 +459,19 @@ export async function getTemplatePerformance(userId: number, input: unknown): Pr
   const lower = sql`((${filters.from}::date)::timestamp AT TIME ZONE ${filters.tz}) AT TIME ZONE 'UTC'`;
   const upper = sql`((${filters.to}::date + 1)::timestamp AT TIME ZONE ${filters.tz}) AT TIME ZONE 'UTC'`;
   const scope = sql`m.user_id=${userId} AND m.business_profile_id=${business} AND m.direction='outbound'
-    AND m.message_kind IN('outreach','follow_up') AND m.template_name IS NOT NULL`;
+    AND m.message_kind IN('outreach','follow_up') AND m.template_name IS NOT NULL
+    ${filters.q ? sql`AND m.template_name ILIKE ${likeText(filters.q)}` : sql``}`;
+  // "Sent" uses the same delivery state as an outreach's own counts. A sent time
+  // alone is not enough: a message put back in the queue keeps its old one.
   const [sent, failed] = await Promise.all([
-    db.execute(sql`SELECT m.template_name,m.template_language,COUNT(DISTINCT m.batch_id)::int AS outreaches,COUNT(*)::int AS sent,
-        COUNT(*) FILTER(WHERE m.status IN('delivered','read') OR m.delivered_at IS NOT NULL OR m.read_at IS NOT NULL)::int AS delivered,
-        COUNT(*) FILTER(WHERE m.status='read' OR m.read_at IS NOT NULL)::int AS read,${utc(sql`MAX(m.sent_at)`)} AS last_sent_at
-      FROM outreach_messages m ${channelJoin(filters.channel)}
-      WHERE ${scope} AND m.sent_at>=${lower} AND m.sent_at<${upper}
-      GROUP BY m.template_name,m.template_language`),
+    db.execute(sql`SELECT template_name,template_language,COUNT(DISTINCT batch_id)::int AS outreaches,COUNT(*)::int AS sent,
+        COUNT(*) FILTER(WHERE state IN('delivered','read'))::int AS delivered,
+        COUNT(*) FILTER(WHERE state='read')::int AS read,${utc(sql`MAX(sent_at)`)} AS last_sent_at
+      FROM (SELECT m.template_name,m.template_language,m.batch_id,m.sent_at,${deliveryState} AS state
+        FROM outreach_messages m ${channelJoin(filters.channel)}
+        WHERE ${scope} AND m.sent_at>=${lower} AND m.sent_at<${upper}) reached
+      WHERE state IN('sent','delivered','read')
+      GROUP BY template_name,template_language`),
     db.execute(sql`SELECT m.template_name,m.template_language,COUNT(*)::int AS failed
       FROM outreach_messages m ${channelJoin(filters.channel)}
       WHERE ${scope} AND m.status IN('failed','bounced') AND ${deliveryState} IN('failed','expired')

@@ -133,18 +133,46 @@ describe('outreach tracking reads', () => {
     await expect(scoped(() => tracking.listOutreachBatches(7, { pageSize: 500 }))).rejects.toThrow();
   });
 
-  it('lists outreaches with their stored counts, without counting messages', async () => {
-    execute.mockResolvedValueOnce({ rows: [{ ...batchRow, counts: { total: 10, sent: 5, scheduled: 5 }, receipt_support: 'none' }] })
-      .mockResolvedValueOnce({ rows: [{ total: 31 }] });
+  it('lists outreaches with their stored counts, without counting messages, and totals every match', async () => {
+    execute.mockResolvedValueOnce({ rows: [{ ...batchRow, counts: { total: 10, sent: 5, scheduled: 5 }, counts_at: new Date(), receipt_support: 'none' }] })
+      .mockResolvedValueOnce({ rows: [{ total: 31 }] })
+      .mockResolvedValueOnce({ rows: [{ key: 'total', count: '400' }, { key: 'read', count: '120' }, { key: 'unknown', count: '9' }] });
 
     const list = await scoped(() => tracking.listOutreachBatches(7, { state: 'active', q: 'spring', page: '2' }));
 
     expect(list).toMatchObject({ page: 2, pageSize: 20, total: 31 });
     expect(list.items[0].counts).toMatchObject({ total: 10, sent: 5, scheduled: 5 });
     expect(list.items[0].receiptSupport).toBe('none');
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(list.totals).toMatchObject({ total: 400, read: 120, sent: 0 });
+    expect(list.totals).not.toHaveProperty('unknown');
+    expect(execute).toHaveBeenCalledTimes(3);
     expect(query(0).sql).toContain("m.status IN('pending','sending')");
     expect(query(0).params).toEqual(expect.arrayContaining(['%spring%', 20, 20]));
+    expect(query(2).sql).toContain('jsonb_each_text');
+  });
+
+  it('filters outreaches by the local day they started on', async () => {
+    execute.mockResolvedValue({ rows: [] });
+    await scoped(() => tracking.listOutreachBatches(7, { from: '2026-11-01', to: '2026-11-24', tz: 'Asia/Kolkata' }));
+    expect(query(0).sql).toContain('b.created_at>=');
+    expect(query(0).sql).toContain('b.created_at<');
+    expect(query(0).params).toEqual(expect.arrayContaining(['2026-11-01', '2026-11-24', 'Asia/Kolkata']));
+    await expect(scoped(() => tracking.listOutreachBatches(7, { from: '2026-11-24', to: '2026-11-01' }))).rejects.toThrow();
+  });
+
+  it('recounts a listed outreach whose stored counts are behind', () => {
+    const now = Date.parse('2026-11-24T10:00:00Z');
+    const at = (seconds: number) => new Date(now - seconds * 1000);
+    const sending = { total: 1, sending: 1 }, finished = { total: 1, sent: 1 };
+    expect(tracking.listCountsBehind({ counts: null }, now)).toBe(true);
+    expect(tracking.listCountsBehind({ counts: finished, counts_dirty: true, counts_at: at(60) }, now)).toBe(true);
+    expect(tracking.listCountsBehind({ counts: finished, counts_dirty: true, counts_at: at(5) }, now)).toBe(false);
+    // Still showing a message going out long after it was last counted: a missed change, so check again.
+    expect(tracking.listCountsBehind({ counts: sending, counts_dirty: false, counts_at: at(600) }, now)).toBe(true);
+    expect(tracking.listCountsBehind({ counts: sending, counts_dirty: false, counts_at: at(30) }, now)).toBe(false);
+    expect(tracking.listCountsBehind({ counts: finished, counts_dirty: false, counts_at: at(86_400) }, now)).toBe(false);
+    // Held by a sending limit for hours is normal, not a missed change.
+    expect(tracking.listCountsBehind({ counts: { total: 1, waitingLimit: 1 }, counts_dirty: false, counts_at: at(600) }, now)).toBe(false);
   });
 
   it('groups failure reasons for failed, expired and review messages only', async () => {
@@ -394,7 +422,16 @@ describe('coming up and template performance', () => {
     ]);
     expect(query(0).sql).toContain('m.template_name IS NOT NULL');
     expect(query(0).sql).toContain('m.sent_at>=');
+    // Sent follows the delivery state, so a message put back in the queue is not counted twice.
+    expect(query(0).sql).toContain("state IN('sent','delivered','read')");
     expect(query(1).sql).toContain('m.failed_at>=');
+  });
+
+  it('narrows the template report to matching template names', async () => {
+    execute.mockResolvedValue({ rows: [] });
+    await scoped(() => tracking.getTemplatePerformance(7, { from: '2026-11-01', to: '2026-11-14', q: 'night_stay' }));
+    expect(query(0).sql).toContain('m.template_name ILIKE');
+    expect(query(0).params).toContain('%night\\_stay%');
   });
 });
 

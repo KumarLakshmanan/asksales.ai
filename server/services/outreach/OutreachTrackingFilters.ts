@@ -7,15 +7,6 @@ const text = (max: number) => z.string().trim().min(1).max(max);
 
 export const batchIdSchema = z.string().uuid();
 
-export const batchListSchema = z.object({
-  channel: z.enum(outreachReportChannels).optional(),
-  state: z.enum(['all', 'active', 'finished']).default('all'),
-  q: text(200).optional(),
-  templateName: text(512).optional(),
-  page: z.coerce.number().int().min(1).max(100_000).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(20),
-}).strict();
-export type BatchListFilters = z.infer<typeof batchListSchema>;
 
 export const messageKindSchema = z.enum(['outreach', 'follow_up', 'all']).default('outreach');
 
@@ -37,6 +28,23 @@ export const timezoneSchema = z.string().trim().min(1).max(64).default('UTC').re
 }, 'Choose a valid timezone.').transform(value => canonicalTimeZone(value));
 const dayCount = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1;
 
+/** `from` and `to` pick outreaches by the local day they started on; both are included and either may be left out. */
+export const batchListSchema = z.object({
+  channel: z.enum(outreachReportChannels).optional(),
+  state: z.enum(['all', 'active', 'finished']).default('all'),
+  q: text(200).optional(),
+  templateName: text(512).optional(),
+  from: day.optional(),
+  to: day.optional(),
+  tz: timezoneSchema,
+  page: z.coerce.number().int().min(1).max(100_000).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+}).strict().superRefine((value, context) => {
+  if (value.from && value.to && dayCount(value.from, value.to) < 1)
+    context.addIssue({ code: 'custom', path: ['to'], message: 'The end date must not be before the start date.' });
+});
+export type BatchListFilters = z.infer<typeof batchListSchema>;
+
 /** Both dates are included. */
 export const dailyActivitySchema = z.object({
   from: day, to: day, tz: timezoneSchema, kind: messageKindSchema,
@@ -54,7 +62,7 @@ export const recipientExportSchema = z.object({
 }).strict();
 
 export const templatePerformanceSchema = z.object({
-  from: day, to: day, tz: timezoneSchema, channel: z.enum(outreachReportChannels).optional(),
+  from: day, to: day, tz: timezoneSchema, channel: z.enum(outreachReportChannels).optional(), q: text(200).optional(),
 }).strict().superRefine((value, context) => {
   const days = dayCount(value.from, value.to);
   if (days < 1) context.addIssue({ code: 'custom', path: ['to'], message: 'The end date must not be before the start date.' });

@@ -130,6 +130,8 @@ export interface OutreachBatchList {
   page: number;
   pageSize: number;
   total: number;
+  /** Every message of every outreach that matches the filters, not only this page. */
+  totals: BatchCounts;
 }
 
 export interface OutreachBatchSummary {
