@@ -48,6 +48,8 @@ import {
 
 const workers: Map<string, Worker> = new Map();
 const WORKER_LOCK_DURATION_MS = 120_000;
+/** How long a message waits when its confirmed sending account is connected but not ready (expired token, readiness check). */
+const ACCOUNT_NOT_READY_RETRY_MS = 60 * 60_000;
 let outreachSenderStarted = false;
 
 type QueuedMediaKind = 'image' | 'video';
@@ -2013,13 +2015,13 @@ export async function processQueuedOutreachMessage(job: Job) {
     const normalizedOfficialChannel = channel === 'gmail' ? 'email' : channel;
     if (['email', 'instagram', 'facebook', 'whatsapp', 'twitter', 'linkedin', 'sms'].includes(normalizedOfficialChannel)) {
       const {
-        resolveOfficialProviderBinding,
+        inspectOfficialProviderBinding,
       } = await import('../services/outreach/ProviderBindingService.js');
       const conversation = await OutreachConversationModel.getOutreachConversationById(conversationId);
       const providerVariant: EmailProviderVariant | undefined = normalizedOfficialChannel === 'email'
         ? (conversation?.integrationProvider === 'resend' ? 'resend' : 'gmail')
         : undefined;
-      const binding = await resolveOfficialProviderBinding(
+      const readiness = await inspectOfficialProviderBinding(
         userId,
         normalizedOfficialChannel as OfficialProviderChannel,
         {
@@ -2027,8 +2029,31 @@ export async function processQueuedOutreachMessage(job: Job) {
           ...(claimedProviderAccountId ? { providerAccountId: claimedProviderAccountId } : {}),
         },
       );
-      if (!binding || !claimedProviderAccountId || binding.providerAccountId !== claimedProviderAccountId
-        || (['facebook', 'instagram'].includes(normalizedOfficialChannel) && conversation?.providerAccountId !== claimedProviderAccountId)) {
+      const binding = readiness.binding;
+      const accountMismatch = !claimedProviderAccountId
+        || (['facebook', 'instagram'].includes(normalizedOfficialChannel) && conversation?.providerAccountId !== claimedProviderAccountId);
+      // The confirmed account is still connected but not ready right now (an
+      // expired token, a failed readiness check, Meta review). Hold the message
+      // instead of failing it: one bad hour on 3 Nov failed 28,136 queued
+      // WhatsApp messages on an account that was fine again soon after.
+      if (!binding && !accountMismatch && !readiness.missing.some(item => ['credential', 'account_selection', 'account_reference'].includes(item))) {
+        const retryAt = Date.now() + ACCOUNT_NOT_READY_RETRY_MS;
+        const intent = await db.execute(sql`SELECT confirmation_expires_at FROM outreach_messages WHERE id=${messageId} AND user_id=${userId}`);
+        const expiresAt = (intent.rows[0] as { confirmation_expires_at?: string | Date | null } | undefined)?.confirmation_expires_at;
+        if (expiresAt && new Date(expiresAt).getTime() > retryAt) {
+          const due = new Date(retryAt).toISOString();
+          await OutreachConversationModel.updateOutreachMessageStatus(messageId, 'pending', {
+            errorMessage: `The sending account needs attention (${readiness.missing.join(', ')}). Queued to retry at ${due}.`,
+            providerCallState: 'not_started', sendClaimedAt: null,
+          });
+          await db.execute(sql`UPDATE outreach_messages SET metadata=jsonb_set(COALESCE(metadata,'{}'::jsonb),'{outreachQueue}',COALESCE(metadata->'outreachQueue','{}'::jsonb)||${JSON.stringify({reason:'account_not_ready',nextAttemptAt:due})}::jsonb) WHERE id=${messageId} AND user_id=${userId}`);
+          const { NotificationService } = await import('../services/NotificationService.js');
+          void NotificationService.outreachAccountNeedsAttention(userId, channel);
+          await job.moveToDelayed(retryAt, job.token);
+          throw new DelayedError();
+        }
+      }
+      if (!binding || accountMismatch || binding.providerAccountId !== claimedProviderAccountId) {
         await OutreachConversationModel.updateOutreachMessageStatus(messageId, 'failed', {
           errorMessage: 'The confirmed official provider account is not ready or no longer matches. Reconnect and create a new confirmed send intent.',
           providerCallState: 'not_started',

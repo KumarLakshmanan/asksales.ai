@@ -11,6 +11,9 @@ import { eq } from 'drizzle-orm';
 
 type NotificationPreference = 'leadAlerts' | 'campaignUpdates';
 
+const channelLabel = (channel: string) => channel === 'whatsapp' ? 'WhatsApp'
+  : channel === 'gmail' || channel === 'resend' || channel === 'email' ? 'email' : channel;
+
 export class NotificationService {
   /**
    * Save a notification for a user. Non-blocking — errors are logged but not thrown.
@@ -64,21 +67,32 @@ export class NotificationService {
    * tell the owner once a day per business instead.
    */
   static async outreachOutOfCredits(userId: number, channel: string): Promise<boolean> {
+    if (!(await NotificationService.firstToday(userId, 'outreach-credits'))) return false;
+    return NotificationService.notify(userId, 'Outreach stopped: wallet is empty',
+      `Queued ${channelLabel(channel)} messages can't be sent until you recharge. Messages that already failed for this reason can be retried from Reports after recharging.`,
+      'error', { actionUrl: '/dashboard/billing/recharge' });
+  }
+
+  /** The confirmed sending account is connected but not ready; queued messages are held, not failed. */
+  static async outreachAccountNeedsAttention(userId: number, channel: string): Promise<boolean> {
+    if (!(await NotificationService.firstToday(userId, `outreach-account:${channel}`))) return false;
+    return NotificationService.notify(userId, `Your ${channelLabel(channel)} account needs attention`,
+      `Queued ${channelLabel(channel)} messages are waiting because the sending account isn't ready (for example an expired connection). They retry every hour until they expire. Check it in Integrations.`,
+      'warning', { actionUrl: '/dashboard/integrations' });
+  }
+
+  /** True the first time per business per day; repeat failures of a large queue then send one notice. */
+  private static async firstToday(userId: number, topic: string): Promise<boolean> {
     try {
       const { getRedisConnection } = await import('../infrastructure/redis.js');
       const { currentBusinessScope } = await import('../tenancy/businessContext.js');
       const business = currentBusinessScope()?.businessProfileId ?? 'none';
-      const first = await getRedisConnection().set(`notify:outreach-credits:${userId}:${business}`, '1', 'EX', 86_400, 'NX');
-      if (first !== 'OK') return false;
+      return await getRedisConnection().set(`notify:${topic}:${userId}:${business}`, '1', 'EX', 86_400, 'NX') === 'OK';
     } catch (err) {
       // Without Redis we cannot tell whether today's notice already went out; skip rather than repeat it per message.
-      logger.warn({ err, userId }, '[NotificationService] Could not check the out-of-credits notice');
+      logger.warn({ err, userId, topic }, '[NotificationService] Could not check the daily notice');
       return false;
     }
-    const label = channel === 'whatsapp' ? 'WhatsApp' : channel === 'gmail' || channel === 'resend' ? 'email' : channel;
-    return NotificationService.notify(userId, 'Outreach stopped: wallet is empty',
-      `Queued ${label} messages can't be sent until you recharge. Messages that already failed for this reason can be retried from Reports after recharging.`,
-      'error', { actionUrl: '/dashboard/billing/recharge' });
   }
 
   static async icpGenerated(userId: number, campaignName: string, fitScore: number): Promise<void> {

@@ -59,7 +59,7 @@ jest.unstable_mockModule('../models/index.js', () => ({ OutreachConversationMode
   getMessagesByConversationId: async () => [],
 } }));
 jest.unstable_mockModule('../services/outreach/ProviderBindingService.js', () => ({
-  resolveOfficialProviderBinding: async () => ({ providerAccountId: 'sender@example.test' }),
+  inspectOfficialProviderBinding: async () => ({ binding: { providerAccountId: 'sender@example.test' }, missing: [] }),
 }));
 jest.unstable_mockModule('../services/outreach/CreationFollowUpService.js', () => ({
   checkCreationDelivery: async () => null, activateCreationFollowUps: activate,
