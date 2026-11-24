@@ -4,6 +4,7 @@ import { TrackingHome } from '@/components/outreach/tracking/TrackingHome';
 import { OutreachDetailPage } from '@/components/outreach/tracking/OutreachDetailPage';
 import { DateRangeField, addDays, dateRangeLength, presetDateRange, toDateValue } from '@/components/ui/date-range-field';
 import { downloadRecipients } from '@/components/outreach/tracking/RecipientDownload';
+import { viewerTimezone } from '@/components/outreach/tracking/DayByDayCard';
 import { emptyBatchCounts, type BatchCounts, type DailyActivity, type OutreachBatchList, type OutreachBatchSummary, type OutreachRecipient, type TemplatePerformanceReport, type UpcomingSchedule } from '../../../shared/outreachTracking';
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn(), push: vi.fn() }));
@@ -177,7 +178,7 @@ describe('Outreach tracking detail', () => {
     await screen.findByRole('heading', { level: 1, name: 'Diwali offer' });
     const today = toDateValue(new Date());
     await waitFor(() => expect(mocks.get).toHaveBeenCalledWith(`/api/outreach/batches/${ID}/daily`, {
-      params: { from: addDays(today, -29) > '2026-11-10' ? addDays(today, -29) : '2026-11-10', to: today, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      params: { from: addDays(today, -29) > '2026-11-10' ? addDays(today, -29) : '2026-11-10', to: today, tz: viewerTimezone() },
     }));
     fireEvent.click((await screen.findAllByRole('button', { name: 'Show as table' }))[0]);
     const table = screen.getByRole('table', { name: /Messages per day for Diwali offer/ });
@@ -247,7 +248,7 @@ describe('Message tracking by day', () => {
     expect(await screen.findByRole('tab', { name: 'By day' })).toHaveAttribute('aria-selected', 'true');
     const today = toDateValue(new Date());
     await waitFor(() => expect(mocks.get).toHaveBeenCalledWith('/api/outreach/daily', {
-      params: { from: addDays(today, -6), to: today, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      params: { from: addDays(today, -6), to: today, tz: viewerTimezone() },
     }));
     expect(await screen.findByText(/counted on the day it happened/)).toBeInTheDocument();
   });
@@ -352,7 +353,7 @@ describe('Message tracking coming up and by template', () => {
     expect(screen.getByRole('img', { name: /Bar chart of the coming days: about 2,000 messages expected to send and 600 expected to expire/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show as table' }));
     const today = toDateValue(new Date());
-    expect(mocks.get).toHaveBeenCalledWith('/api/outreach/upcoming', { params: { until: addDays(today, 30), tz: Intl.DateTimeFormat().resolvedOptions().timeZone } });
+    expect(mocks.get).toHaveBeenCalledWith('/api/outreach/upcoming', { params: { until: addDays(today, 30), tz: viewerTimezone() } });
     const table = screen.getByRole('table', { name: 'Messages due on each coming day' });
     // The day with nothing due is left out.
     expect(within(table).getAllByRole('row')).toHaveLength(3);
