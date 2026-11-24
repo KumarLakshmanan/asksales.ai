@@ -89,7 +89,7 @@ for (const caller of ['send', 'outreach'] as const) {
     f.state.status = 503;
     f.state.response = { success: false, code: 'AI_PROVIDER_CREDITS', error: 'fixture-upstream-secret' };
     await f.generate.click();
-    await expect(f.dialog.getByRole('alert')).toContainText('provider has insufficient credits');
+    await expect(f.dialog.getByRole('alert')).toContainText('quota limit on the AskSales side');
     await expect(f.subject).toHaveValue('My newer reviewed subject');
     await expect(f.body).toHaveValue('My newer manual body.');
     await expect(page.getByText('fixture-upstream-secret')).toHaveCount(0);
