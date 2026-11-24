@@ -50,8 +50,9 @@ function CampaignReportPanel({scope}:{scope:string}) {
     setLoading(true);setError('');setReport(undefined);
     const params=Object.fromEntries(Object.entries(next).filter(([,value])=>value!==undefined && value!==''));
     try {
-      // Large accounts take 15–20 seconds to report on. Allow more than the default 30-second read deadline.
-      const data=await api.get<CampaignReport>('/api/outreach/reports',{params,timeoutMs:60_000});
+      // The default 30-second read deadline already outlasts the server's 25-second query limit
+      // (server/tenancy/statementTimeout.ts), which answers a slow report with its own message.
+      const data=await api.get<CampaignReport>('/api/outreach/reports',{params});
       if(version!==request.current || creatorSessionScope()!==scope) return;
       setReport(data);
       window.history.replaceState(null,'',data.links.report);

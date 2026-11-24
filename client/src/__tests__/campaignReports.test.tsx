@@ -28,7 +28,7 @@ describe('campaign report dashboard and agent result',()=>{
     expect(screen.getByText('Awaiting confirmation')).toBeInTheDocument();
     expect(screen.getByText('Already included in accepted')).toBeInTheDocument();
     expect(screen.getByText('Call-button clicks are unavailable.')).toBeInTheDocument();
-    expect(mocks.get).toHaveBeenCalledWith('/api/outreach/reports',{params:{workspaceId:'21'},timeoutMs:60_000});
+    expect(mocks.get).toHaveBeenCalledWith('/api/outreach/reports',{params:{workspaceId:'21'}});
     expect(screen.getByRole('link',{name:'Open contacts'})).toHaveAttribute('href','/dashboard/crm');
   });
   it('sends owned import identifiers and exclusive UTC date bounds through the supported API',async()=>{
@@ -37,7 +37,7 @@ describe('campaign report dashboard and agent result',()=>{
     fireEvent.change(screen.getByLabelText('Channel'),{target:{value:'whatsapp'}});
     fireEvent.change(screen.getByLabelText('Created before (UTC)'),{target:{value:'2026-11-03'}});
     fireEvent.click(screen.getByRole('button',{name:'Apply filters'}));
-    await waitFor(()=>expect(mocks.get).toHaveBeenLastCalledWith('/api/outreach/reports',{params:{workspaceId:'21',importSource:'crm',importId:3,channel:'whatsapp',to:'2026-11-03T00:00:00Z'},timeoutMs:60_000}));
+    await waitFor(()=>expect(mocks.get).toHaveBeenLastCalledWith('/api/outreach/reports',{params:{workspaceId:'21',importSource:'crm',importId:3,channel:'whatsapp',to:'2026-11-03T00:00:00Z'}}));
   });
   it('does not leave a prior business report on screen when refresh fails',async()=>{
     render(<CampaignReportView/>);await screen.findByText('Confirmed delivered');
