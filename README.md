@@ -16,4 +16,6 @@ The larger `client/e2e` directory also contains audits that need a dedicated Pla
 
 A push to `main` runs the Production release workflow on GitHub-hosted runners. The production server deploys the exact head of `main` after those checks pass. It keeps its environment file locally and runs the existing backup, migration, and health checks.
 
+After health checks and Nginx reload pass, production keeps the two most recent complete rollback image sets that match verified release manifests. Older matching rollback tags are eligible for removal. Database dumps, manifests and manually tagged images remain available under their existing retention policies. When changing the release script, install the reviewed copy of `scripts/deploy-production-release.sh` as `/usr/local/lib/asksales/deploy-main-release.sh` on the host.
+
 After resolving a server release failure, re-run the successful workflow for the current `main` commit. Server operators can inspect `journalctl -u asksales-main-release.service`.

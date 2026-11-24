@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / 'deploy.sh'
 RELEASE = ROOT / 'scripts' / 'deploy-production-release.sh'
 SHA = 'a' * 40
+SERVICES = ('api', 'worker-1', 'worker-2', 'client')
 # Each fake Docker, SSH, and database command starts a Python process. Give
 # the fixtures room to finish on the production runner under its CPU limit.
 FIXTURE_TIMEOUT_SECONDS = 45
@@ -44,8 +45,16 @@ args = ' '.join(sys.argv[1:])
 if 'migrate.mjs status' in args: print('Total: 2 | Applied: 0 | Pending: 2')
 elif 'migrate.mjs up' in args and os.environ.get('QA_MIGRATE_FAIL'): sys.exit(23)
 elif 'config --format json' in args: print('{"name":"salesmarketing"}')
+elif 'image ls' in args:
+    tags = Path(os.environ['QA_ROOT']) / 'rollback-tags'
+    if tags.exists(): print(tags.read_text(), end='')
+elif 'image rm' in args and os.environ.get('QA_PRUNE_FAIL'): sys.exit(1)
+elif args.startswith('image inspect asksales-rollback-'): sys.exit(1)
 elif 'image inspect' in args:
-    print('b'*40 if os.environ.get('QA_BAD_PREBUILT') and 'asksales-security-' in args else os.environ['QA_SHA'])
+    if os.environ.get('QA_BAD_PREBUILT') and 'asksales-security-' in args: print('b' * 40)
+    elif 'sha256:synthetic' in args and ' up -d ' not in (Path(os.environ['QA_ROOT'])/'commands').read_text():
+        print(os.environ.get('QA_RUNNING_SHA', os.environ['QA_SHA']))
+    else: print(os.environ['QA_SHA'])
 elif 'inspect' in args: print('sha256:synthetic')
 ''')
         self.stub('pg_dump', '''
@@ -72,6 +81,20 @@ Path(target).write_text('synthetic backup')
         return subprocess.run(['bash', '-c', source, 'qa', str(self.root), 'fixture.yml', SHA, bundle or str(self.root/'bundle'), self.env.get('QA_PREBUILT', '0'), cutover_from],
                               env=self.env, capture_output=True, text=True, timeout=FIXTURE_TIMEOUT_SECONDS)
 
+    def rollback_set(self, digit, day, *, state='verified', missing=(), mismatched=()):
+        revision = digit * 40
+        image_id = 'sha256:' + digit * 64
+        manifest = self.root / 'backups' / f'release-200001{day:02}T000000Z-{revision}.manifest'
+        manifest.write_text(f'release_sha={revision}\nstate=building\n' +
+                            ''.join(f'image_{service}={image_id}\n' for service in SERVICES) +
+                            f'state={state}\n')
+        with (self.root / 'rollback-tags').open('a') as tags:
+            for service in SERVICES:
+                if service not in missing:
+                    tag_image_id = 'sha256:' + '0' * 64 if service in mismatched else image_id
+                    tags.write(f'asksales-rollback-{service} {revision} {tag_image_id}\n')
+        return revision
+
     def test_failed_migration_leaves_writers_stopped(self):
         self.env['QA_MIGRATE_FAIL'] = '1'
         result = self.release()
@@ -80,6 +103,7 @@ Path(target).write_text('synthetic backup')
         self.assertIn(' stop api worker-1 worker-2', commands)
         self.assertNotIn(' start api worker-1 worker-2', commands)
         self.assertNotIn(' up -d ', commands)
+        self.assertNotIn('docker image ls', commands)
         self.assertLess(commands.index(' stop api'), commands.index('pg_dump '))
         self.assertLess(commands.index('pg_dump '), commands.index('migrate.mjs up'))
 
@@ -133,6 +157,50 @@ Path(target).write_text('synthetic backup')
         self.assertIn(f'release_sha={SHA}', manifest)
         self.assertIn('state=verified', manifest)
         self.assertIn('image_worker-1=sha256:synthetic', manifest)
+
+    def test_rollback_tags_use_the_running_image_revision(self):
+        self.env['QA_RUNNING_SHA'] = 'b' * 40
+        result = self.release()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        commands = (self.root / 'commands').read_text()
+        self.assertIn(f'image tag sha256:synthetic asksales-rollback-api:{"b" * 40}', commands)
+        self.assertNotIn(f'image tag sha256:synthetic asksales-rollback-api:{SHA}', commands)
+
+    def test_prunes_only_expired_matching_tags_after_verification(self):
+        expired = self.rollback_set('b', 1, missing=('client',), mismatched=('api',))
+        older_kept = self.rollback_set('c', 2)
+        newer_kept = self.rollback_set('d', 3)
+        partial = self.rollback_set('e', 4, missing=('worker-2',))
+        failed = self.rollback_set('f', 1, state='failed')
+        self.rollback_set('a', 2)
+        result = self.release()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        commands = (self.root / 'commands').read_text()
+        removals = [line for line in commands.splitlines() if line.startswith('docker image rm')]
+        self.assertEqual(removals, [f'docker image rm --no-prune asksales-rollback-worker-1:{expired} '
+                                    f'asksales-rollback-worker-2:{expired}'])
+        for retained in (older_kept, newer_kept, partial, failed, SHA):
+            self.assertNotIn(retained, removals[0])
+        self.assertLess(commands.index('systemctl reload nginx'), commands.index('docker image rm'))
+
+    def test_keeps_all_tags_when_two_complete_rollback_sets_are_missing(self):
+        self.rollback_set('b', 1, missing=('api',))
+        self.rollback_set('c', 2)
+        self.rollback_set('d', 3, mismatched=('client',))
+        result = self.release()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('docker image rm', (self.root / 'commands').read_text())
+
+    def test_prune_failure_does_not_mark_verified_release_failed(self):
+        self.rollback_set('b', 1)
+        self.rollback_set('c', 2)
+        self.rollback_set('d', 3)
+        self.env['QA_PRUNE_FAIL'] = '1'
+        result = self.release()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('retrying after the next verified release', result.stderr)
+        manifest = next((self.root / 'backups').glob(f'release-*-{SHA}.manifest')).read_text()
+        self.assertTrue(manifest.endswith('state=verified\n'))
 
     def test_unverified_sha_is_rejected_before_publication(self):
         result = subprocess.run(['bash', str(SCRIPT)], env=self.env, capture_output=True, text=True,

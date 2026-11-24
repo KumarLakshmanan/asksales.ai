@@ -105,13 +105,19 @@ if [ "${total_kb:-0}" -lt 12582912 ] && [ "${swap_kb:-0}" -lt 4194304 ]; then
   exit 1
 fi
 
-# Retain the previous image by commit. Retention is a reviewed operator policy;
-# a failed release never overwrites the only known-good image tag.
-for service in api worker-1 worker-2 client; do
+# A failed release can advance the checkout before replacing any containers.
+# Tag the images by their running revision and preserve existing rollback tags.
+release_services=(api worker-1 worker-2 client)
+for service in "${release_services[@]}"; do
   container="sm-$service"
   if docker inspect "$container" >/dev/null 2>&1; then
     image_id=$(docker inspect --format '{{.Image}}' "$container")
-    docker image tag "$image_id" "asksales-rollback-$service:$previous_sha"
+    revision=$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id")
+    [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || revision=$previous_sha
+    rollback_tag="asksales-rollback-$service:$revision"
+    if ! docker image inspect "$rollback_tag" >/dev/null 2>&1; then
+      docker image tag "$image_id" "$rollback_tag"
+    fi
   fi
 done
 
@@ -178,7 +184,7 @@ COMPOSE_PARALLEL_LIMIT=1 docker compose --env-file server/.env -f "$compose_file
 curl -fsS --max-time 15 http://127.0.0.1:8080/health >/dev/null
 curl -fsS --max-time 15 http://127.0.0.1:3000/ >/dev/null
 docker exec sm-api node /app/server/dist/backfill-crm-channel-identities.js
-for service in api worker-1 worker-2 client; do
+for service in "${release_services[@]}"; do
   image_id=$(docker inspect --format '{{.Image}}' "sm-$service")
   revision=$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id")
   [ "$revision" = "$release_sha" ] || { echo "Image revision mismatch for $service" >&2; exit 1; }
@@ -194,3 +200,55 @@ if ! nginx -t || ! systemctl reload nginx; then
 fi
 printf 'state=verified\n' >> "$manifest"
 echo "Verified release $release_sha; manifest: $manifest"
+
+# Keep two complete, verified rollback sets by deployment date. Check full
+# image IDs against the manifests before retaining or removing any of the tags.
+prune_release_images() {
+  local LC_ALL=C
+  local images repository revision image_id service old_manifest tag i
+  local retained=0
+  local -A rollback_images=() seen_revisions=()
+  local -a manifests=("$backup_dir"/release-*.manifest) matching_tags=() expired_tags=()
+
+  images=$(docker image ls --no-trunc --filter 'reference=asksales-rollback-*:*' \
+    --format '{{.Repository}} {{.Tag}} {{.ID}}') || return 1
+  while read -r repository revision image_id; do
+    if [[ "$repository" =~ ^asksales-rollback-(api|worker-1|worker-2|client)$ &&
+          "$revision" =~ ^[0-9a-f]{40}$ && "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+      rollback_images["$repository:$revision"]=$image_id
+    fi
+  done <<< "$images"
+
+  for ((i = ${#manifests[@]} - 1; i >= 0; i--)); do
+    old_manifest=${manifests[i]}
+    revision=${old_manifest##*-}
+    revision=${revision%.manifest}
+    [[ "$revision" =~ ^[0-9a-f]{40}$ && "$revision" != "$release_sha" ]] || continue
+    [[ -z "${seen_revisions[$revision]:-}" ]] || continue
+    grep -Fxq "release_sha=$revision" "$old_manifest" || continue
+    [[ "$(tail -n 1 "$old_manifest")" = state=verified ]] || continue
+
+    matching_tags=()
+    for service in "${release_services[@]}"; do
+      tag="asksales-rollback-$service:$revision"
+      image_id=${rollback_images[$tag]:-}
+      if [[ -n "$image_id" ]] && grep -Fxq "image_$service=$image_id" "$old_manifest"; then
+        matching_tags+=("$tag")
+      fi
+    done
+    if (( retained < 2 )); then
+      if (( ${#matching_tags[@]} == ${#release_services[@]} )); then
+        seen_revisions[$revision]=1
+        retained=$((retained + 1))
+      fi
+    elif (( ${#matching_tags[@]} > 0 )); then
+      seen_revisions[$revision]=1
+      expired_tags+=("${matching_tags[@]}")
+    fi
+  done
+
+  if (( ${#expired_tags[@]} > 0 )); then
+    docker image rm --no-prune "${expired_tags[@]}"
+  fi
+}
+prune_release_images || echo 'Some expired rollback images could not be removed; retrying after the next verified release.' >&2
