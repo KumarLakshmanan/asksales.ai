@@ -53,15 +53,23 @@ fi
 # A failed release needs a new successful workflow attempt. This avoids
 # repeatedly touching an incomplete migration or overwriting recovery evidence.
 echo "Deploying $sha from GitHub Actions run $run_id attempt $attempt."
-available_kb=$(df --output=avail /var/lib/docker | tail -n 1)
-if [ "$available_kb" -lt 12582912 ]; then
-  echo 'The Docker filesystem needs at least 12 GiB free for the release.' >&2
-  exit 1
-fi
 exec 9>/var/lock/asksales-release.lock
 if ! flock -n 9; then
   echo 'A release is already running. The timer will check again.'
   exit 0
+fi
+# Every build leaves cache behind, and it filled the disk within a day of
+# releases. With the host lock held no build (production or staging) is using
+# it, so clear cache unused for a day, then all unused cache if room is short.
+# Images, containers, volumes and rollback tags are never touched.
+free_kb() { df --output=avail /var/lib/docker | tail -n 1; }
+docker builder prune --force --filter until=24h > /dev/null || echo 'Could not clear old build cache.' >&2
+if [ "$(free_kb)" -lt 12582912 ]; then
+  docker builder prune --force > /dev/null || echo 'Could not clear unused build cache.' >&2
+fi
+if [ "$(free_kb)" -lt 12582912 ]; then
+  echo 'The Docker filesystem needs at least 12 GiB free for the release.' >&2
+  exit 1
 fi
 printf '%s %s %s\n' "$sha" "$run_id" "$attempt" > "$state/attempted"
 bash "$release_script" "$production" docker-compose.production.yml "$sha" - 0 "$cutover_from" inherited-lock
