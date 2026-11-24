@@ -230,9 +230,39 @@ describe('outreach day-by-day activity', () => {
     execute.mockResolvedValueOnce({ rows: [] });
     await scoped(() => tracking.getDailyActivity(7, { from: '2026-11-10', to: '2026-11-10', channel: 'email', templateName: 'welcome' }));
     const daily = query(0);
-    expect(daily.sql).not.toContain('m.batch_id=');
+    expect(daily.sql).not.toContain('m.batch_id');
     expect(daily.sql).toContain('c.channel IN(');
     expect(daily.params).toEqual(expect.arrayContaining(['gmail', 'resend', 'welcome', 'UTC']));
+    // Older send records have no template, so a template view does not read them.
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('adds messages sent before Message tracking and older send records to the business-wide days', async () => {
+    execute.mockResolvedValueOnce({ rows: [
+      { day: '2026-11-10', series: 'sent', count: 3 },
+    ] }).mockResolvedValueOnce({ rows: [
+      { day: '2026-11-10', series: 'sent', count: 5 }, { day: '2026-11-11', series: 'failed', count: 1 },
+    ] });
+
+    const activity = await scoped(() => tracking.getDailyActivity(7, { from: '2026-11-10', to: '2026-11-11', tz: 'Asia/Kolkata', kind: 'all' }));
+
+    expect(activity.days).toEqual([
+      { date: '2026-11-10', sent: 8, delivered: 0, read: 0, failed: 0 },
+      { date: '2026-11-11', sent: 0, delivered: 0, read: 0, failed: 1 },
+    ]);
+    // Messages without an outreach count too.
+    expect(query(0).sql).not.toContain('m.batch_id');
+    // Older records come from the Reports projection, which drops the ones already counted as outreach messages.
+    const legacy = query(1);
+    expect(legacy.sql).toContain('legacy_sent AS');
+    expect(legacy.sql).toContain('i.message_id IS NULL');
+  });
+
+  it('keeps one outreach to its own messages', async () => {
+    execute.mockResolvedValueOnce({ rows: [batchRow] }).mockResolvedValueOnce({ rows: [] });
+    await scoped(() => tracking.getDailyActivity(7, { from: '2026-11-10', to: '2026-11-10' }, BATCH));
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(query(1).sql).not.toContain('intents');
   });
 
   it('rejects reversed, oversized and malformed ranges and unknown timezones', async () => {

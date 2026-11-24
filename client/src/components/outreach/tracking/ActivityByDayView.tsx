@@ -15,7 +15,7 @@ export function ActivityByDayView() {
   return (
     <DayByDayCard
       title="Messages by day"
-      description="Everything your tracked outreaches sent on each day, with what was delivered, read and failed. Replies and messages sent from the Inbox are not counted."
+      description="Every outreach message sent on each day, including ones sent before Message tracking, with what was delivered, read and failed. Replies and messages sent from the Inbox are not counted."
       endpoint="/api/outreach/daily"
       subject={channel === "all" ? "all outreach" : `${trackingChannelLabel(channel)} outreach`}
       defaultRange={defaultRange}

@@ -18,6 +18,13 @@ function reportChannelPredicate(column: SQL, channel?: string): SQL {
   return sql`${column} IN (${sql.join(channels.map(value => sql`${value}`), sql`, `)})`;
 }
 
+/** Email, Gmail and Resend are one channel. Either side may hold any of the
+ * three: an older Gmail send record belongs to an `email` conversation. */
+const reportChannel = (column: SQL) => sql`CASE WHEN ${column} IN('gmail','resend') THEN 'email' ELSE ${column} END`;
+function sameReportChannel(left: SQL, right: SQL): SQL {
+  return sql`${reportChannel(left)}=${reportChannel(right)}`;
+}
+
 function reportSourcePredicate(filters: CampaignReportFilters | undefined, source: {
   channel: SQL;
   account: SQL;
@@ -143,8 +150,13 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
       WHERE s.is_reply IS NOT TRUE AND k.key IS NOT NULL AND k.key<>''
     ), receipt_matches AS (
       SELECT mk.message_id,s.* FROM message_receipt_keys mk
-      JOIN sent_receipt_keys s ON s.kind=mk.kind AND s.key=mk.key AND s.customer_key=mk.customer_key
-        AND (s.channel=mk.conversation_channel OR (s.channel='email' AND mk.conversation_channel IN('gmail','resend')))
+      -- A stored outreach_message_id names exactly one message of this business, so it
+      -- needs no further check. Its conversation may be keyed by CRM contact while the
+      -- send record is keyed by lead, which used to count the same email twice.
+      -- Provider IDs must also agree on customer and channel.
+      JOIN sent_receipt_keys s ON s.kind=mk.kind AND s.key=mk.key
+        AND (s.kind='om' OR (s.customer_key=mk.customer_key
+          AND ${sameReportChannel(sql`s.channel`, sql`mk.conversation_channel`)}))
     ), linked_sent AS (
       -- Legacy receipts already represented by a canonical message.
       SELECT DISTINCT id FROM receipt_matches
@@ -207,7 +219,7 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
           (array_agg(s.sentiment ORDER BY s.updated_at DESC) FILTER(WHERE s.sentiment IS NOT NULL))[1] AS sentiment
         FROM report_sent s WHERE s.user_id=j.user_id AND s.business_profile_id=j.business_profile_id
           AND s.customer_key=j.customer_key AND s.is_reply IS NOT TRUE
-          AND (s.channel=j.channel OR (j.channel='email' AND s.channel IN('gmail','resend')))
+          AND ${sameReportChannel(sql`s.channel`, sql`j.channel`)}
           AND j.external_message_id IS NOT NULL AND j.external_message_id IN(s.message_id,s.gmail_message_id,s.rfc_message_id)
       ) receipt ON TRUE
       WHERE j.user_id=${userId} AND j.business_profile_id=${business}
@@ -215,7 +227,7 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
           AND c.user_id=m.user_id AND c.business_profile_id=m.business_profile_id
           WHERE m.user_id=j.user_id AND m.business_profile_id=j.business_profile_id AND c.customer_key=j.customer_key
             AND m.direction='outbound' AND m.message_kind IN('outreach','follow_up')
-            AND (c.channel=j.channel OR (j.channel='email' AND c.channel IN('gmail','resend')))
+            AND ${sameReportChannel(sql`c.channel`, sql`j.channel`)}
             AND (j.external_message_id IN(m.external_message_id,m.provider_message_id,m.rfc_message_id,m.waba_message_id)
               OR m.id::text=j.metadata->>'messageId'))
         AND ${reportSourcePredicate(filters, {
@@ -245,7 +257,7 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
       WHERE s.user_id=${userId} AND s.business_profile_id=${business} AND s.is_reply IS NOT TRUE
         AND NOT EXISTS(SELECT 1 FROM linked_sent linked WHERE linked.id=s.id)
         AND NOT EXISTS(SELECT 1 FROM report_jobs j WHERE j.user_id=s.user_id AND j.business_profile_id=s.business_profile_id
-          AND j.customer_key=s.customer_key AND (j.channel=s.channel OR (j.channel='email' AND s.channel='gmail'))
+          AND j.customer_key=s.customer_key AND ${sameReportChannel(sql`j.channel`, sql`s.channel`)}
           AND j.external_message_id IS NOT NULL AND j.external_message_id IN(s.message_id,s.gmail_message_id,s.rfc_message_id))
         AND ${reportSourcePredicate(filters, {
           channel: sql`s.channel`, account: sql`COALESCE(s.sender_id::text,'')`, createdAt: sql`s.created_at`,

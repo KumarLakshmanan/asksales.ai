@@ -13,9 +13,11 @@ import { getEffectiveDailyLimit } from './QuotaService.js';
 import { nextDailyCapacityTime } from './providerRetry.js';
 import { addUtcDays, projectSends, utcDay, type WaitingGroup } from './OutreachUpcomingProjection.js';
 import { crmCsvCell } from '../../utils/crmWorkspaceValidation.js';
+import { canonicalOutreachCtes, executeReportQuery } from './CampaignReportingService.js';
+import { campaignReportFiltersSchema } from './CampaignReportFilters.js';
 import {
   batchIdSchema, batchListSchema, batchRenameSchema, dailyActivitySchema, failureListSchema, recipientExportSchema, recipientListSchema,
-  templatePerformanceSchema, upcomingSchema,
+  templatePerformanceSchema, upcomingSchema, type DailyActivityFilters,
 } from './OutreachTrackingFilters.js';
 
 export class OutreachTrackingError extends Error {
@@ -26,6 +28,8 @@ export class OutreachTrackingError extends Error {
  * These queries read outreach_messages by batch_id only. They deliberately do
  * not use the canonical report projection, which joins legacy tables and
  * customer identity for every message and is too heavy for a large outreach.
+ * The one exception is the business-wide day view, which needs that
+ * projection to add older send records without counting them twice.
  */
 
 /** When a waiting message is next due, and where it stands: the shared definition Reports also uses. */
@@ -323,9 +327,31 @@ const activityColumns = [
 ] as const;
 
 /**
+ * Sends from before Message tracking: recorded only in the older sent_messages
+ * and outreach_jobs tables. The Reports projection already drops the ones that
+ * are also an outreach message, so these rows add only what is missing and the
+ * business-wide days agree with Reports. Older rows have no read or failure
+ * time: a failure counts on the day it was sent, or created if never sent.
+ */
+function legacyActivityQuery(userId: number, filters: DailyActivityFilters, lower: SQL, upper: SQL): SQL {
+  const report = campaignReportFiltersSchema.parse({ channel: filters.channel, messageKind: filters.kind });
+  const columns = [
+    ['sent', sql`i.sent_at`, sql`TRUE`],
+    ['delivered', sql`i.delivered_at`, sql`TRUE`],
+    ['failed', sql`COALESCE(i.sent_at,i.created_at)`, sql`i.state='failed'`],
+  ] as const;
+  const parts = columns.map(([name, column, extra]) => sql`
+    SELECT to_char((${column} AT TIME ZONE 'UTC') AT TIME ZONE ${filters.tz},'YYYY-MM-DD') AS day,${name} AS series
+    FROM intents i WHERE i.message_id IS NULL AND ${extra} AND ${column}>=${lower} AND ${column}<${upper}`);
+  return sql`WITH ${canonicalOutreachCtes(userId, report)}
+    SELECT day,series,COUNT(*)::int AS count FROM (${sql.join(parts, sql` UNION ALL `)}) events GROUP BY day,series`;
+}
+
+/**
  * Per-day numbers, each counted on the day it happened in the reader's
  * timezone. With `batchId` it covers one outreach; without, every outbound
- * outreach message in the business.
+ * outreach message in the business, including messages sent before Message
+ * tracking existed and older send records that have no outreach message.
  */
 export async function getDailyActivity(userId: number, input: unknown, batchId?: unknown): Promise<DailyActivity> {
   const filters = dailyActivitySchema.parse(input);
@@ -337,8 +363,6 @@ export async function getDailyActivity(userId: number, input: unknown, batchId?:
     scope.push(sql`m.batch_id=${batch.id}::uuid`);
   } else {
     business = owner(userId);
-    // Only messages that belong to a tracked outreach, so these days add up to the outreach pages.
-    scope.push(sql`m.batch_id IS NOT NULL`);
   }
   scope.push(sql`m.user_id=${userId}`, sql`m.business_profile_id=${business}`, sql`m.direction='outbound'`, kindPredicate(filters.kind));
   if (filters.templateName) scope.push(sql`m.template_name=${filters.templateName}`);
@@ -352,7 +376,11 @@ export async function getDailyActivity(userId: number, input: unknown, batchId?:
   const parts = activityColumns.map(([name, column, extra]) => sql`
     SELECT to_char((${column} AT TIME ZONE 'UTC') AT TIME ZONE ${filters.tz},'YYYY-MM-DD') AS day,${name} AS series
     FROM outreach_messages m ${join} WHERE ${where} AND ${extra} AND ${column}>=${lower} AND ${column}<${upper}`);
-  const result = await db.execute(sql`SELECT day,series,COUNT(*)::int AS count FROM (${sql.join(parts, sql` UNION ALL `)}) events GROUP BY day,series`);
+  const current = db.execute(sql`SELECT day,series,COUNT(*)::int AS count FROM (${sql.join(parts, sql` UNION ALL `)}) events GROUP BY day,series`);
+  // Older send records have no outreach and no template, so they belong only in the business-wide, all-template view.
+  const legacy = batchId === undefined && !filters.templateName
+    ? executeReportQuery(db, legacyActivityQuery(userId, filters, lower, upper)) : Promise.resolve({ rows: [] });
+  const [result, older] = await Promise.all([current, legacy]);
 
   const byDay = new Map<string, DailyActivityDay>();
   const end = Date.parse(`${filters.to}T00:00:00Z`);
@@ -361,7 +389,7 @@ export async function getDailyActivity(userId: number, input: unknown, batchId?:
     byDay.set(date, { date, sent: 0, delivered: 0, read: 0, failed: 0 });
   }
   const totals = { sent: 0, delivered: 0, read: 0, failed: 0 };
-  for (const row of result.rows as Record<string, unknown>[]) {
+  for (const row of [...result.rows, ...older.rows] as Record<string, unknown>[]) {
     const day = byDay.get(String(row.day)), series = String(row.series) as keyof typeof totals, count = Number(row.count) || 0;
     if (!day || !(series in totals)) continue;
     day[series] += count;
