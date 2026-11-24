@@ -16,6 +16,12 @@ on:
       - 'client/src/app/support-widget/**'
       - 'server/migrations/**'
       - 'server/tests/**support**'
+      - 'shared/**'
+      - '.node-version'
+      - 'package.json'
+      - 'server/package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - 'server/tests/agentRouter.test.ts'
       - 'server/tests/contactValidation.test.ts'
       - 'server/utils/agentPromptBuilder.ts'
@@ -48,7 +54,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.18.1'
+          node-version-file: '.node-version'
       - name: Enable pinned pnpm
         run: corepack enable
       - name: Install workspace dependencies
