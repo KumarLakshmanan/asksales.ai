@@ -58,6 +58,29 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Queued outreach stopped because the wallet ran out. Each message fails on
+   * its own, so a large queue would otherwise fail silently by the thousand;
+   * tell the owner once a day per business instead.
+   */
+  static async outreachOutOfCredits(userId: number, channel: string): Promise<boolean> {
+    try {
+      const { getRedisConnection } = await import('../infrastructure/redis.js');
+      const { currentBusinessScope } = await import('../tenancy/businessContext.js');
+      const business = currentBusinessScope()?.businessProfileId ?? 'none';
+      const first = await getRedisConnection().set(`notify:outreach-credits:${userId}:${business}`, '1', 'EX', 86_400, 'NX');
+      if (first !== 'OK') return false;
+    } catch (err) {
+      // Without Redis we cannot tell whether today's notice already went out; skip rather than repeat it per message.
+      logger.warn({ err, userId }, '[NotificationService] Could not check the out-of-credits notice');
+      return false;
+    }
+    const label = channel === 'whatsapp' ? 'WhatsApp' : channel === 'gmail' || channel === 'resend' ? 'email' : channel;
+    return NotificationService.notify(userId, 'Outreach stopped: wallet is empty',
+      `Queued ${label} messages can't be sent until you recharge. Messages that already failed for this reason can be retried from Reports after recharging.`,
+      'error', { actionUrl: '/dashboard/billing/recharge' });
+  }
+
   static async icpGenerated(userId: number, campaignName: string, fitScore: number): Promise<void> {
     await this.notify(
       userId,

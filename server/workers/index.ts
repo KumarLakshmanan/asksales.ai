@@ -2095,6 +2095,8 @@ export async function processQueuedOutreachMessage(job: Job) {
     if (!reservation.success) {
       const errorMessage = reservation.error || 'Insufficient credits. Recharge your wallet before retrying.';
       await OutreachConversationModel.updateOutreachMessageStatus(messageId, 'failed', { errorMessage });
+      const { NotificationService } = await import('../services/NotificationService.js');
+      void NotificationService.outreachOutOfCredits(userId, channel);
       return { success: false, error: errorMessage, code: 'INSUFFICIENT_CREDITS' };
     }
     reservationTransactionId = reservation.transactionId;
