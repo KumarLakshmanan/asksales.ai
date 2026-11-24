@@ -34,6 +34,7 @@ export function ActivityByDayView() {
       subject={channel === "all" ? `all ${noun}` : `${trackingChannelLabel(channel)} ${noun}`}
       defaultRange={defaultRange}
       params={params}
+      standalone
       filters={
         <>
           <Select value={kind} onValueChange={value => setKind(value as MessageKind)}>

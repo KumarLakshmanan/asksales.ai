@@ -300,6 +300,20 @@ describe('Message tracking by day', () => {
     await waitFor(() => expect(dailyCalls().at(-1)![1].params).toMatchObject({ kind: 'follow_up' }));
     expect(screen.getByRole('combobox', { name: 'Outbound messages' })).toHaveTextContent('Follow-ups');
   });
+
+  it('totals the day-by-day numbers for the dates chosen and offers a refresh', async () => {
+    window.history.replaceState(null, '', '/dashboard/outreach/tracking?view=days');
+    mocks.get.mockImplementation(async (url: string) => url.endsWith('/daily') ? daily() : list([]));
+    render(<TrackingHome />);
+    const totals = await screen.findByLabelText('Totals for these filters');
+    const tile = (label: string) => within(totals).getByText(label).closest('article')!;
+    await waitFor(() => expect(within(tile('Messages sent')).getByText('300')).toBeInTheDocument());
+    expect(within(tile('Delivered')).getByText('87% of sent')).toBeInTheDocument();
+    expect(within(tile('Failed')).getByText('10')).toBeInTheDocument();
+    const calls = mocks.get.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh these numbers' }));
+    await waitFor(() => expect(mocks.get.mock.calls.length).toBeGreaterThan(calls));
+  });
 });
 
 describe('date range field', () => {
@@ -388,6 +402,23 @@ describe('Message tracking coming up and by template', () => {
     expect(within(table).getByRole('link', { name: 'Diwali offer' })).toHaveAttribute('href', `/dashboard/outreach/tracking/${ID}`);
     expect(screen.getByText(/Your daily limit is 1,000 WhatsApp messages/)).toBeInTheDocument();
     expect(screen.getByText(/2,600/, { selector: 'span' })).toBeInTheDocument();
+  });
+
+  it('totals the coming days and narrows them to one channel', async () => {
+    window.history.replaceState(null, '', '/dashboard/outreach/tracking?view=upcoming');
+    mocks.get.mockImplementation(async (url: string) => url.endsWith('/upcoming') ? upcoming() : list([]));
+    render(<TrackingHome />);
+    const totals = await screen.findByLabelText('Totals for the coming days');
+    const tile = (label: string) => within(totals).getByText(label).closest('article')!;
+    await waitFor(() => expect(within(tile('Waiting now')).getByText('2,600')).toBeInTheDocument());
+    expect(within(tile('Expected to send')).getByText('2,000')).toBeInTheDocument();
+    expect(within(tile('Will expire')).getByText('600')).toBeInTheDocument();
+
+    const channel = screen.getByRole('combobox', { name: 'Channel' });
+    fireEvent.keyDown(channel, { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByRole('option', { name: 'WhatsApp' }));
+    await waitFor(() => expect(mocks.get).toHaveBeenLastCalledWith('/api/outreach/upcoming',
+      { params: expect.objectContaining({ channel: 'whatsapp' }) }));
   });
 
   it('refuses a date beyond how far the schedule can look', async () => {

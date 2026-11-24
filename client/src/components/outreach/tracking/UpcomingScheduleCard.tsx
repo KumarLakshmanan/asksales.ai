@@ -10,7 +10,10 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { addDays, toDateValue } from "@/components/ui/date-range-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { PageEmptyState } from "@/components/EmptyState";
+import { outreachReportChannels } from "../../../../../shared/campaignReporting";
 import {
   MAX_UPCOMING_DAYS, outreachTrackingUrl, trackingChannelLabel, type UpcomingDay, type UpcomingSchedule,
 } from "../../../../../shared/outreachTracking";
@@ -18,6 +21,7 @@ import { prefersTable } from "./DailyActivityChart";
 import { viewerTimezone } from "./DayByDayCard";
 import { chartPaletteClass } from "./chartPalette";
 import { UpcomingChart } from "./UpcomingChart";
+import { RefreshStatus } from "./TrackingSummary";
 import { formatCount } from "./status";
 
 const dayLabel = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
@@ -71,9 +75,13 @@ export function UpcomingScheduleCard({ endpoint, description, showOutreaches = f
   const latest = addDays(today, MAX_UPCOMING_DAYS - 1);
   const [until, setUntil] = useState(() => addDays(today, 30));
   const [view, setView] = useState<"chart" | "table">(() => prefersTable() ? "table" : "chart");
+  const [channel, setChannel] = useState("all");
+  // The page covering every outreach has no Refresh of its own, so this card refreshes itself and offers a channel filter.
+  const standalone = showOutreaches;
   const valid = until >= today && until <= latest;
-  const params = useMemo(() => ({ until, tz: timezone }), [until, timezone]);
-  const schedule = useTrackingQuery<UpcomingSchedule>(valid ? endpoint : null, params);
+  const params = useMemo(() => ({ until, tz: timezone, channel: channel === "all" ? undefined : channel }), [until, timezone, channel]);
+  // Waiting messages go out and new ones arrive all day; read the schedule again every minute.
+  const schedule = useTrackingQuery<UpcomingSchedule>(valid ? endpoint : null, params, standalone ? 60_000 : false);
   const { refetch } = schedule;
   const mounted = useRef(false);
   useEffect(() => {
@@ -87,6 +95,7 @@ export function UpcomingScheduleCard({ endpoint, description, showOutreaches = f
   const busyDays = useMemo(() => data?.days.filter(day => day.due || day.expectedToSend || day.willExpire), [data]);
   const expected = data?.days.reduce((sum, day) => sum + day.expectedToSend, 0) ?? 0;
   const expiring = data?.days.reduce((sum, day) => sum + day.willExpire, 0) ?? 0;
+  const first = !data && schedule.loading;
 
   return (
     <Card className={chartPaletteClass}>
@@ -95,19 +104,49 @@ export function UpcomingScheduleCard({ endpoint, description, showOutreaches = f
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-1 sm:max-w-[13rem]">
-          <Label htmlFor={`${id}-until`} className="text-xs text-muted-foreground">Show until</Label>
-          <Input id={`${id}-until`} type="date" value={until} min={today} max={latest} onChange={event => setUntil(event.target.value)}
-            aria-invalid={!valid || undefined} aria-describedby={valid ? undefined : `${id}-problem`} />
-          {!valid ? <p id={`${id}-problem`} role="alert" className="text-xs text-destructive">Choose a date from today up to {formatDay(latest)}.</p> : null}
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+            <div className="space-y-1 sm:w-52">
+              <Label htmlFor={`${id}-until`} className="text-xs text-muted-foreground">Show until</Label>
+              <Input id={`${id}-until`} type="date" value={until} min={today} max={latest} onChange={event => setUntil(event.target.value)}
+                aria-invalid={!valid || undefined} aria-describedby={valid ? undefined : `${id}-problem`} />
+              {!valid ? <p id={`${id}-problem`} role="alert" className="text-xs text-destructive">Choose a date from today up to {formatDay(latest)}.</p> : null}
+            </div>
+            {standalone ? (
+              <div className="space-y-1">
+                <Label htmlFor={`${id}-channel`} className="text-xs text-muted-foreground">Channel</Label>
+                <Select value={channel} onValueChange={setChannel}>
+                  <SelectTrigger id={`${id}-channel`} className="sm:w-44" aria-label="Channel"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All channels</SelectItem>
+                    {outreachReportChannels.map(option => <SelectItem key={option} value={option}>{trackingChannelLabel(option)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
+          {standalone ? <RefreshStatus updatedAt={schedule.updatedAt} loading={schedule.loading} live={Boolean(data && data.waiting > 0)} onRefresh={schedule.refetch} /> : null}
         </div>
+
+        {standalone && !schedule.error && (first || (data && data.waiting > 0)) ? (
+          <StatGrid columns={4} aria-label="Totals for the coming days">
+            <StatCard label="Waiting now" loading={first} value={data ? formatCount(data.waiting) : undefined} description="messages not sent yet" />
+            <StatCard label="Expected to send" loading={first} value={data ? formatCount(expected) : undefined}
+              description={data ? `by ${formatDay(data.until)}` : undefined} />
+            <StatCard label="Still waiting after" loading={first} value={data ? formatCount(data.afterRange) : undefined}
+              description={data ? `after ${formatDay(data.until)}` : undefined} />
+            <StatCard label="Will expire" loading={first} value={data ? formatCount(expiring) : undefined}
+              tone={expiring > 0 ? "destructive" : "neutral"} description="before they can be sent" />
+          </StatGrid>
+        ) : null}
 
         {schedule.error ? (
           <Callout tone="danger" actions={<Button variant="outline" size="sm" onClick={schedule.refetch}>Try again</Button>}>
             We couldn&apos;t load the schedule.
           </Callout>
         ) : data && data.waiting === 0 ? (
-          <PageEmptyState compact title="Nothing is waiting to be sent" description="Scheduled and held messages appear here until they go out." />
+          <PageEmptyState compact title={channel === "all" ? "Nothing is waiting to be sent" : `No ${trackingChannelLabel(channel)} messages are waiting`}
+            description="Scheduled and held messages appear here until they go out." />
         ) : (
           <>
             {data ? (
