@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.18.1'
+          node-version-file: '.node-version'
       - run: corepack enable && corepack prepare pnpm@10.30.3 --activate
       - run: test "$(pnpm --version)" = 10.30.3
       - run: pnpm install --frozen-lockfile
@@ -63,6 +63,8 @@ jobs:
       - if: '!inputs.release_checks'
         run: pnpm --dir server typecheck
       - run: pnpm --dir server build:all
+      - name: Check bundled API and worker startup
+        run: node --test scripts/tests/customer-delivery-startup.test.mjs
       - name: Campaign history migration on isolated PostgreSQL
         if: inputs.release_checks
         run: bash scripts/test-campaign-history-migration.sh
@@ -84,7 +86,7 @@ jobs:
       - name: Export verified API image for the approved rollout
         if: github.event_name == 'workflow_dispatch' && !inputs.release_checks
         run: docker save asksales-security-api:${{ github.sha }} | gzip -1 > api.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'workflow_dispatch' && !inputs.release_checks
         with:
           name: release-api-${{ github.sha }}
@@ -118,7 +120,7 @@ jobs:
           -f ${{ matrix.dockerfile }} -t asksales-security-${{ matrix.service }}:${{ github.sha }} .
       - name: Export the release image
         run: docker save asksales-security-${{ matrix.service }}:${{ github.sha }} | gzip -1 > ${{ matrix.service }}.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.service }}-${{ github.sha }}
           path: ${{ matrix.service }}.tar.gz

@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: asksales-production-release
+  group: asksales-production-release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

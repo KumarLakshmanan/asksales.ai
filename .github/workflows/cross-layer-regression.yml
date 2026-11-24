@@ -7,11 +7,13 @@ on:
       - 'docker-compose*.yml'
       - '**/Dockerfile*'
       - '.dockerignore'
+      - '.node-version'
       - 'nginx/**'
       - 'scripts/**'
       - 'pnpm-workspace.yaml'
       - 'client/**'
       - 'server/**'
+      - 'shared/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/cross-layer-regression.yml'
@@ -41,7 +43,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.18.1'
+          node-version-file: '.node-version'
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - name: Server workflow contracts
@@ -87,52 +89,47 @@ jobs:
           src/__tests__/sendOutreachContract.test.ts
           src/__tests__/adCampaignPublishing.test.ts
           src/__tests__/publishAdsReviewContract.test.ts
-      # checkout's `git clean -ffdx` deletes in-repo .tsbuildinfo files, so
-      # every run used to type-check from scratch (~8 min on the release
-      # host). Keep the incremental state in the runner's persistent tool
-      # cache instead. tsc keys it on file content hashes, so state written
-      # by another commit or branch only skips files whose content and
-      # dependencies are unchanged. Ephemeral hosted runners just start cold.
-      - name: Prepare TypeScript incremental cache
-        run: mkdir -p "$RUNNER_TOOL_CACHE/asksales-tsc"
       - name: Typecheck server
-        run: pnpm --dir server typecheck --incremental --tsBuildInfoFile "$RUNNER_TOOL_CACHE/asksales-tsc/server.tsbuildinfo"
+        run: pnpm --dir server typecheck
       - name: Typecheck client
         # The client program outgrew Node's default ~1.5 GB heap. The runner
         # needs sufficient heap on hosted runners.
         env:
           NODE_OPTIONS: --max-old-space-size=3072
-        run: pnpm --dir client typecheck --incremental --tsBuildInfoFile "$RUNNER_TOOL_CACHE/asksales-tsc/client.tsbuildinfo"
+        run: pnpm --dir client typecheck
 
   browser:
     needs: contracts
     runs-on: ubuntu-24.04
-    timeout-minutes: ${{ inputs.release_checks && 60 || 30 }}
+    timeout-minutes: 30
     env:
-      E2E_BASE_URL: ${{ inputs.release_checks && 'http://127.0.0.1:3200' || 'http://127.0.0.1:3000' }}
-      BACKEND_URL: ${{ inputs.release_checks && 'http://127.0.0.1:3201' || 'http://127.0.0.1:8080' }}
-      NEXT_PUBLIC_API_URL: ${{ inputs.release_checks && 'http://127.0.0.1:3200' || '' }}
-      NEXT_PUBLIC_WS_URL: ${{ inputs.release_checks && 'ws://127.0.0.1:3201' || '' }}
+      E2E_BASE_URL: http://127.0.0.1:3200
+      BACKEND_URL: http://127.0.0.1:3201
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3200
+      NEXT_PUBLIC_WS_URL: ws://127.0.0.1:3201
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.18.1'
+          node-version-file: '.node-version'
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --dir client exec playwright install --with-deps chromium
-      - name: Full browser suite
-        if: '!inputs.release_checks'
-        run: pnpm --dir client test:e2e
-      # Any failure blocks the deploy, so stop at the first one (after its
-      # retry) instead of spending up to 6 minutes on each further test.
-      - name: Release browser regression on desktop and mobile
-        if: inputs.release_checks
+      - run: pnpm --dir client exec playwright install chromium
+      - name: Browser regressions on desktop and mobile
         run: >-
           pnpm --dir client test:e2e --max-failures=1 --timeout=360000
           e2e/ad-review-safety.spec.ts
+          e2e/campaign-email-generation.spec.ts
           e2e/campaign-history-accessibility.spec.ts
           e2e/crm-recovery.spec.ts
           e2e/home-ux001.spec.ts
+      - name: Upload failed browser report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-report-attempt-${{ github.run_attempt }}
+          path: client/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
