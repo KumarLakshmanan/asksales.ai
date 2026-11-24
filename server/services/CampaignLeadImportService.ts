@@ -86,6 +86,9 @@ export async function saveCampaignLeadImport(userId: number, input: {
     }
     const matchedExisting = people.length - fresh.length;
     const memberLeadIds = people.map(person => person.existingId!);
+    // A replay reports total_records, so it counts people, not file rows, like this first response.
+    if (people.length !== input.records.length)
+      await tx.execute(sql`UPDATE campaign_lead_imports SET total_records=${people.length} WHERE id=${importId}`);
     const members: Array<{ id: number; email: string | null }> = memberLeadIds.length ? (await tx.execute(sql`SELECT id,email FROM leads
       WHERE id = ANY(${sql.param(memberLeadIds)}::int[]) AND user_id=${userId}`)).rows.map((row: Record<string, unknown>) => ({ id: Number(row.id), email: (row.email as string | null) ?? null }))
       .sort((a: { id: number }, b: { id: number }) => memberLeadIds.indexOf(a.id) - memberLeadIds.indexOf(b.id)) : [];
