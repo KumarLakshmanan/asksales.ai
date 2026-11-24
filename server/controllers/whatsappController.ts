@@ -279,6 +279,8 @@ export async function getWhatsAppConfig(req: Request, res: Response) {
         grantedScopes: credential?.grantedScopes || [],
         capabilities,
         lastVerifiedAt: credential?.lastReadinessCheckAt?.toISOString() || credential?.providerVerifiedAt?.toISOString() || null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        paymentMethod: (sd as any).paymentMethod?.status || null,
       },
     });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -387,6 +389,13 @@ export async function saveWhatsAppConfig(req: Request, res: Response) {
  * POST /api/whatsapp/test
  * Test WhatsApp connection
  */
+/** Accounts on AskSales' credit line need no card of their own in Meta. */
+async function paymentMethodStatus(userId: number, resolved: NonNullable<Awaited<ReturnType<typeof whatsappApiService.resolveCreds>>>) {
+  const { isPlatformBilledAccount } = await import('../services/whatsapp/WhatsAppBillingService.js');
+  if (await isPlatformBilledAccount(userId, resolved.phoneNumberId).catch(() => false)) return 'billed_by_asksales' as const;
+  return whatsappApiService.checkPaymentMethod(resolved);
+}
+
 export async function testWhatsAppConnection(req: Request, res: Response) {
   if (!authorizeBusinessManager(req, res)) return;
   try {
@@ -450,11 +459,16 @@ export async function testWhatsAppConnection(req: Request, res: Response) {
 
     const data = await response.json() as { verified_name?: string; display_phone_number?: string };
     if (resolved) await whatsappApiService.recordReadiness(resolved, { ok: true });
+    // Only the saved connection is checked; a body token is a pre-save test.
+    const paymentMethod = resolved && !bodyToken && !bodyPhoneId
+      ? await paymentMethodStatus(userId, resolved)
+      : undefined;
 
     return res.json({
       success: true,
       businessName: data.verified_name || data.display_phone_number,
       message: 'WhatsApp connection successful',
+      ...(paymentMethod ? { paymentMethod } : {}),
     });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
@@ -1387,6 +1401,10 @@ export async function handleOAuthCallback(req: Request, res: Response) {
     if (!whatsappOAuthVerificationAllowsConnection(verification)) {
       return res.redirect(`${FRONTEND_URL}/dashboard/integrations/whatsapp?error=${encodeURIComponent('WhatsApp connected, but Meta verification failed. Review the required app permissions and reconnect.')}`);
     }
+    // A customer who clicks Finish without adding a card in Meta cannot send paid
+    // templates; save the check so the WhatsApp page can say so. Never fails signup.
+    const signupCreds = await whatsappApiService.resolveCreds(userId).catch(() => null);
+    if (signupCreds) await paymentMethodStatus(userId, signupCreds).catch(() => undefined);
     const limited = verification.errorCode === 'WABA_HEALTH';
     res.redirect(`${FRONTEND_URL}/dashboard/integrations/whatsapp?whatsapp_connected=true${limited ? '&whatsapp_limited=payment_required' : ''}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

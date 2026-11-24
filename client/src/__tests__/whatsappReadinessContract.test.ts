@@ -34,6 +34,12 @@ describe('WhatsApp provider readiness presentation', () => {
     expect(page).toContain("connectedLabel=\"Connected\"");
   });
 
+  it('says when Meta has no payment method, from the checked account status', () => {
+    expect(summary).toContain('status.paymentMethod === "missing"');
+    expect(summary).toContain('Meta has no payment method for this WhatsApp account');
+    expect(summary).toContain('Replies inside the 24-hour window still work.');
+  });
+
   it('explains a missing Meta phone-number binding without recommending a blind reconnect', () => {
     expect(connection).toContain("settings?.readinessErrorCode === 'meta_100_33'");
     expect(connection).toContain('Meta no longer exposes the selected phone number');

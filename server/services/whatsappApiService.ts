@@ -43,6 +43,9 @@ import {
 } from './agents/orchestration/SupportChoiceDelivery.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
+/** 'missing': Meta has no payment method, so paid templates fail; 'billed_by_asksales': our credit line pays. */
+export type WhatsAppPaymentMethodStatus = 'present' | 'missing' | 'unknown' | 'billed_by_asksales';
+
 export interface ResolvedWhatsAppCreds {
   source: 'channel_credentials' | 'api_credentials';
   credId: number;
@@ -203,6 +206,41 @@ export class WhatsAppApiService {
     } catch (error) {
       logger.warn({ err: error, credId: creds.credId }, '[WhatsAppApiService] Could not persist provider readiness');
     }
+  }
+
+  /**
+   * Whether Meta has a payment method on this WhatsApp Business Account.
+   * On customer billing Meta charges the customer's own card; without one,
+   * marketing, utility and authentication templates fail. The result is kept
+   * on the connection so the WhatsApp page can show it.
+   */
+  async checkPaymentMethod(creds: ResolvedWhatsAppCreds): Promise<WhatsAppPaymentMethodStatus> {
+    let status: WhatsAppPaymentMethodStatus = 'unknown';
+    if (creds.businessAccountId) {
+      try {
+        const token = await this.ensureTokenValidity(creds);
+        const response = await fetch(
+          `https://graph.facebook.com/${creds.apiVersion}/${encodeURIComponent(creds.businessAccountId)}?fields=primary_funding_id`,
+          { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) },
+        );
+        const data = await response.json() as { primary_funding_id?: string };
+        if (response.ok) status = data.primary_funding_id ? 'present' : 'missing';
+      } catch (error) {
+        logger.warn({ err: error, credId: creds.credId }, '[WhatsAppApiService] Could not check the payment method');
+      }
+    }
+    if (creds.source === 'channel_credentials' && creds.credId > 0) {
+      try {
+        await db.execute(sql`UPDATE channel_credentials
+          SET session_data = COALESCE(session_data, '{}'::jsonb) || jsonb_build_object('paymentMethod',
+            jsonb_build_object('status', ${status}::text, 'checkedAt', ${new Date().toISOString()}::text)),
+            updated_at = NOW()
+          WHERE id = ${creds.credId}`);
+      } catch (error) {
+        logger.warn({ err: error, credId: creds.credId }, '[WhatsAppApiService] Could not save the payment method status');
+      }
+    }
+    return status;
   }
 
   // ── Credential resolution ────────────────────────────────────────────────

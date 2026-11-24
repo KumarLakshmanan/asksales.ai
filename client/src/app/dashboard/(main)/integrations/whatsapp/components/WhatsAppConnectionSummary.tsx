@@ -12,6 +12,8 @@ type WhatsAppStatus = {
   tokenStatus?: "active" | "expiring_soon" | "expired" | "invalid" | "unknown";
   accessTokenExpiresAt?: string | null;
   lastVerifiedAt?: string | null;
+  /** From the last Test connection: whether Meta has a payment method for this account. */
+  paymentMethod?: "present" | "missing" | "unknown" | "billed_by_asksales" | null;
 };
 
 export function WhatsAppConnectionSummary({ status, testing, onTest }: {
@@ -47,6 +49,9 @@ export function WhatsAppConnectionSummary({ status, testing, onTest }: {
     </div>
     {needsMetaAction && <Callout tone="warning">
       Meta no longer exposes this phone number to the selected business account. Check phone registration, account restrictions, payment status, and business verification in <a className="font-semibold underline underline-offset-2" href="https://business.facebook.com/latest/whatsapp_manager/phone_numbers/" target="_blank" rel="noreferrer">WhatsApp Manager</a>. Reconnecting alone cannot restore a disabled account.
+    </Callout>}
+    {status.paymentMethod === "missing" && <Callout tone="warning">
+      Meta has no payment method for this WhatsApp account, so marketing, utility and authentication templates will fail. Replies inside the 24-hour window still work. Add a card under Messaging accounts in <a className="font-semibold underline underline-offset-2" href="https://business.facebook.com/billing_hub/accounts" target="_blank" rel="noreferrer">Meta Billing &amp; payments</a>, then use Test connection.
     </Callout>}
     {(status.tokenStatus === "expiring_soon" || status.tokenStatus === "expired" || status.tokenStatus === "invalid") && <p className="text-sm text-amber-700 dark:text-amber-300">Your authorization needs attention. Reconnect WhatsApp to renew access.</p>}
     {status.lastVerifiedAt && <LastCheckedNote value={status.lastVerifiedAt} action="Test connection" />}
