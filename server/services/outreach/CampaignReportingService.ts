@@ -6,7 +6,7 @@ import { assertOwnedCampaignThread } from '../CampaignWorkspaceService.js';
 import { campaignReportUrl, type CampaignReport, type CampaignReportFilters, type CampaignDeliveryCounts } from '../../../shared/campaignReporting.js';
 import type { CampaignReportOptions } from '../../../shared/campaignReporting.js';
 import {customerReportingIdentityCtes} from './CustomerReportingIdentity.js';
-import { deliveryStateSql, messageProviderCode, reportStateSql } from './OutreachDeliveryState.js';
+import { deliveryStateSql, providerCodeSql, reportStateSql } from './OutreachDeliveryState.js';
 
 export class CampaignReportError extends Error {
   constructor(message: string, public readonly status = 400) { super(message); }
@@ -174,17 +174,40 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
       SELECT 'message-'||m.id AS id,m.id AS message_id,c.lead_id,m.campaign_id,c.id AS conversation_id,
         CASE WHEN c.channel IN('gmail','resend') THEN 'email' ELSE c.channel END AS channel,
         COALESCE(c.provider_account_id,m.provider_account_id,'') AS account_id,
-        m.message_kind,COALESCE(m.metadata->>'preparedOutreachId',m.metadata->'outreachCreation'->'delivery'->>'preparedOutreachId') AS prepared_outreach_id,
-        COALESCE(m.metadata->>'threadId',m.metadata->'outreachCreation'->'delivery'->>'threadId',campaign.settings->>'threadId') AS workspace_id,
-        CASE WHEN m.status='failed' AND m.metadata->'outreachQueue'->>'enqueueNeeded'='true' THEN 'pending' ELSE m.status END AS raw_status,
+        m.message_kind,md.prepared_outreach_id,
+        COALESCE(md.thread_id,campaign.settings->>'threadId') AS workspace_id,
+        CASE WHEN m.status='failed' AND md.enqueue_needed='true' THEN 'pending' ELSE m.status END AS raw_status,
         m.sent_at,m.created_at,COALESCE(m.delivered_at,receipt.delivered_at) AS delivered_at,m.read_at,
         m.manual_review_required OR m.status IN('manual_review','setup_required') AS needs_review,
-        m.metadata->'outreachQueue'->>'reason' AS reason,
-        ${messageProviderCode} AS provider_code,
-        COALESCE(m.metadata->'outreachQueue'->>'nextAttemptAt',m.metadata->>'scheduledAt') AS next_attempt_at,
+        md.queue_reason AS reason,
+        ${providerCodeSql({
+          status: sql`m.status`, error: sql`m.error_message`,
+          queueCode: sql`md.queue_code`, enqueueNeeded: sql`md.enqueue_needed`,
+          failureCode: sql`md.failure_code`, failureMessage: sql`md.failure_message`,
+        })} AS provider_code,
+        md.next_attempt_at,
         m.error_message AS error,receipt.opened_at,receipt.clicked_at,
         receipt.reply_received_at,NULL::text AS reply_message_id,receipt.sentiment
-      FROM outreach_messages m JOIN report_conversations c ON c.id=m.conversation_id
+      FROM outreach_messages m
+      -- Metadata is often over 2 kB, so Postgres stores it compressed and
+      -- decompressed it again for every m.metadata->'…'. Unpacking it once
+      -- ('{}' || metadata returns an in-memory copy; each OFFSET 0 keeps its
+      -- subquery from being inlined) cut that step from about 1.6 s to 0.4 s
+      -- on a 35,000-message report. Only short text leaves the outer one, so
+      -- the decompressed copy is never carried into later sorts.
+      CROSS JOIN LATERAL (
+        SELECT COALESCE(x.d->>'preparedOutreachId',x.d->'outreachCreation'->'delivery'->>'preparedOutreachId') AS prepared_outreach_id,
+          COALESCE(x.d->>'threadId',x.d->'outreachCreation'->'delivery'->>'threadId') AS thread_id,
+          x.d->'outreachQueue'->>'enqueueNeeded' AS enqueue_needed,
+          x.d->'outreachQueue'->>'reason' AS queue_reason,
+          x.d->'outreachQueue'->>'providerCode' AS queue_code,
+          x.d->'providerFailure'->>'code' AS failure_code,
+          x.d->'providerFailure'->>'message' AS failure_message,
+          COALESCE(x.d->'outreachQueue'->>'nextAttemptAt',x.d->>'scheduledAt') AS next_attempt_at
+        FROM (SELECT '{}'::jsonb || COALESCE(m.metadata,'{}'::jsonb) AS d OFFSET 0) x
+        OFFSET 0
+      ) md
+      JOIN report_conversations c ON c.id=m.conversation_id
         AND c.user_id=m.user_id AND c.business_profile_id=m.business_profile_id
       LEFT JOIN outreach_campaigns campaign ON campaign.id=m.campaign_id AND campaign.user_id=m.user_id AND campaign.business_profile_id=m.business_profile_id
       LEFT JOIN message_receipts receipt ON receipt.message_id=m.id
@@ -193,7 +216,7 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
         AND ${reportSourcePredicate(filters, {
           channel: sql`c.channel`, account: sql`COALESCE(c.provider_account_id,m.provider_account_id,'')`,
           createdAt: sql`m.created_at`, campaignId: sql`m.campaign_id`, messageKind: sql`m.message_kind`,
-          preparedOutreachId: sql`COALESCE(m.metadata->>'preparedOutreachId',m.metadata->'outreachCreation'->'delivery'->>'preparedOutreachId')`,
+          preparedOutreachId: sql`md.prepared_outreach_id`,
         })}
     ), legacy_jobs AS (
       SELECT 'campaign-job-'||j.id AS id,NULL::int AS message_id,j.lead_id,j.campaign_id,NULL::int AS conversation_id,

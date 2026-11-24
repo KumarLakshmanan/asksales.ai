@@ -107,12 +107,27 @@ export const messageNextAttemptAt = sql`(CASE WHEN ${nextAttemptText} ~ '^[0-9]{
  * A failure receipt saves WhatsApp's own code with its text
  * (`providerFailure`); that code is shown while the text is still the error.
  */
-export const messageProviderCode = sql`(CASE
-  WHEN NULLIF(m.error_message,'') IS NOT NULL AND m.metadata->'providerFailure'->>'message'=m.error_message
-    THEN m.metadata->'providerFailure'->>'code'
-  WHEN m.status IN(${list([...rawStatuses.waiting, ...rawStatuses.sending])})
-    OR m.metadata->'outreachQueue'->>'enqueueNeeded'='true' OR NULLIF(m.error_message,'') IS NULL
-  THEN m.metadata->'outreachQueue'->>'providerCode' END)`;
+export interface ProviderCodeColumns {
+  status: SQL; error: SQL;
+  /** Text: `outreachQueue.providerCode` and `outreachQueue.enqueueNeeded`. */
+  queueCode: SQL; enqueueNeeded: SQL;
+  /** Text: `providerFailure.code` and `providerFailure.message`. */
+  failureCode: SQL; failureMessage: SQL;
+}
+export function providerCodeSql(c: ProviderCodeColumns): SQL {
+  return sql`(CASE
+  WHEN NULLIF(${c.error},'') IS NOT NULL AND ${c.failureMessage}=${c.error} THEN ${c.failureCode}
+  WHEN ${c.status} IN(${list([...rawStatuses.waiting, ...rawStatuses.sending])})
+    OR ${c.enqueueNeeded}='true' OR NULLIF(${c.error},'') IS NULL
+  THEN ${c.queueCode} END)`;
+}
+export const messageProviderCode = providerCodeSql({
+  status: sql`m.status`, error: sql`m.error_message`,
+  queueCode: sql`m.metadata->'outreachQueue'->>'providerCode'`,
+  enqueueNeeded: sql`m.metadata->'outreachQueue'->>'enqueueNeeded'`,
+  failureCode: sql`m.metadata->'providerFailure'->>'code'`,
+  failureMessage: sql`m.metadata->'providerFailure'->>'message'`,
+});
 
 /** The delivery state of an `outreach_messages m` row. */
 export const messageDeliveryState = deliveryStateSql({
