@@ -99,7 +99,7 @@ async function backfill(userId: number, business: number) {
         CASE WHEN g.scheduled ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' THEN g.scheduled::timestamptz END,
         CASE WHEN g.prepared<>'' THEN 'legacy_prepared' ELSE 'legacy_inferred' END,NULLIF(g.prepared,'')::uuid,
         g.fingerprint,'queued',g.messages,g.messages,g.expires AT TIME ZONE 'UTC',g.started AT TIME ZONE 'UTC'
-      FROM groups g LEFT JOIN dashboard_operations op ON g.prepared<>'' AND op.id=g.prepared::uuid
+      FROM groups g LEFT JOIN dashboard_operations op ON op.id=NULLIF(g.prepared,'')::uuid
         AND op.user_id=${userId} AND op.business_profile_id=${business} AND op.kind='campaign_prepare'
       ON CONFLICT(business_profile_id,user_id,request_fingerprint) DO UPDATE SET updated_at=now()
       RETURNING id,request_fingerprint
