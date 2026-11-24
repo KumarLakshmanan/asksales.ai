@@ -26,8 +26,32 @@ const SECRET_PATTERNS: Array<{ code: string; pattern: RegExp }> = [
   { code: 'password_assignment', pattern: /\b(?:password|passwd|pwd)\s*[:=]\s*[^\s]{6,}/i },
   { code: 'api_secret', pattern: /\b(?:api[_ -]?key|client[_ -]?secret|access[_ -]?token)\s*[:=]\s*[A-Za-z0-9_\-.]{12,}/i },
   { code: 'bearer_token', pattern: /\bBearer\s+[A-Za-z0-9_\-.=]{16,}/i },
-  { code: 'payment_card', pattern: /\b(?:\d[ -]*?){13,19}\b/ },
 ];
+
+// Any run of 13-19 digits with spaces or hyphens is a candidate; only a
+// Luhn-valid one is treated as a card. Without the checksum, price tables,
+// phone numbers and figures in PDFs were classified as secrets and quarantined.
+const PAYMENT_CARD_CANDIDATE = /\b(?:\d[ -]*?){13,19}\b/g;
+/** Luhn checksum over 13-19 digits, the same rule the PII redactor applies. */
+function isPaymentCardNumber(value: string): boolean {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0;
+  let double = false;
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let digit = Number(digits[i]);
+    if (double) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    double = !double;
+  }
+  return sum % 10 === 0;
+}
+function containsPaymentCard(text: string): boolean {
+  return [...text.matchAll(PAYMENT_CARD_CANDIDATE)].some(match => isPaymentCardNumber(match[0]));
+}
 
 const INJECTION_PATTERNS: Array<{ code: string; pattern: RegExp }> = [
   { code: 'ignore_instructions', pattern: /\bignore\s+(?:all\s+)?(?:previous|prior|system|developer)\s+instructions?\b/i },
@@ -94,7 +118,10 @@ export function scanKnowledgeContent(content: string, options: { trustedBusiness
   const redacted = redaction.text;
   const containsPersonalData = redacted !== normalized;
   const maskedContacts = maskVerifiedBusinessContacts(normalized, contacts).masked;
-  const secretMatches = SECRET_PATTERNS.filter(({ code, pattern }) => pattern.test(code === 'payment_card' ? maskedContacts : normalized)).map(({ code }) => code);
+  const secretMatches = [
+    ...SECRET_PATTERNS.filter(({ pattern }) => pattern.test(normalized)).map(({ code }) => code),
+    ...(containsPaymentCard(maskedContacts) ? ['payment_card'] : []),
+  ];
   const injectionFlags = INJECTION_PATTERNS.filter(({ pattern }) => pattern.test(normalized)).map(({ code }) => code);
   const exactIdentifiers = unique(normalized.toUpperCase().match(IDENTIFIER_PATTERN) || []);
   const reasons: string[] = [];
