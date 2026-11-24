@@ -94,14 +94,29 @@ export function useInboxConversation(
               conversation: OutreachConversation;
               messages: OutreachMessage[];
             }>(
-              `/api/outreach-conversations/${detail.item.channel}/${initial.id}/messages?limit=50&offset=0`,
+              `/api/outreach-conversations/${detail.item.channel}/${initial.id}/messages?limit=50&offset=0&markRead=false`,
             )
           : {
               conversation: null,
               messages: detail.message ? [detail.message] : [],
             };
       if (!alive.current) return;
-      setItem({ ...detail.item, unreadCount: 0 });
+      // Loading never marks anything read: only a person looking at the open
+      // thread does, so background refreshes of a hidden tab leave it unread.
+      const visible = initial.kind === "conversation"
+        && typeof document !== "undefined" && document.visibilityState === "visible";
+      let seen = visible && detail.item.unreadCount === 0;
+      if (visible && detail.item.unreadCount > 0) {
+        try {
+          await api.post(`/api/outreach-conversations/${detail.item.channel}/${initial.id}/read`, {});
+          seen = true;
+        } catch {
+          // Still unread on the server: keep the count, and do not ask the
+          // list to refresh (that would retry this request in a loop).
+        }
+        if (!alive.current) return;
+      }
+      setItem(seen ? { ...detail.item, unreadCount: 0 } : detail.item);
       setConversation(response.conversation);
       setError(null);
       // If more than a page arrived while away, restart from a contiguous
@@ -134,7 +149,7 @@ export function useInboxConversation(
           .forEach((m) => merged.delete(m.id));
         return [...merged.values()].sort(messageOrder);
       });
-      if (initial.kind === "conversation") onRead(detail.item);
+      if (seen) onRead(detail.item);
     } catch (e) {
       if (alive.current)
         setError(
@@ -161,7 +176,7 @@ export function useInboxConversation(
     setLoadingOlder(true);
     try {
       const response = await api.get<{ messages: OutreachMessage[] }>(
-        `/api/outreach-conversations/${item.channel}/${item.id}/messages?limit=50&beforeMessageId=${oldestMessageId.current}`,
+        `/api/outreach-conversations/${item.channel}/${item.id}/messages?limit=50&beforeMessageId=${oldestMessageId.current}&markRead=false`,
       );
       if (!alive.current) return;
       if (response.messages.length)
@@ -191,10 +206,11 @@ export function useInboxConversation(
 
   const send = async (
     extra: Record<string, unknown> = {},
-    override?: OutreachMessage,
+    override?: Pick<OutreachMessage, "content" | "htmlContent" | "subject"> & { id?: number },
   ) => {
     if (sendInFlight.current || deliveryFailure || !item.reply.canReply || item.reply.assistant?.ready === false || error || uploading)
       return false;
+    if (item.reply.requiresTemplate && !extra.templateName) return false;
     const snapshot = override
       ? {
           ...draftRef.current,

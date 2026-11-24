@@ -30,6 +30,7 @@ interface OutreachComposeAreaProps {
   sending?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  inlineReply?: boolean;
 
   // Optional features
   showSubject?: boolean;
@@ -78,6 +79,7 @@ export function OutreachComposeArea({
   sending = false,
   disabled = false,
   placeholder,
+  inlineReply = false,
   showSubject = false,
   subject = "",
   onSubjectChange,
@@ -113,11 +115,26 @@ export function OutreachComposeArea({
   const isAttachmentEnabled = showAttachment || !!onFilesSelected;
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !disabled && !sending && (message.trim() || attachments?.length)) {
       e.preventDefault();
       onSend();
     }
-  }, [onSend]);
+  }, [attachments?.length, disabled, message, onSend, sending]);
+
+  const aiAction = showAIGenerate && (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onAIGenerateClick}
+      loading={isGeneratingAI}
+      disabled={disabled || sending}
+      className="h-9 shrink-0 gap-1 rounded-lg px-2 text-xs text-primary hover:bg-primary/5"
+    >
+      <Sparkles className={inlineReply ? "hidden size-3.5 sm:block" : "size-3.5"} aria-hidden="true" />
+      AI
+    </Button>
+  );
 
   return (
     <div className={`border-t border-border/70 p-3 ${appearance === 'channel' && channel === "whatsapp" ? "bg-[#f0f2f5] dark:bg-slate-900" : "bg-background"}`}>
@@ -140,9 +157,11 @@ export function OutreachComposeArea({
           onValueChange={handleMessageChange}
           onSend={onSend}
           onKeyDown={handleKeyDown}
+          inlineEditor={inlineReply}
+          context={inlineReply ? <>{extraLeftActions}{aiAction}</> : undefined}
           editor={channel === "whatsapp" || (channel === "email" && onHtmlContentChange) ? (
             <ChannelMessageEditor channel={channel} value={message} onChange={handleMessageChange}
-              htmlContent={htmlContent} onHtmlChange={onHtmlContentChange} compact
+              htmlContent={htmlContent} onHtmlChange={onHtmlContentChange} compact inline={inlineReply}
               disabled={disabled || sending} placeholder={resolvedPlaceholder}
               maxLength={capabilities.characterLimit} onKeyDown={handleKeyDown} />
           ) : undefined}
@@ -179,7 +198,7 @@ export function OutreachComposeArea({
           ) : uploadingAttachments ? (
             <AttachmentTray attachments={[{ id: "uploading", name: "Uploading attachment…", status: "uploading" }]} />
           ) : undefined}
-          footer={
+          footer={!inlineReply && (
             <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-0.5">
             {showImage && (
@@ -216,19 +235,7 @@ export function OutreachComposeArea({
                 Templates
               </Button>
             )}
-            {showAIGenerate && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onAIGenerateClick}
-                loading={isGeneratingAI}
-                disabled={disabled || sending}
-                className="h-8 rounded-lg px-2.5 text-xs gap-1.5 text-primary hover:bg-primary/5"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                AI
-              </Button>
-            )}
+            {aiAction}
             {channel === 'email' && onEmailDesignChange && <EmailDesignPicker value={emailDesignId} onChange={onEmailDesignChange} body={htmlContent} disabled={disabled || sending} />}
             {extraLeftActions}
           </div>
@@ -240,7 +247,7 @@ export function OutreachComposeArea({
             {children}
           </div>
         </div>
-          }
+          )}
         />
       </div>
     </div>

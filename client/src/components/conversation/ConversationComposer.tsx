@@ -31,6 +31,7 @@ interface ConversationComposerProps {
   attachments?: ReactNode;
   subject?: ReactNode;
   editor?: ReactNode;
+  inlineEditor?: boolean;
   footer?: ReactNode;
   shape?: "pill" | "panel";
   sendLabel?: string;
@@ -65,6 +66,7 @@ export function ConversationComposer({
   attachments,
   subject,
   editor,
+  inlineEditor = false,
   footer,
   shape = "pill",
   sendLabel,
@@ -112,11 +114,11 @@ export function ConversationComposer({
         className={cn(
           "border border-border/80 bg-card shadow-[0_8px_28px_rgb(0_0_0/0.08)] transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:ring-2 focus-within:ring-primary/10",
           shape === "pill" ? "rounded-2xl p-2" : "rounded-xl p-2.5",
-          disabled && "opacity-65",
+          disabled && !inlineEditor && "opacity-65",
         )}
       >
-        {editor}
-        <div className={cn("flex min-w-0 items-end gap-1.5", editor && "mt-2")}>
+        {inlineEditor ? null : editor}
+        <div className={cn("flex min-w-0 items-end gap-1.5", editor && !inlineEditor && "mt-2", inlineEditor && "items-center gap-1")}>
           {onAttach ? (
             <Button
               type="button"
@@ -132,7 +134,7 @@ export function ConversationComposer({
             </Button>
           ) : null}
 
-          {editor ? <div className="min-w-0 flex-1" /> : <Textarea
+          {editor ? <div className="min-w-0 flex-1">{inlineEditor ? editor : null}</div> : <Textarea
             ref={resolvedRef}
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
@@ -188,12 +190,12 @@ export function ConversationComposer({
             onClick={onSend}
             disabled={cannotSend}
             size={sendLabel ? "sm" : "icon"}
-            className={cn("h-9 shrink-0 rounded-lg", sendLabel ? "gap-1.5 px-3" : "w-9", sendButtonClassName)}
+            className={cn("h-9 shrink-0 rounded-lg", sendLabel ? "gap-1.5 px-3" : "w-9", inlineEditor && "w-9 px-0 sm:w-auto sm:px-3", sendButtonClassName)}
             aria-label={busy && allowQueue ? "Queue message" : sendLabel || "Send message"}
             title={busy && allowQueue ? "Queue message" : sendLabel || "Send message"}
           >
             {busy && !allowQueue ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
-            {sendLabel ? <span>{busy ? "Sending…" : sendLabel}</span> : null}
+            {sendLabel ? <span className={inlineEditor ? "hidden sm:inline" : undefined}>{busy ? "Sending…" : sendLabel}</span> : null}
           </Button>
         </div>
         {controlsLayout === "toolbar" && (context || actions.length > 0 || onToggleVoice) ? (

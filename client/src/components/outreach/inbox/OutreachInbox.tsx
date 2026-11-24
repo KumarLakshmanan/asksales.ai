@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
-  CheckCheck,
+  Clock,
   Facebook,
+  FileText,
   Inbox,
   Instagram,
   LockKeyhole,
@@ -22,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from '@/components/ui/textarea';
-import { AssistantDeliveryNotice } from '../AssistantDeliveryNotice';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import api from "@/lib/api";
@@ -30,8 +31,10 @@ import { cn } from "@/lib/utils";
 import {
   INBOX_CHANNELS,
   INBOX_LABELS,
+  INBOX_ORIGIN_LABELS,
   type InboxChannel,
   type InboxItem,
+  type InboxOriginFilter,
   type InboxPage,
 } from "@/lib/outreach-inbox";
 import { OutreachMessageTimeline } from "../OutreachMessageTimeline";
@@ -54,6 +57,7 @@ const ICONS = {
   facebook: Facebook,
   sms: MessageSquare,
 };
+const ORIGIN_CHIPS = ["outreach", "customer", "ai", "manual", "native_app"] satisfies InboxOriginFilter[];
 const emptyCounts = () =>
   Object.fromEntries(
     [...INBOX_CHANNELS, "all"].map((channel) => [channel, 0]),
@@ -100,12 +104,15 @@ function InboxThread({
   );
   const { item } = thread;
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  const [showWhatsAppTemplate, setShowWhatsAppTemplate] = useState(false);
+  // WhatsApp templates open in a side panel, so the reply bar stays one line
+  // and the messages keep the space.
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
   const [templatePayload, setTemplatePayload] =
     useState<InboxTemplatePayload | null>(null);
-  const templateMode =
-    item.channel === "whatsapp" &&
-    (item.reply.requiresTemplate || showWhatsAppTemplate);
+  const templateButton = useRef<HTMLButtonElement>(null);
+  const isWhatsApp = item.channel === "whatsapp";
+  // Outside the 24-hour window only an approved template can be sent.
+  const windowClosed = isWhatsApp && Boolean(item.reply.requiresTemplate);
   const timeline = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
   const previousLastId = useRef<number | undefined>(undefined);
@@ -126,15 +133,11 @@ function InboxThread({
   }, [thread.messages]);
   const sendTemplate = async () => {
     if (!templatePayload) return;
-    thread.setDraft({ content: templatePayload.content, attachments: [] });
-    if (
-      await thread.send({
-        templateName: templatePayload.templateName,
-        templateLanguage: templatePayload.templateLanguage,
-        templateComponents: templatePayload.templateComponents,
-      })
-    )
-      setShowWhatsAppTemplate(false);
+    const { content, ...template } = templatePayload;
+    if (await thread.send(template, { content })) {
+      setTemplatePayload(null);
+      setTemplatePanelOpen(false);
+    }
   };
   return (
     <section
@@ -286,7 +289,7 @@ function InboxThread({
                     : undefined
                 }
                 onSendDraft={
-                  item.reply.canReply && !templateMode
+                  item.reply.canReply && !windowClosed
                     ? (message) => void thread.send({}, message)
                     : undefined
                 }
@@ -300,7 +303,7 @@ function InboxThread({
           </div>
         )}
       </div>
-      {thread.actionError && (
+      {thread.actionError && !templatePanelOpen && (
         <div
           role="alert"
           className="shrink-0 border-t bg-destructive/5 px-4 py-3 text-sm text-destructive"
@@ -308,8 +311,6 @@ function InboxThread({
           {thread.actionError}
         </div>
       )}
-      {/* A blocked assistant is explained once, in the reply panel below, with its setup link. */}
-      {!thread.loading && item.reply.assistant?.ready && <div className="shrink-0 border-t px-4 py-2 sm:px-6"><AssistantDeliveryNotice readiness={item.reply.assistant} compact /></div>}
       {!thread.loading && (!item.reply.canReply || item.reply.assistant?.ready === false) ? (
         <div className="flex min-h-0 max-h-[50%] shrink items-start gap-2 overflow-y-auto border-t bg-card px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
           <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -321,96 +322,121 @@ function InboxThread({
                 href={item.reply.assistant?.setupUrl || (item.channel === "sms" ? "/dashboard/integrations/msg91" : "/dashboard/integrations")}
                 className="ml-1 inline-flex items-center gap-0.5 font-medium text-primary hover:underline"
               >
-                {item.reply.assistant && !item.reply.assistant.ready ? 'Set up required assistant' : 'Manage connections'}
+                {item.reply.assistant && !item.reply.assistant.ready ? 'Fix in settings' : 'Manage connections'}
                 <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </Link>
             )}
           </p>
-          {item.reply.assistant?.ready === false && <div className="mt-3 space-y-2"><Textarea aria-label="Reply draft" value={thread.draft.content} onChange={event => thread.setDraft({ content: event.target.value })} rows={3} maxLength={50000} /><p>Draft kept in this tab. Setting up an assistant will not send it automatically.</p></div>}
+          {item.reply.assistant?.ready === false && <div className="mt-3 space-y-2"><Textarea aria-label="Reply draft" value={thread.draft.content} onChange={event => thread.setDraft({ content: event.target.value })} rows={3} maxLength={50000} /><p>Draft kept in this tab. Fixing the settings will not send it automatically.</p></div>}
           </div>
         </div>
       ) : (
         !thread.loading && (
           <div className="min-h-0 max-h-[50%] shrink overflow-y-auto border-t bg-card">
-            {templateMode ? (
-              <>
-                <div className="flex items-center justify-between gap-2 px-4 pt-3 text-xs text-muted-foreground">
-                  <p>
-                    {item.reply.requiresTemplate
-                      ? "An approved template is required to restart this WhatsApp conversation."
-                      : "Send an approved template."}
-                  </p>
-                  {!item.reply.requiresTemplate && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowWhatsAppTemplate(false)}
-                    >
-                      Write reply
-                    </Button>
-                  )}
-                </div>
-                <InboxWhatsAppTemplate onChange={onTemplateChange} providerAccountId={item.reply.providerAccountId} />
-                <div className="flex justify-end px-4 pb-4">
-                  <Button
-                    loading={thread.sending}
-                    disabled={
-                      !templatePayload ||
-                      Boolean(thread.error)
-                    }
-                    onClick={() => void sendTemplate()}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    Send template
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <OutreachComposeArea
-                channel={item.channel}
-                appearance="neutral"
-                message={thread.draft.content}
-                onMessageChange={(content) => thread.setDraft({ content })}
-                emailDesignId={thread.draft.emailDesignId}
-                onEmailDesignChange={emailDesignId => thread.setDraft({ emailDesignId })}
-                htmlContent={thread.draft.htmlContent}
-                onHtmlContentChange={item.channel === "email" ? (htmlContent) => thread.setDraft({ htmlContent }) : undefined}
-                onSend={() => void thread.send()}
-                sending={thread.sending}
-                disabled={Boolean(thread.error) || thread.uploading}
-                showSubject={item.channel === "email"}
-                subject={thread.draft.subject}
-                onSubjectChange={(subject) => thread.setDraft({ subject })}
-                attachments={thread.draft.attachments}
-                uploadingAttachments={thread.uploading}
-                fileAccept={
-                  item.channel === "instagram"
-                    ? ".png,.jpg,.jpeg,.mp3,.ogg,.m4a"
-                    : item.channel === "facebook"
-                      ? ".png,.jpg,.jpeg,.gif,.mp3,.ogg,.m4a"
-                      : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.mp3,.ogg,.m4a,.aac"
-                }
-                onFilesSelected={capability.supportsAttachments ? (files) => void thread.upload(files) : undefined}
-                onRemoveAttachment={(id) =>
-                  thread.setDraft({
-                    attachments: thread.draft.attachments.filter(
-                      (a) => a.id !== id,
-                    ),
-                  })
-                }
-                showTemplate
-                onTemplateClick={() =>
-                  item.channel === "whatsapp"
-                    ? setShowWhatsAppTemplate(true)
-                    : setTemplatesOpen(true)
-                }
-                showAIGenerate
-                onAIGenerateClick={() => void thread.generate()}
-                aiGenerating={thread.generating}
-              />
+            {windowClosed && (
+              <div role="status" className="flex items-center justify-center gap-2 border-b bg-amber-50 px-4 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>24-hour window closed · reply with a template</span>
+              </div>
             )}
+            <OutreachComposeArea
+              channel={item.channel}
+              appearance="neutral"
+              message={thread.draft.content}
+              onMessageChange={(content) => thread.setDraft({ content })}
+              emailDesignId={thread.draft.emailDesignId}
+              onEmailDesignChange={emailDesignId => thread.setDraft({ emailDesignId })}
+              htmlContent={thread.draft.htmlContent}
+              onHtmlContentChange={item.channel === "email" ? (htmlContent) => thread.setDraft({ htmlContent }) : undefined}
+              onSend={() => void thread.send()}
+              sending={thread.sending}
+              disabled={Boolean(thread.error) || thread.uploading || windowClosed}
+              placeholder={windowClosed ? "Free-form replies open again when the customer writes" : undefined}
+              showSubject={item.channel === "email"}
+              subject={thread.draft.subject}
+              onSubjectChange={(subject) => thread.setDraft({ subject })}
+              attachments={thread.draft.attachments}
+              uploadingAttachments={thread.uploading}
+              fileAccept={
+                item.channel === "instagram"
+                  ? ".png,.jpg,.jpeg,.mp3,.ogg,.m4a"
+                  : item.channel === "facebook"
+                    ? ".png,.jpg,.jpeg,.gif,.mp3,.ogg,.m4a"
+                    : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.mp3,.ogg,.m4a,.aac"
+              }
+              onFilesSelected={capability.supportsAttachments ? (files) => void thread.upload(files) : undefined}
+              onRemoveAttachment={(id) =>
+                thread.setDraft({
+                  attachments: thread.draft.attachments.filter(
+                    (a) => a.id !== id,
+                  ),
+                })
+              }
+              // WhatsApp's Template button stays usable when the window is closed.
+              inlineReply={isWhatsApp}
+              showTemplate={!isWhatsApp}
+              onTemplateClick={() => setTemplatesOpen(true)}
+              extraLeftActions={isWhatsApp ? (
+                <Button
+                  ref={templateButton}
+                  type="button"
+                  variant={windowClosed ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setTemplatePanelOpen(true)}
+                  disabled={thread.sending || Boolean(thread.error)}
+                  className={cn("h-8 gap-1.5 rounded-lg px-2.5 text-xs", !windowClosed && "text-muted-foreground hover:text-foreground")}
+                >
+                  <FileText className="hidden size-3.5 sm:block" aria-hidden="true" />
+                  Template
+                </Button>
+              ) : undefined}
+              showAIGenerate={!windowClosed}
+              onAIGenerateClick={() => void thread.generate()}
+              aiGenerating={thread.generating}
+            />
           </div>
         )
+      )}
+      {isWhatsApp && (
+        <Sheet
+          open={templatePanelOpen}
+          onOpenChange={(open) => {
+            if (thread.sending) return;
+            setTemplatePanelOpen(open);
+            if (!open) setTemplatePayload(null);
+          }}
+        >
+          <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md" onCloseAutoFocus={(event) => {
+            if (templateButton.current) {
+              event.preventDefault();
+              templateButton.current.focus();
+            }
+          }}>
+            <SheetHeader className="border-b py-4 pl-5 pr-12 text-left">
+              <SheetTitle>Send a WhatsApp template</SheetTitle>
+              <SheetDescription>
+                {windowClosed
+                  ? "The 24-hour window is closed, so only an approved template can restart this conversation."
+                  : "Pick an approved template, fill in its fields and check the preview."}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <InboxWhatsAppTemplate onChange={onTemplateChange} providerAccountId={item.reply.providerAccountId} />
+            </div>
+            <SheetFooter className="flex-col gap-2 border-t px-5 py-4 sm:flex-col">
+              {thread.actionError && <p role="alert" className="text-xs text-destructive">{thread.actionError}</p>}
+              <Button
+                loading={thread.sending}
+                disabled={!templatePayload || Boolean(thread.error)}
+                onClick={() => void sendTemplate()}
+                className="w-full"
+              >
+                <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+                Send template
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       )}
       <TemplateSelector
         open={templatesOpen}
@@ -445,10 +471,15 @@ export default function OutreachInbox() {
   const leadId = params.get("leadId");
   useEffect(() => { setChannel(initialChannel); }, [initialChannel]);
   const [unread, setUnread] = useState(false);
+  const [origin, setOrigin] = useState<InboxOriginFilter | null>(null);
+  const [totals, setTotals] = useState(emptyCounts);
+  const [originCounts, setOriginCounts] = useState<Partial<Record<InboxOriginFilter, number>>>({});
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<InboxItem[]>([]);
   const [counts, setCounts] = useState(emptyCounts);
+  // Counts are unknown until the first page arrives; never show a false "0".
+  const [countsLoaded, setCountsLoaded] = useState(false);
   const [cursor, setCursor] = useState<string | null>(null);
   const [selected, setSelected] = useState<InboxItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -507,6 +538,7 @@ export default function OutreachInbox() {
         limit: "50",
       });
       if (leadId) queryParams.set("leadId", leadId);
+      if (origin) queryParams.set("origin", origin);
       if (mode === "more" && cursorRef.current)
         queryParams.set("cursor", cursorRef.current);
       try {
@@ -563,6 +595,9 @@ export default function OutreachInbox() {
           setCursor(page.nextCursor);
         }
         setCounts(page.unreadThreads);
+        if (page.totalThreads) setTotals(page.totalThreads);
+        if (page.originCounts) setOriginCounts(page.originCounts);
+        setCountsLoaded(true);
         setError(null);
       } catch (e) {
         if (requestGeneration === generation.current)
@@ -583,7 +618,7 @@ export default function OutreachInbox() {
         }
       }
     },
-    [channel, unread, query, leadId],
+    [channel, unread, origin, query, leadId],
   );
   useEffect(() => {
     viewportAnchor.current = null;
@@ -713,6 +748,7 @@ export default function OutreachInbox() {
     selected.kind === "conversation" &&
     (channel === "all" || selected.channel === channel) &&
     (!leadId || selected.leadId === Number(leadId)) &&
+    (!origin || (origin === "ai" ? selected.aiHandled : selected.origin === origin)) &&
     !visibleItems.some((item) => item.key === selected.key)
   )
     visibleItems.unshift(selected);
@@ -782,7 +818,7 @@ export default function OutreachInbox() {
         )}
         aria-label="Inbox conversations"
       >
-        <div className="shrink-0 space-y-3 border-b p-3">
+        <section aria-label="Conversation filters" className="shrink-0 space-y-2.5 border-b p-3">
           <div className="relative">
             <Search
               aria-hidden="true"
@@ -796,27 +832,53 @@ export default function OutreachInbox() {
               className="h-10 rounded-lg bg-card pl-9"
             />
           </div>
-          <p className="text-[11px] text-muted-foreground">Searches all conversations</p>
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              aria-pressed={unread}
-              onClick={() => setUnread((value) => !value)}
-              className={cn(
-                "flex min-h-11 md:min-h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-medium",
-                unread
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted",
-              )}
-            >
-              <CheckCheck className="h-4 w-4" />
-              Unread threads<span className="rounded bg-primary/10 px-1.5 tabular-nums text-primary">{counts[channel]}</span>
-            </button>
-            <span className="text-[11px] text-muted-foreground">
-              Latest activity first
-            </span>
+          <div className="flex items-center justify-between gap-2">
+            <div role="group" aria-label="Show conversations" className="inline-flex rounded-lg border bg-muted/40 p-0.5">
+              {([false, true] as const).map((value) => (
+                <button
+                  key={String(value)}
+                  type="button"
+                  aria-pressed={unread === value}
+                  onClick={() => setUnread(value)}
+                  className={cn(
+                    "flex min-h-11 md:min-h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors",
+                    unread === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {value ? "Unread" : "All"}
+                  {countsLoaded ? (
+                    <span className={cn("tabular-nums", value && (counts[channel] ?? 0) > 0 ? "text-primary" : "text-muted-foreground")}>
+                      {((value ? counts[channel] : totals[channel]) ?? 0).toLocaleString()}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+            <span className="text-[11px] text-muted-foreground">Latest first</span>
           </div>
-        </div>
+          <div role="group" aria-label="Filter by conversation origin or AI activity" className="flex flex-wrap gap-1.5">
+            {ORIGIN_CHIPS.map((value) => {
+              const active = origin === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setOrigin(active ? null : value)}
+                  className={cn(
+                    "flex min-h-11 md:min-h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium transition-colors",
+                    active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {INBOX_ORIGIN_LABELS[value]}
+                  {countsLoaded && originCounts[value] !== undefined ? (
+                    <span className="tabular-nums">{originCounts[value]!.toLocaleString()}</span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
         <div ref={conversationList} className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           onScroll={event => {
             const list = event.currentTarget;
@@ -856,6 +918,8 @@ export default function OutreachInbox() {
               <p className="text-sm font-medium">
                 {query
                   ? "No matching conversations"
+                  : origin
+                    ? `No ${unread ? "unread " : ""}conversations in ${INBOX_ORIGIN_LABELS[origin]}`
                   : unread
                     ? "No unread conversations"
                     : "No conversations yet"}
@@ -867,7 +931,7 @@ export default function OutreachInbox() {
                     ? "New replies will appear here."
                     : "Your sent outreach and incoming replies will appear here."}
               </p>
-              {query || unread || channel !== "all" ? (
+              {query || unread || origin || channel !== "all" ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -876,6 +940,7 @@ export default function OutreachInbox() {
                     setSearch("");
                     setQuery("");
                     setUnread(false);
+                    setOrigin(null);
                     changeChannel("all");
                   }}
                 >
@@ -941,6 +1006,11 @@ export default function OutreachInbox() {
                           : item.reply.accountLabel ||
                             INBOX_LABELS[item.channel]}
                       </span>
+                      {item.origin && (
+                        <span className="ml-auto shrink-0 rounded border px-1.5 text-[10px] text-muted-foreground">
+                          {INBOX_ORIGIN_LABELS[item.origin]}{item.aiHandled ? " · AI" : ""}
+                        </span>
+                      )}
                       {item.unreadCount > 0 && (
                         <span className="min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center font-mono text-[11px] text-primary-foreground">
                           {item.unreadCount}

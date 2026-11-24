@@ -1,6 +1,6 @@
 import { test, expect, expectNoHorizontalOverflow } from "./fixtures/app";
 import type { Page, Route } from "@playwright/test";
-import type { InboxItem, InboxChannel } from "../../shared/outreachInbox";
+import { INBOX_CHANNELS, INBOX_ORIGIN_FILTERS, type InboxItem, type InboxChannel } from "../../shared/outreachInbox";
 
 if (process.env.EMAIL_PROVIDER_CHROMIUM_PATH) {
   test.use({ launchOptions: { executablePath: process.env.EMAIL_PROVIDER_CHROMIUM_PATH }, video: 'off', serviceWorkers: 'block' });
@@ -63,6 +63,8 @@ const makeItem = (channel: InboxChannel, id: number): InboxItem => ({
   totalMessages: 1,
   status: "active",
   integrationProvider: channel === "email" ? "gmail" : channel === "sms" ? "msg91" : null,
+  origin: id === 2 ? "outreach" : "customer",
+  aiHandled: id === 2,
   reply: {
     canReply: true,
     reason: null,
@@ -80,6 +82,7 @@ async function installInbox(page: Page) {
     kind: "legacy",
     unreadCount: 0,
     preview: "Older campaign outreach",
+    origin: "outreach",
     reply: {
       canReply: false,
       reason:
@@ -248,18 +251,27 @@ async function installInbox(page: Page) {
       if (state.failList)
         return json(route, { error: "Inbox temporarily unavailable" }, 503);
       const channel = url.searchParams.get("channel");
+      const origin = url.searchParams.get("origin");
       const query = url.searchParams.get("search") || "";
       searches.push(query);
       let filtered = items.filter(
         (item) =>
           (!channel || channel === "all" || item.channel === channel) &&
           (url.searchParams.get("unread") !== "true" || item.unreadCount > 0) &&
+          (!origin || (origin === "ai" ? item.aiHandled : item.origin === origin)) &&
           (!query ||
             [item.leadName, item.preview, item.leadCompany]
               .join(" ")
               .toLowerCase()
               .includes(query.toLowerCase())),
       );
+      const totalThreads = Object.fromEntries([...INBOX_CHANNELS, "all"].map(channel => [
+        channel, items.filter(item => channel === "all" || item.channel === channel).length,
+      ]));
+      const channelItems = items.filter(item => !channel || channel === "all" || item.channel === channel);
+      const originCounts = Object.fromEntries(INBOX_ORIGIN_FILTERS.map(origin => [
+        origin, channelItems.filter(item => origin === "ai" ? item.aiHandled : item.origin === origin).length,
+      ]));
       const unreadThreads = Object.fromEntries(
         ["all", ...new Set(channels)].map((channel) => [
           channel,
@@ -274,7 +286,7 @@ async function installInbox(page: Page) {
       const nextCursor =
         filtered.length > offset + 7 ? String(offset + 7) : null;
       filtered = filtered.slice(offset, offset + 7);
-      return json(route, { items: filtered, unreadThreads, nextCursor });
+      return json(route, { items: filtered, unreadThreads, totalThreads, originCounts, nextCursor });
     }
     const detail = path.match(
       /^\/api\/outreach-conversations\/inbox\/(conversation|legacy)\/(\d+)$/,
@@ -302,14 +314,14 @@ async function installInbox(page: Page) {
         : json(route, { error: "This inbox item is unavailable." }, 404);
     }
     const thread = path.match(
-      /^\/api\/outreach-conversations\/([^/]+)\/(\d+)\/(messages|draft-reply|discard-draft)$/,
+      /^\/api\/outreach-conversations\/([^/]+)\/(\d+)\/(messages|draft-reply|discard-draft|read)$/,
     );
     if (thread) {
       const id = Number(thread[2]);
       const item = items.find((item) => item.id === id)!;
       if (request.method() === "GET") {
         if (state.failMessages) return json(route, { error: "Messages temporarily unavailable" }, 503);
-        item.unreadCount = 0;
+        if (url.searchParams.get("markRead") !== "false") item.unreadCount = 0;
         const anchor = Number(url.searchParams.get("beforeMessageId") || 0);
         const all = history.get(id)!;
         const end = anchor
@@ -319,6 +331,10 @@ async function installInbox(page: Page) {
           conversation: { ...item, userId: 4101, leadName: item.leadName },
           messages: all.slice(Math.max(0, end - 50), end),
         });
+      }
+      if (thread[3] === "read") {
+        item.unreadCount = 0;
+        return json(route, { success: true });
       }
       const body = request.postDataJSON() as Record<string, unknown>;
       requests.push({ path, body });
@@ -519,11 +535,18 @@ test('WhatsApp reply formatting sends native bold and italic markers', async ({ 
   await page.goto('/dashboard/outreach/inbox?thread=conversation%3A2', { waitUntil: 'domcontentloaded' });
   const selected = page.getByRole('region', { name: 'Selected conversation' });
   const field = selected.getByRole('textbox', { name: 'Message', exact: true });
+  await expect(field).toBeVisible();
+  const replyControls = [field, ...['Attach files', 'Template', 'AI', 'Send'].map(name => selected.getByRole('button', { name, exact: true }))];
+  const bounds = await Promise.all(replyControls.map(control => control.boundingBox()));
+  const centers = bounds.map(box => box!.y + box!.height / 2);
+  expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(8);
   await field.fill('Hello Ben');
   await field.press('ControlOrMeta+a');
-  await selected.getByRole('button', { name: 'Bold', exact: true }).click();
+  await selected.getByRole('button', { name: 'Format message' }).click();
+  await page.getByRole('button', { name: 'Bold', exact: true }).click();
   await expect(field).toHaveValue('*Hello Ben*');
-  await selected.getByRole('button', { name: 'Italic', exact: true }).click();
+  await selected.getByRole('button', { name: 'Format message' }).click();
+  await page.getByRole('button', { name: 'Italic', exact: true }).click();
   await expect(field).toHaveValue('*_Hello Ben_*');
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('inbox-whatsapp-formatting.png'), fullPage: true });
@@ -531,6 +554,27 @@ test('WhatsApp reply formatting sends native bold and italic markers', async ({ 
   await expect(field).toHaveValue('');
   expect(mock.requests.at(-1)!.body.content).toBe('*_Hello Ben_*');
   expect(mock.requests.at(-1)!.body.htmlContent).toBeUndefined();
+});
+
+test('conversation origins filter the list and identify sent messages', async ({ page }, testInfo) => {
+  const mock = await installInbox(page);
+  mock.history.get(2)!.push({
+    id: 201, conversationId: 2, direction: 'outbound', content: 'Your proposal is ready.', status: 'sent',
+    createdAt: new Date().toISOString(), origin: { kind: 'outreach', label: 'AskSales outreach', outreachName: 'Proposal review', templateName: 'proposal_update', followUpStep: 2 },
+  });
+  await page.goto('/dashboard/outreach/inbox?channel=whatsapp');
+  const inbox = page.getByTestId('outreach-inbox');
+  const counts = inbox.getByRole('group', { name: 'Show conversations' });
+  await expect(counts.getByRole('button', { name: /^All\s*2$/ })).toBeVisible();
+  await expect(counts.getByRole('button', { name: /^Unread\s*1$/ })).toBeVisible();
+  await expect(inbox.getByText('Outreach · AI', { exact: true })).toBeVisible();
+  await inbox.getByRole('button', { name: /^AI handled\s*1$/ }).click();
+  const conversations = inbox.getByRole('button', { name: /^Open / });
+  await expect(conversations).toHaveCount(1);
+  await expectNoHorizontalOverflow(page);
+  await inbox.getByRole('region', { name: 'Conversation filters' }).screenshot({ path: testInfo.outputPath('inbox-origin-filters.png'), animations: 'disabled' });
+  await conversations.first().click();
+  await expect(page.getByText('AskSales outreach · Proposal review · Template proposal_update · Follow-up 2')).toBeVisible();
 });
 
 test('saved email templates keep their HTML when inserted into an Inbox reply', async ({ page }, testInfo) => {
@@ -554,15 +598,18 @@ test('Inbox templates use the conversation account and selected WhatsApp languag
   page.on('request', (request) => { if (request.url().includes('/compose/templates')) catalogs.push(new URL(request.url()).searchParams.get('providerAccountId') || ''); });
   await page.goto('/dashboard/outreach/inbox?thread=conversation%3A2', { waitUntil: 'domcontentloaded' });
   const selected = page.getByRole('region', { name: 'Selected conversation' });
-  await selected.getByRole('button', { name: /Choose a template/ }).click();
-  const drawer = page.getByRole('dialog');
+  await expect(selected.getByRole('textbox', { name: 'Message' })).toBeDisabled();
+  await selected.getByRole('button', { name: 'Template', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Send a WhatsApp template' });
+  await drawer.getByRole('searchbox', { name: 'Search templates' }).fill('proposal');
   await drawer.getByRole('button', { name: /proposal_update/ }).click();
+  await expect(drawer.getByRole('button', { name: 'Send template', exact: true })).toBeDisabled();
   await drawer.getByLabel('Header variable 1').fill('Ben');
   await drawer.getByLabel('Body variable 1').fill('Ben');
-  await drawer.getByRole('button', { name: 'Use template', exact: true }).click();
+  await expect(drawer.getByText('Hello Ben, your proposal is ready.', { exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('inbox-whatsapp-account-template.png'), fullPage: true });
-  await selected.getByRole('button', { name: 'Send template', exact: true }).click();
+  await drawer.getByRole('button', { name: 'Send template', exact: true }).click();
   await expect.poll(() => mock.requests.length).toBe(1);
   expect(catalogs.length).toBeGreaterThan(0);
   expect(new Set(catalogs)).toEqual(new Set(['original-2']));
@@ -696,7 +743,7 @@ test("unread counts threads, opening marks read and selection remains until leav
   await installInbox(page);
   await page.goto("/dashboard/outreach/inbox");
   const inbox = page.getByTestId("outreach-inbox");
-  await inbox.getByRole("button", { name: /^Unread threads\s*2$/ }).click();
+  await inbox.getByRole("button", { name: /^Unread\s*2$/ }).click();
   await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(2);
   await inbox.getByRole("button", { name: "Open Asha Raman on Email" }).click();
   await expect(page.getByText("History for Asha Raman")).toBeVisible();
@@ -705,7 +752,7 @@ test("unread counts threads, opening marks read and selection remains until leav
     await expect(inbox.getByRole("button", { name: /^Open / })).toHaveCount(1);
   } else {
     await expect(
-      inbox.getByRole("button", { name: /^Unread threads\s*1$/ }),
+      inbox.getByRole("button", { name: /^Unread\s*1$/ }),
     ).toBeVisible();
     await expect(
       inbox.getByRole("button", { name: "Open Asha Raman on Email" }),
@@ -727,15 +774,14 @@ test("channel reply controls, approved WhatsApp template values and disconnected
   mock.items[1].reply.requiresTemplate = true;
   await page.goto("/dashboard/outreach/inbox?thread=conversation%3A2");
   const selected = page.getByRole("region", { name: "Selected conversation" });
-  await selected.getByRole('button', { name: /Choose a template/ }).click();
+  await selected.getByRole('button', { name: 'Template', exact: true }).click();
   const drawer = page.getByRole('dialog');
   await drawer.getByRole('button', { name: /proposal_update/ }).click();
   await drawer.getByLabel('Header variable 1').fill('Orchid Labs');
   await drawer.getByLabel('Body variable 1').fill('Ben');
   await expect(drawer.getByText('For Orchid Labs', { exact: true })).toBeVisible();
   await expect(drawer.getByText('Hello Ben, your proposal is ready.', { exact: true })).toBeVisible();
-  await drawer.getByRole('button', { name: 'Use template', exact: true }).click();
-  await selected.getByRole("button", { name: "Send template" }).click();
+  await drawer.getByRole("button", { name: "Send template" }).click();
   await expect.poll(() => mock.requests.length).toBe(1);
   expect(mock.requests[0].body).toMatchObject({
     templateName: "proposal_update",

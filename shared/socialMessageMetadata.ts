@@ -1,6 +1,6 @@
 /** Durable social message provenance. Provider/account identity remains authoritative on the message and conversation. */
 export interface SocialMessageMetadata extends Record<string, unknown> {
-  origin?: 'ai' | 'native_app' | 'external_app' | 'api';
+  origin?: 'ai' | 'native_app' | 'external_app' | 'api' | 'inbox' | 'crm_automation';
   replySurface?: 'message' | 'comment';
   providerAccountId?: string;
   recipient?: string;

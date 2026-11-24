@@ -227,6 +227,38 @@ export async function getConversationsByChannel(req: AuthenticatedRequest, res: 
   }
 }
 
+/** The approved WhatsApp template a person picked in the inbox, kept on the
+ * message so the thread can say which template was sent. */
+function inboxTemplateFields(channel: string, body: Record<string, unknown> | undefined) {
+  const name = typeof body?.templateName === 'string' ? body.templateName.trim().slice(0, 512) : '';
+  if (channel !== 'whatsapp' || !name) return {};
+  const language = typeof body?.templateLanguage === 'string' ? body.templateLanguage.trim().slice(0, 20) : '';
+  return { templateName: name, ...(language ? { templateLanguage: language } : {}) };
+}
+
+/**
+ * Mark a conversation's inbound messages read. The inbox calls this when a
+ * person opens the thread, so background refreshes never mark anything read.
+ */
+export async function markConversationRead(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = businessOwnerUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const conversationId = Number(req.params.conversationId);
+    if (!Number.isSafeInteger(conversationId) || conversationId <= 0) {
+      return res.status(400).json({ error: 'Invalid conversation.' });
+    }
+    const conversation = await OutreachConversationModel.getOutreachConversationById(conversationId);
+    if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+    if (conversation.userId !== userId) return res.status(403).json({ error: 'Access denied' });
+    await OutreachConversationModel.markMessagesAsRead(conversationId);
+    return res.json({ success: true });
+  } catch (error) {
+    logger.error({ err: error }, 'Error marking conversation read');
+    return res.status(500).json({ error: 'Unable to mark this conversation read. Please try again.' });
+  }
+}
+
 /**
  * Get a specific conversation with all messages
  */
@@ -287,10 +319,15 @@ export async function getConversationWithMessages(req: AuthenticatedRequest, res
         : message.attachments,
     }));
 
-    // Mark messages as read
-    await OutreachConversationModel.markMessagesAsRead(parseInt(conversationId));
+    // Readers that only display the thread (the inbox refreshes it in the
+    // background) pass markRead=false and mark it read explicitly instead.
+    if (req.query.markRead !== 'false') {
+      await OutreachConversationModel.markMessagesAsRead(parseInt(conversationId));
+    }
 
-    return res.json(result);
+    const { withMessageOrigins } = await import('../services/outreach/MessageOrigin.js');
+    const labelled = await withMessageOrigins(userId, result.conversation.channel, result.messages);
+    return res.json({ ...result, messages: labelled });
   } catch (error) {
     logger.error({ err: error }, 'Error fetching conversation messages');
     return res.status(500).json({ error: 'Unable to retrieve conversation messages. Please try again.' });
@@ -656,7 +693,8 @@ async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Respon
         confirmationExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
         providerCallState: 'not_started',
         manualReviewRequired: false,
-        metadata: { ...(draft.metadata as Record<string, unknown> || {}), ...(normalizedConversationChannel === 'sms' ? { smsRecipient: inboxRecipient } : {}), sourceTemplateId: req.body.sourceTemplateId, sourceTemplateVersion: req.body.sourceTemplateVersion, templateRenderContext: req.body.templateRenderContext },
+        ...inboxTemplateFields(normalizedConversationChannel, req.body),
+        metadata: { origin: 'inbox', ...(draft.metadata as Record<string, unknown> || {}), ...(normalizedConversationChannel === 'sms' ? { smsRecipient: inboxRecipient } : {}), sourceTemplateId: req.body.sourceTemplateId, sourceTemplateVersion: req.body.sourceTemplateVersion, templateRenderContext: req.body.templateRenderContext },
       });
       if (!message) {
         await idempotencyService.forget(claimedIdempotencyKey);
@@ -677,7 +715,9 @@ async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Respon
         confirmationExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
         providerCallState: 'not_started',
         manualReviewRequired: false,
-        metadata: { ...(normalizedConversationChannel === 'sms' ? { smsRecipient: inboxRecipient } : {}), sourceTemplateId: req.body.sourceTemplateId, sourceTemplateVersion: req.body.sourceTemplateVersion, templateRenderContext: req.body.templateRenderContext },
+        ...inboxTemplateFields(normalizedConversationChannel, req.body),
+        // A person sent this from the AskSales inbox.
+        metadata: { origin: 'inbox', ...(normalizedConversationChannel === 'sms' ? { smsRecipient: inboxRecipient } : {}), sourceTemplateId: req.body.sourceTemplateId, sourceTemplateVersion: req.body.sourceTemplateVersion, templateRenderContext: req.body.templateRenderContext },
       });
     }
     createdMessageId = message.id;
@@ -1316,7 +1356,8 @@ async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Respon
             await db.execute(sql`
               UPDATE sent_messages
               SET gmail_thread_id = COALESCE(gmail_thread_id, ${conversation.externalThreadId || null}),
-                  is_reply = ${isReply}
+                  is_reply = ${isReply},
+                  outreach_message_id = COALESCE(outreach_message_id, ${message.id})
               WHERE message_id = ${trackingMessageId} AND user_id = ${userId}
             `);
           } else {
@@ -1334,6 +1375,7 @@ async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Respon
               deliveryStatus: 'sent',
               sentAt: new Date(),
               messageId: trackingMessageId || null,
+              outreachMessageId: message.id,
               isReply,
               gmailThreadId: conversation.externalThreadId || null,
             }, { skipCreditDeduction: true });
@@ -1386,6 +1428,9 @@ async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Respon
           deliveryStatus: 'sent',
           sentAt: new Date(),
           messageId: sendResult.externalMessageId || null,
+          // Linked so the inbox shows this send inside its conversation instead
+          // of again as a separate "historical send".
+          outreachMessageId: message.id,
         }, { skipCreditDeduction: true });
       }
 
@@ -1627,6 +1672,8 @@ export async function createConversation(req: AuthenticatedRequest, res: Respons
         subject: subject || undefined,
         content: initialMessage,
         status: 'pending',
+        // Started by a person from AskSales, not an outreach launch.
+        metadata: { origin: 'inbox' },
       });
 
       // Send via channel

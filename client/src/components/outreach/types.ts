@@ -31,6 +31,8 @@ export interface OutreachConversation {
 }
 
 export interface OutreachMessage {
+  /** Who or what sent an outbound message (outreach, manual, AI, phone app). */
+  origin?: import('../../../../shared/outreachInbox').OutreachMessageOrigin | null;
   emailTracking?: { source: 'image_load'; enabled: boolean; openedAt: string | null; openCount: number };
   messageKind?: string;
   followUpStep?: number | null;

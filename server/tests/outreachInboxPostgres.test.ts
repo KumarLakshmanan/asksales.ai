@@ -42,6 +42,10 @@ jest.unstable_mockModule(
     ),
   }),
 );
+// Assistant readiness has its own tests; here every account may reply.
+jest.unstable_mockModule("../services/assistants/CustomerDeliveryGate.js", () => ({
+  customerDeliveryReadiness: jest.fn(async () => ({ ready: true, setupUrl: "", accountId: "", channel: "" })),
+}));
 jest.unstable_mockModule("../services/whatsappServiceWindow.js", () => ({
   hasActiveWhatsAppWindow: jest.fn(async () => false),
   activeWhatsAppWindows: jest.fn(async () => new Set()),
@@ -177,9 +181,11 @@ suite("Unified inbox PostgreSQL integration", () => {
         external_thread_id TEXT,lead_instagram TEXT);
       CREATE TABLE outreach_messages(id SERIAL PRIMARY KEY,conversation_id INTEGER,user_id INTEGER,direction TEXT,subject TEXT,content TEXT,html_content TEXT,
         redacted_content TEXT,privacy_vault_id BIGINT,external_message_id TEXT,provider_message_id TEXT,rfc_message_id TEXT,waba_message_id TEXT,provider_account_id TEXT,
-        phone_number_id TEXT,sent_at TIMESTAMP,created_at TIMESTAMP DEFAULT NOW(),is_read BOOLEAN DEFAULT false);
+        phone_number_id TEXT,sent_at TIMESTAMP,created_at TIMESTAMP DEFAULT NOW(),is_read BOOLEAN DEFAULT false,metadata JSONB,
+        batch_id UUID,campaign_id INTEGER,message_kind TEXT DEFAULT 'outreach',is_automatic BOOLEAN DEFAULT false,is_ai_generated BOOLEAN DEFAULT false,
+        status TEXT DEFAULT 'sent');
       CREATE TABLE sent_messages(id SERIAL PRIMARY KEY,user_id INTEGER,lead_id INTEGER,lead_name TEXT,channel TEXT,subject TEXT,message TEXT,
-        status TEXT,delivery_status TEXT,sent_at TIMESTAMP,message_id TEXT,gmail_message_id TEXT,sender_id INTEGER);
+        status TEXT,delivery_status TEXT,sent_at TIMESTAMP,message_id TEXT,gmail_message_id TEXT,sender_id INTEGER,is_reply BOOLEAN DEFAULT false);
       CREATE TABLE email_senders(id INTEGER,user_id INTEGER,email TEXT,type TEXT,credential_id INTEGER,is_verified BOOLEAN);
       CREATE TABLE support_privacy_vault(id BIGINT PRIMARY KEY,user_id INTEGER,conversation_id INTEGER,message_id INTEGER);
       CREATE TABLE channel_credentials(id INTEGER,user_id INTEGER,platform TEXT,account_name TEXT,account_identifier TEXT,is_active BOOLEAN,
@@ -589,6 +595,9 @@ suite("Unified inbox PostgreSQL integration", () => {
       const firstProfile = await listInbox(1, parseInboxQuery({}));
       expect(firstProfile.items.some((item) => item.id === 998)).toBe(false);
       expect(firstProfile.unreadThreads.all).toBe(6);
+      // "All N" counts exactly the threads the list can show in this profile.
+      expect(firstProfile.nextCursor).toBeNull();
+      expect(firstProfile.totalThreads?.all).toBe(firstProfile.items.length);
       await client.query(
         "SELECT set_config('app.business_profile_id','22',false)",
       );
@@ -600,11 +609,46 @@ suite("Unified inbox PostgreSQL integration", () => {
         "conversation:998",
       ]);
       expect(otherProfile.unreadThreads.email).toBe(1);
+      const otherAll = await listInbox(1, parseInboxQuery({}));
+      expect(otherAll.totalThreads?.all).toBe(otherAll.items.length);
     } finally {
       await client.query(
         `RESET ROLE; DROP OWNED BY ${role}; DROP ROLE ${role}`,
       );
     }
+  });
+
+  it("classifies each thread by its first message, filters by origin and counts every thread", async () => {
+    const user = 9;
+    await client.query("INSERT INTO leads(id,user_id,full_name,phone) VALUES(90,9,'Origin lead','919000000090') ON CONFLICT DO NOTHING");
+    const thread = async (first: string, account: string) => {
+      const id = (await client.query("INSERT INTO outreach_conversations(user_id,lead_id,channel,provider_account_id,last_message_at) VALUES($1,90,'whatsapp',$2,NOW()) RETURNING id", [user, account])).rows[0].id;
+      await client.query(`INSERT INTO outreach_messages(conversation_id,user_id,direction,content,sent_at,provider_account_id,phone_number_id,metadata,batch_id,is_ai_generated) ${first}`.replace(/\$C/g, String(id)), []);
+      return id;
+    };
+    const outreach = await thread("VALUES($C,9,'outbound','Launch',NOW() - interval '2 hours','acct-o','acct-o',NULL,'00000000-0000-0000-0000-000000000001',false),($C,9,'outbound','AI reply',NOW(),'acct-o','acct-o','{\"origin\":\"ai\"}',NULL,false)", 'acct-o');
+    const customer = await thread("VALUES($C,9,'inbound','Hi there',NOW(),'acct-c','acct-c',NULL,NULL,false)", 'acct-c');
+    await client.query(`INSERT INTO outreach_messages(conversation_id,user_id,direction,content,created_at,metadata,status)
+      VALUES($1,$2,'outbound','Old AI draft',NOW() - INTERVAL '1 day','{"origin":"ai"}','draft')`, [customer, user]);
+    const manual = await thread("VALUES($C,9,'outbound','Hello from the inbox',NOW(),'acct-m','acct-m','{\"origin\":\"inbox\"}',NULL,false)", 'acct-m');
+    const phone = await thread("VALUES($C,9,'outbound','From my phone',NOW(),'acct-p','acct-p','{\"origin\":\"native_app\"}',NULL,false)", 'acct-p');
+    await client.query("INSERT INTO sent_messages(user_id,lead_id,channel,message,status,sent_at,message_id) VALUES(9,90,'whatsapp','Old send','sent',NOW(),'origin-legacy')");
+
+    const all = await listInbox(user, parseInboxQuery({ channel: "whatsapp" }));
+    const byId = new Map(all.items.filter(item => item.kind === "conversation").map(item => [item.id, item]));
+    expect(byId.get(outreach)).toMatchObject({ origin: "outreach", aiHandled: true });
+    expect(byId.get(customer)).toMatchObject({ origin: "customer", aiHandled: false });
+    expect(byId.get(manual)?.origin).toBe("manual");
+    expect(byId.get(phone)?.origin).toBe("native_app");
+    expect(all.items.find(item => item.kind === "legacy")?.origin).toBe("outreach");
+    expect(all.totalThreads).toMatchObject({ whatsapp: 5, all: 5 });
+    expect(all.originCounts).toEqual({ outreach: 2, customer: 1, manual: 1, native_app: 1, ai: 1 });
+
+    const onlyOutreach = await listInbox(user, parseInboxQuery({ channel: "whatsapp", origin: "outreach" }));
+    expect(onlyOutreach.items.map(item => item.origin)).toEqual(["outreach", "outreach"]);
+    const onlyAi = await listInbox(user, parseInboxQuery({ channel: "whatsapp", origin: "ai" }));
+    expect(onlyAi.items.map(item => item.id)).toEqual([outreach]);
+    expect(() => parseInboxQuery({ origin: "spam" })).toThrow("Invalid inbox origin.");
   });
 });
 

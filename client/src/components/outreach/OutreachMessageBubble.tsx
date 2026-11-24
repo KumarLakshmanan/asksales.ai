@@ -18,6 +18,7 @@ import DOMPurify from "dompurify";
 import { DraftRecommendationCard } from "@/components/conversation/DraftRecommendationCard";
 import { ConversationMessageFrame } from "@/components/conversation/ConversationMessageFrame";
 import { EmailMessageContent } from "./EmailMessageContent";
+import { messageOriginText } from "@/lib/outreach-message-origin";
 
 interface OutreachMessageBubbleProps {
   message: OutreachMessage;
@@ -247,10 +248,10 @@ export function OutreachMessageBubble({
   const displayContent = parseContent
     ? parseMessageContent(message.content)
     : message.content;
-  const originLabel = message.metadata?.origin === 'native_app' ? `Sent from ${{ instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp' }[channel as 'instagram' | 'facebook' | 'whatsapp'] || 'social app'}` : message.metadata?.origin === 'external_app' ? 'Sent from connected app' : null;
+  const originLabel = isOutbound ? messageOriginText(message, channel) : null;
   const scheduledAt = typeof message.metadata?.scheduledAt === 'string' && ['pending', 'queued'].includes(message.status) ? new Date(message.metadata.scheduledAt) : null;
   const followUpLabel = <>
-    {message.messageKind === 'follow_up' ? <span className="mb-1 block text-[10px] font-semibold opacity-80">Follow-up{message.followUpStep ? ` ${message.followUpStep}` : ''}</span> : null}
+    {message.messageKind === 'follow_up' && !message.origin ? <span className="mb-1 block text-[10px] font-semibold opacity-80">Follow-up{message.followUpStep ? ` ${message.followUpStep}` : ''}</span> : null}
     {scheduledAt && Number.isFinite(scheduledAt.getTime()) ? <span className="mb-2 block text-xs text-muted-foreground">Scheduled for {scheduledAt.toLocaleString()}</span> : null}
   </>;
 

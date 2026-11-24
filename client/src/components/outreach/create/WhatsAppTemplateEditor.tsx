@@ -41,6 +41,7 @@ interface Props {
   prefix?: string;
   loading?: boolean;
   showSummary?: boolean;
+  onInlineSelectionChange?: (templateId: string, values: Record<string, string>) => void;
 }
 
 export function WhatsAppTemplateEditor(props: Props) {
@@ -59,6 +60,7 @@ function TemplateDrawer({
   prefix = "message",
   loading = false,
   showSummary = true,
+  onInlineSelectionChange,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -86,6 +88,9 @@ function TemplateDrawer({
     fields.every((field) => draft[field.key]?.trim()) &&
     (!needsMedia ||
       (!!draft.mediaId && draft.mediaAccountId === providerAccountId));
+  useEffect(() => {
+    onInlineSelectionChange?.(canApply ? draftId : "", draft);
+  }, [canApply, draft, draftId, onInlineSelectionChange]);
   const mediaName = kind === "image" ? "an image" : kind === "video" ? "a video" : "a PDF";
   /** Why "Use template" is disabled, so the button never looks broken. */
   const applyHint = !template
@@ -204,53 +209,8 @@ function TemplateDrawer({
       /{{\s*([^}]+?)\s*}}/g,
       (raw, token: string) => draft[`body:${token}`] || raw,
     );
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <Label>Approved WhatsApp template</Label>
-        <Link
-          href="/dashboard/integrations/whatsapp/templates"
-          className="text-xs text-primary hover:underline"
-        >
-          Manage templates
-        </Link>
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => changeOpen(true)}
-        disabled={!providerAccountId}
-        className="h-auto min-h-16 w-full justify-between gap-3 whitespace-normal px-4 py-3 text-left"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="rounded-lg bg-primary/10 p-2 text-primary">
-            <ImageIcon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0">
-            <span className="block font-medium">
-              {selected ? selected.name : "Choose a template"}
-            </span>
-              <span className="block break-all text-xs font-normal text-muted-foreground">
-              {selected
-                ? `${selected.language} · ${values.mediaName || "Approved template"}`
-                : "Browse approved messages and upload media"}
-            </span>
-          </span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0" />
-      </Button>
-      {selected ? <div className="flex flex-wrap items-center gap-2 text-xs"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 font-medium text-emerald-700 dark:text-emerald-300"><Check className="h-3 w-3" />Meta approved</span>{['IMAGE','VIDEO','DOCUMENT'].includes(selected.headerType || '') && <span className="rounded-full bg-primary/10 px-2 py-1 font-medium text-primary">{values.mediaId && values.mediaAccountId === providerAccountId ? 'Media ready' : 'Media required'}</span>}<span className="text-muted-foreground">Approval and message readiness are checked separately.</span></div> : null}
-      {selected && showSummary && <p className="line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">{selected.body}</p>}
-      <Sheet open={open} onOpenChange={changeOpen}>
-        <SheetContent className="outreach-workspace workspace-template-drawer flex h-full w-full flex-col gap-0 p-0 sm:max-w-2xl">
-          <header className="shrink-0 border-b px-6 py-5 pr-12">
-            <SheetTitle>Choose a WhatsApp template</SheetTitle>
-            <SheetDescription className="mt-1">
-              Select an approved message, add your media, and preview before
-              applying.
-            </SheetDescription>
-          </header>
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
+  const templateForm = (
+          <div className={onInlineSelectionChange ? "space-y-5" : "min-h-0 flex-1 space-y-6 overflow-y-auto p-6"}>
             <section className="space-y-3" aria-label="Approved templates">
               <Label htmlFor={`${prefix}-template-search`}>
                 Search templates
@@ -274,7 +234,7 @@ function TemplateDrawer({
                     : "No approved templates are available for this account."}
                 </p>
               ) : null}
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className={onInlineSelectionChange ? "grid gap-2" : "grid gap-2 sm:grid-cols-2"}>
                 {filtered.map((item) => (
                   <button
                     key={item.id}
@@ -296,7 +256,7 @@ function TemplateDrawer({
                     className={`rounded-xl border p-3 text-left transition-colors hover:bg-muted/50 ${draftId === item.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"}`}
                   >
                     <span className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{item.name}</span>
+                      <span className="min-w-0 break-words font-medium">{item.name}</span>
                       {draftId === item.id ? (
                         <Check className="h-4 w-4 text-primary" />
                       ) : null}
@@ -454,6 +414,56 @@ function TemplateDrawer({
               </>
             ) : null}
           </div>
+  );
+  if (onInlineSelectionChange) return templateForm;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <Label>Approved WhatsApp template</Label>
+        <Link
+          href="/dashboard/integrations/whatsapp/templates"
+          className="text-xs text-primary hover:underline"
+        >
+          Manage templates
+        </Link>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => changeOpen(true)}
+        disabled={!providerAccountId}
+        className="h-auto min-h-16 w-full justify-between gap-3 whitespace-normal px-4 py-3 text-left"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="rounded-lg bg-primary/10 p-2 text-primary">
+            <ImageIcon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-medium">
+              {selected ? selected.name : "Choose a template"}
+            </span>
+              <span className="block break-all text-xs font-normal text-muted-foreground">
+              {selected
+                ? `${selected.language} · ${values.mediaName || "Approved template"}`
+                : "Browse approved messages and upload media"}
+            </span>
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0" />
+      </Button>
+      {selected ? <div className="flex flex-wrap items-center gap-2 text-xs"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 font-medium text-emerald-700 dark:text-emerald-300"><Check className="h-3 w-3" />Meta approved</span>{['IMAGE','VIDEO','DOCUMENT'].includes(selected.headerType || '') && <span className="rounded-full bg-primary/10 px-2 py-1 font-medium text-primary">{values.mediaId && values.mediaAccountId === providerAccountId ? 'Media ready' : 'Media required'}</span>}<span className="text-muted-foreground">Approval and message readiness are checked separately.</span></div> : null}
+      {selected && showSummary && <p className="line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">{selected.body}</p>}
+      <Sheet open={open} onOpenChange={changeOpen}>
+        <SheetContent className="outreach-workspace workspace-template-drawer flex h-full w-full flex-col gap-0 p-0 sm:max-w-2xl">
+          <header className="shrink-0 border-b px-6 py-5 pr-12">
+            <SheetTitle>Choose a WhatsApp template</SheetTitle>
+            <SheetDescription className="mt-1">
+              Select an approved message, add your media, and preview before
+              applying.
+            </SheetDescription>
+          </header>
+          {templateForm}
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t bg-background px-6 py-4">
             <Button
               type="button"

@@ -348,6 +348,7 @@ const { mockRequest, mockResponse, mockAuthRequest } = await import('./helpers/m
 const {
   getConversationsByChannel,
   getConversationWithMessages,
+  markConversationRead,
   sendMessage: sendMessageHandler,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   createConversation,
@@ -588,6 +589,44 @@ describe('Outreach Conversations Controller', () => {
       expect(res._json.messages).toHaveLength(1);
       expect(OutreachConversationModel.markMessagesAsRead).toHaveBeenCalledWith(58);
     });
+
+    it('does not mark anything read when the reader opts out', async () => {
+      OutreachConversationModel.getConversationWithMessages.mockResolvedValueOnce({ conversation: { ...mockConv, userId: 1 }, messages: [mockMessage] });
+      OutreachConversationModel.markMessagesAsRead.mockClear();
+      const res = mockResponse();
+      await getConversationWithMessages(mockAuthRequest(1, { params: { conversationId: '58' }, query: { markRead: 'false' } }) as any, res);
+      expect(res._status).toBe(200);
+      expect(OutreachConversationModel.markMessagesAsRead).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markConversationRead', () => {
+    it("marks the owner's conversation read", async () => {
+      OutreachConversationModel.getOutreachConversationById.mockResolvedValueOnce({ ...mockConv, userId: 1 });
+      OutreachConversationModel.markMessagesAsRead.mockClear();
+      const res = mockResponse();
+      await markConversationRead(mockAuthRequest(1, { params: { conversationId: '58' } }) as any, res);
+      expect(res._status).toBe(200);
+      expect(OutreachConversationModel.markMessagesAsRead).toHaveBeenCalledWith(58);
+    });
+
+    it.each([
+      ['another business', { ...mockConv, userId: 2 }, 403],
+      ['a missing conversation', null, 404],
+    ])('refuses %s', async (_label, conversation, status) => {
+      OutreachConversationModel.getOutreachConversationById.mockResolvedValueOnce(conversation);
+      OutreachConversationModel.markMessagesAsRead.mockClear();
+      const res = mockResponse();
+      await markConversationRead(mockAuthRequest(1, { params: { conversationId: '58' } }) as any, res);
+      expect(res._status).toBe(status);
+      expect(OutreachConversationModel.markMessagesAsRead).not.toHaveBeenCalled();
+    });
+
+    it('rejects an invalid conversation ID', async () => {
+      const res = mockResponse();
+      await markConversationRead(mockAuthRequest(1, { params: { conversationId: 'abc' } }) as any, res);
+      expect(res._status).toBe(400);
+    });
   });
 
   // ── sendMessage ───────────────────────────────────────────────────────
@@ -730,7 +769,7 @@ describe('Outreach Conversations Controller', () => {
           expect(whatsappApiService.sendText).toHaveBeenCalledWith(expect.objectContaining({ phoneNumberId: 'original-account', to: recipient }));
         } else if (channel === 'sms') {
           expect(mockSmsSend).toHaveBeenCalledWith(1, recipient, 'Reviewed Inbox reply', undefined, 'ABCDEF');
-          expect(OutreachConversationModel.createOutreachMessage).toHaveBeenCalledWith(expect.objectContaining({ providerAccountId: 'ABCDEF', metadata: { smsRecipient: recipient } }));
+          expect(OutreachConversationModel.createOutreachMessage).toHaveBeenCalledWith(expect.objectContaining({ providerAccountId: 'ABCDEF', metadata: expect.objectContaining({ origin: 'inbox', smsRecipient: recipient }) }));
         } else {
           const adapter = channel === 'instagram' ? (await import('../services/instagramService')).sendInstagramDM
             : channel === 'facebook' ? (await import('../services/FacebookMessengerService')).sendFacebookDM

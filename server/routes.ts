@@ -107,6 +107,7 @@ import {
 import {
   getConversationsByChannel,
   getConversationWithMessages,
+  markConversationRead,
   sendMessage as sendConversationMessage,
   createConversation,
   searchConversations,
@@ -806,6 +807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/outreach-conversations/:channel/:conversationId/send-draft", authenticateToken, requireCredits, sendDraftMessage);
   app.post("/api/outreach-conversations/:channel/:conversationId/discard-draft", authenticateToken, discardDraft);
   app.get("/api/outreach-conversations/:channel/:conversationId/messages", authenticateToken, getConversationWithMessages);
+  app.post("/api/outreach-conversations/:channel/:conversationId/read", authenticateToken, markConversationRead);
   app.post("/api/outreach-conversations/:channel/:conversationId/messages", authenticateToken, requireCredits, sendConversationMessage);
   app.post("/api/outreach-conversations/:channel/sync", authenticateToken, syncReplies);
   app.delete("/api/outreach-conversations/:conversationId", authenticateToken, deleteConversation);

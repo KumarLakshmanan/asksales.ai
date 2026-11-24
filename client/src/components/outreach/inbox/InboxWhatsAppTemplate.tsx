@@ -41,10 +41,10 @@ function AccountTemplate({ onChange, providerAccountId }: Props) {
   const [templates, setTemplates] = useState<OutreachTemplate[]>([]);
   const [selected, setSelected] = useState("");
   const [values, setValues] = useState<Record<string, string>>({});
-  useEffect(() => {
-    const preview = values.mediaPreview;
-    return () => { if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview); };
-  }, [values.mediaPreview]);
+  const onSelectionChange = useCallback((id: string, fields: Record<string, string>) => {
+    setSelected(id);
+    setValues(fields);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const generation = useRef(0);
@@ -123,11 +123,9 @@ function AccountTemplate({ onChange, providerAccountId }: Props) {
         templates={templates}
         templateId={selected}
         values={values}
-        onTemplateChange={(id) => {
-          setSelected(id);
-          setValues({});
-        }}
+        onTemplateChange={setSelected}
         onValuesChange={setValues}
+        onInlineSelectionChange={onSelectionChange}
         providerAccountId={providerAccountId}
         loading={loading}
         prefix="inbox"

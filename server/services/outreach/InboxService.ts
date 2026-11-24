@@ -14,7 +14,11 @@ import { inboxEmailDisplayText } from './InboxEmailPresentation.js';
 import { customerDeliveryReadiness } from '../assistants/CustomerDeliveryGate.js';
 import {
   INBOX_CHANNELS,
+  INBOX_ORIGIN_FILTERS,
+  INBOX_START_ORIGINS,
   type InboxChannel,
+  type InboxOriginFilter,
+  type InboxStartOrigin,
   type InboxItem,
   type InboxPage,
   type InboxReplyAvailability,
@@ -24,13 +28,16 @@ export interface InboxQuery {
   channel?: InboxChannel;
   leadId?: number;
   unread?: boolean;
+  origin?: InboxOriginFilter;
   search: string;
   limit: number;
   cursor?: { at: string; kind: string; id: number };
 }
 
 export function parseInboxQuery(query: Record<string, unknown>): InboxQuery {
-  const { channel, leadId, unread, search = "", limit = "50", cursor } = query;
+  const { channel, leadId, unread, origin, search = "", limit = "50", cursor } = query;
+  if (origin !== undefined && origin !== "all" && !INBOX_ORIGIN_FILTERS.includes(origin as InboxOriginFilter))
+    throw new Error("Invalid inbox origin.");
   if (leadId !== undefined && (typeof leadId !== 'string' || !/^\d+$/.test(leadId)
     || !Number.isSafeInteger(Number(leadId)) || Number(leadId) <= 0)) throw new Error('Invalid inbox contact.');
   if (
@@ -73,6 +80,7 @@ export function parseInboxQuery(query: Record<string, unknown>): InboxQuery {
     channel:
       channel && channel !== "all" ? (channel as InboxChannel) : undefined,
     unread: unread === "true",
+    origin: origin && origin !== "all" ? (origin as InboxOriginFilter) : undefined,
     search: search.trim(),
     limit: Number(limit),
     cursor: decoded,
@@ -144,6 +152,32 @@ export async function prepareInboxSearch(userId: number): Promise<void> {
   }
 }
 
+// How a conversation started, from its first message (alias "first_msg"):
+// - the customer wrote first (organic);
+// - sent from the WhatsApp/Instagram/Messenger app on a phone or the web;
+// - an AskSales outreach launch, campaign, follow-up or automation;
+// - otherwise a person started it from AskSales (inbox, CRM or a manual send).
+const CONVERSATION_ORIGIN = sql`CASE
+      WHEN first_msg.direction = 'inbound' THEN 'customer'
+      WHEN first_msg.metadata->>'origin' IN ('native_app','external_app') THEN 'native_app'
+      WHEN first_msg.batch_id IS NOT NULL OR first_msg.campaign_id IS NOT NULL OR first_msg.message_kind = 'follow_up'
+        OR COALESCE(first_msg.is_automatic,false) OR first_msg.metadata ? 'outreachCreation'
+        OR first_msg.metadata->>'origin' = 'crm_automation' THEN 'outreach'
+      ELSE 'manual' END`;
+const FIRST_MESSAGE = sql`LEFT JOIN LATERAL (
+      SELECT m.id, m.direction, m.metadata, m.batch_id, m.campaign_id, m.message_kind, m.is_automatic
+      FROM outreach_messages m WHERE m.conversation_id=c.id
+      ORDER BY COALESCE(m.status='draft',false), COALESCE(m.sent_at,m.created_at), m.id LIMIT 1
+    ) first_msg ON true`;
+const AI_HANDLED = sql`EXISTS(SELECT 1 FROM outreach_messages ai WHERE ai.conversation_id=c.id AND ai.direction='outbound'
+      AND ai.status IN ('sent','delivered','read')
+      AND (COALESCE(ai.is_ai_generated,false) OR ai.metadata->>'origin' = 'ai'))`;
+// A historical send without a linked conversation came from an outreach send
+// unless it was logged as a reply.
+const LEGACY_ORIGIN = sql`CASE WHEN COALESCE(s.is_reply,false) THEN 'manual' ELSE 'outreach' END`;
+const INBOX_CHANNEL_SQL = sql`('email','gmail','whatsapp','instagram','facebook','sms')`;
+const LEGACY_STATUSES = sql`('sent','delivered','read','opened','clicked','replied','bounced')`;
+
 // This projection intentionally preserves each native conversation and each
 // unlinked historical send. A contact name is never a threading key.
 function inboxRows(userId: number): SQL {
@@ -166,8 +200,10 @@ function inboxRows(userId: number): SQL {
       COALESCE(l.blacklisted,false) OR COALESCE(l.do_not_contact,false)
         OR (c.channel IN ('email','gmail') AND COALESCE(l.email_unsubscribed,false)) AS opted_out,
       senders.sender_id,
-      preview.preview_body, preview.preview_is_html, NULL::text AS message_format, preview.message_id AS preview_message_id
+      preview.preview_body, preview.preview_is_html, NULL::text AS message_format, preview.message_id AS preview_message_id,
+      ${CONVERSATION_ORIGIN} AS origin, ${AI_HANDLED} AS ai_handled
     FROM outreach_conversations c LEFT JOIN leads l ON l.id=c.lead_id AND l.user_id=c.user_id
+    ${FIRST_MESSAGE}
     LEFT JOIN LATERAL (
       SELECT CASE WHEN m.direction='inbound' AND m.privacy_vault_id IS NOT NULL THEN m.id END AS message_id,
         COALESCE(m.redacted_content,NULLIF(m.html_content,''),m.content) AS preview_body,
@@ -181,17 +217,18 @@ function inboxRows(userId: number): SQL {
     LEFT JOIN LATERAL (SELECT CASE WHEN COUNT(DISTINCT s.sender_id)=1 THEN MIN(s.sender_id) END AS sender_id
       FROM sent_messages s JOIN outreach_messages m ON m.id=s.outreach_message_id
       WHERE m.conversation_id=c.id AND s.user_id=c.user_id) senders ON true
-    WHERE c.user_id=${userId} AND c.channel IN ('email','gmail','whatsapp','instagram','facebook','sms')
-      AND accounts.total_messages>0
+    WHERE c.user_id=${userId} AND c.channel IN ${INBOX_CHANNEL_SQL}
+      AND first_msg.id IS NOT NULL
     UNION ALL
     SELECT 'legacy', s.id, s.lead_id, CASE WHEN s.channel='gmail' THEN 'email' ELSE s.channel END,
       COALESCE(NULLIF(l.full_name,''),NULLIF(l.name,''),s.lead_name,'Unknown contact'),l.email,l.phone,COALESCE(l.company,l.company_name),
       NULL::text,s.subject,s.sent_at,0,1,COALESCE(s.delivery_status,s.status),CASE WHEN s.channel='gmail' THEN 'gmail' END,
-      NULL::text,NULL::text,NULL::text,CASE WHEN s.channel IN ('email','gmail') THEN l.email ELSE l.phone END,false,s.sender_id,s.message,false,to_jsonb(s)->>'message_format',NULL::integer
+      NULL::text,NULL::text,NULL::text,CASE WHEN s.channel IN ('email','gmail') THEN l.email ELSE l.phone END,false,s.sender_id,s.message,false,to_jsonb(s)->>'message_format',NULL::integer,
+      ${LEGACY_ORIGIN},false
     FROM sent_messages s LEFT JOIN leads l ON l.id=s.lead_id AND l.user_id=s.user_id
     WHERE s.user_id=${userId} AND s.outreach_message_id IS NULL
-      AND s.channel IN ('email','gmail','whatsapp','instagram','facebook','sms')
-      AND s.status IN ('sent','delivered','read','opened','clicked','replied','bounced')`;
+      AND s.channel IN ${INBOX_CHANNEL_SQL}
+      AND s.status IN ${LEGACY_STATUSES}`;
 }
 
 type Row = {
@@ -219,6 +256,8 @@ type Row = {
   preview_message_id?: number;
   preview_is_html: boolean;
   message_format: string | null;
+  origin: InboxStartOrigin;
+  ai_handled: boolean;
 };
 
 export async function replyAvailability(
@@ -377,6 +416,8 @@ async function presentRow(userId: number, row: Row, actorUserId?: number): Promi
     totalMessages: Number(row.total_messages),
     status: row.status,
     integrationProvider: row.integration_provider,
+    origin: INBOX_START_ORIGINS.includes(row.origin) ? row.origin : "manual",
+    aiHandled: Boolean(row.ai_handled),
     reply,
   };
 }
@@ -402,7 +443,8 @@ export async function listInbox(
       to_char(r.activity_at,'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_at FROM inbox r WHERE true
       ${query.channel ? sql`AND r.channel=${query.channel}` : sql``}
       ${query.leadId ? sql`AND r.lead_id=${query.leadId}` : sql``}
-      ${query.unread ? sql`AND r.unread_count>0` : sql``} ${searchFilter}
+      ${query.unread ? sql`AND r.unread_count>0` : sql``}
+      ${query.origin === "ai" ? sql`AND r.ai_handled` : query.origin ? sql`AND r.origin=${query.origin}` : sql``} ${searchFilter}
       ${query.cursor ? sql`AND (r.activity_at,r.kind,r.id)<(${query.cursor.at}::timestamptz AT TIME ZONE 'UTC',${query.cursor.kind},${query.cursor.id})` : sql``}
       ORDER BY r.activity_at DESC,r.kind DESC,r.id DESC LIMIT ${query.limit + 1}`)
   ).rows as Row[];
@@ -411,7 +453,7 @@ export async function listInbox(
     FROM outreach_conversations c WHERE c.user_id=${userId}
       ${query.leadId ? sql`AND c.lead_id=${query.leadId}` : sql``}
       AND EXISTS(SELECT 1 FROM outreach_messages m WHERE m.conversation_id=c.id AND m.direction='inbound' AND COALESCE(m.is_read,false)=false)
-      AND c.channel IN ('email','gmail','whatsapp','instagram','facebook','sms') GROUP BY 1`)
+      AND c.channel IN ${INBOX_CHANNEL_SQL} GROUP BY 1`)
   ).rows as Array<{ channel: InboxChannel; count: number }>;
   const unreadThreads = Object.fromEntries(
     [...INBOX_CHANNELS, "all"].map((c) => [c, 0]),
@@ -420,11 +462,13 @@ export async function listInbox(
     unreadThreads[row.channel] = Number(row.count);
     unreadThreads.all += Number(row.count);
   }
+  const facets = query.cursor ? {} : await inboxFacets(userId, query);
   const page = rows.slice(0, query.limit);
   const last = page.at(-1);
   return {
     items: await Promise.all(page.map((row) => presentRow(userId, row, actorUserId))),
     unreadThreads,
+    ...facets,
     nextCursor:
       rows.length > query.limit && last
         ? Buffer.from(
@@ -436,6 +480,40 @@ export async function listInbox(
           ).toString("base64url")
         : null,
   };
+}
+
+/** Thread totals per channel and per origin filter. Light on purpose: no
+ * previews or reply checks, only what the counts need. Not narrowed by the
+ * unread toggle or search, so the chips describe the whole channel. */
+async function inboxFacets(userId: number, query: InboxQuery) {
+  const rows = (await db.execute(sql`
+    WITH facets AS (
+      SELECT CASE WHEN c.channel='gmail' THEN 'email' ELSE c.channel END AS channel,
+        ${CONVERSATION_ORIGIN} AS origin, ${AI_HANDLED} AS ai_handled
+      FROM outreach_conversations c ${FIRST_MESSAGE}
+      WHERE c.user_id=${userId} AND c.channel IN ${INBOX_CHANNEL_SQL} AND first_msg.id IS NOT NULL
+        ${query.leadId ? sql`AND c.lead_id=${query.leadId}` : sql``}
+      UNION ALL
+      SELECT CASE WHEN s.channel='gmail' THEN 'email' ELSE s.channel END, ${LEGACY_ORIGIN}, false
+      FROM sent_messages s
+      WHERE s.user_id=${userId} AND s.outreach_message_id IS NULL AND s.channel IN ${INBOX_CHANNEL_SQL}
+        AND s.status IN ${LEGACY_STATUSES}
+        ${query.leadId ? sql`AND s.lead_id=${query.leadId}` : sql``}
+    )
+    SELECT channel, origin, ai_handled, COUNT(*)::int AS count FROM facets GROUP BY 1,2,3`)).rows as Array<{
+      channel: InboxChannel; origin: InboxStartOrigin; ai_handled: boolean; count: number;
+    }>;
+  const totalThreads = Object.fromEntries([...INBOX_CHANNELS, "all"].map((c) => [c, 0])) as NonNullable<InboxPage["totalThreads"]>;
+  const originCounts = Object.fromEntries(INBOX_ORIGIN_FILTERS.map((o) => [o, 0])) as NonNullable<InboxPage["originCounts"]>;
+  for (const row of rows) {
+    const count = Number(row.count);
+    totalThreads[row.channel] = (totalThreads[row.channel] || 0) + count;
+    totalThreads.all += count;
+    if (query.channel && row.channel !== query.channel) continue;
+    if (row.origin in originCounts) originCounts[row.origin] += count;
+    if (row.ai_handled) originCounts.ai += count;
+  }
+  return { totalThreads, originCounts };
 }
 
 export async function getInboxItem(
@@ -461,6 +539,9 @@ export async function getInboxItem(
             id,
             conversationId: 0,
             direction: "outbound",
+            origin: row.origin === "outreach"
+              ? { kind: "outreach", label: "AskSales outreach" }
+              : { kind: "manual", label: "Sent from AskSales" },
             content: safeInboxText(row.preview_body, legacyEmailFormat(row.preview_body || '', row.channel, row.message_format)),
             subject: row.subject,
             status: row.status,
