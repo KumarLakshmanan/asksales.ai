@@ -86,7 +86,9 @@ describe("selected WhatsApp account template catalog", () => {
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ data: [item("es", "es")] })),
       );
+    const validate = jest.spyOn(service as unknown as { resolveAndValidate: (...args: unknown[]) => Promise<unknown> }, 'resolveAndValidate');
     const templates = await service.listApprovedTemplates(1, "phone-7");
+    expect(validate).toHaveBeenCalledWith(1, "phone-7", false, true);
     expect(service.resolveCreds).toHaveBeenCalledWith(1, "phone-7");
     expect(templates).toHaveLength(2);
     expect(templates.map((template) => template.language)).toEqual([

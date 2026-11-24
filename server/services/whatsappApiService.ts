@@ -109,7 +109,7 @@ export class WhatsAppApiService {
 
   /** Read Meta's approved catalog for the exact number's WABA, including language variants. */
   async listApprovedTemplates(userId: number, phoneNumberId: string): Promise<OutreachTemplate[]> {
-    const creds = await this.resolveAndValidate(userId, phoneNumberId);
+    const creds = await this.resolveAndValidate(userId, phoneNumberId, false, true);
     if (!creds.businessAccountId) throw new Error('Reconnect this WhatsApp number with its Business Account.');
     const token = await this.ensureTokenValidity(creds);
     return this.readApprovedTemplateCatalog(creds, token);
