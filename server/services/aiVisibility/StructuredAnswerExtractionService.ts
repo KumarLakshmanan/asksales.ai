@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getAllActiveAdminCredentials, updateAdminCredentialLastUsed, type AdminApiPlatform } from '../../models/adminApiCredentials/functions.js';
+import { getAllActiveAdminCredentials, updateAdminCredentialLastUsed } from '../../models/adminApiCredentials/functions.js';
 import { createOpenAIUsage } from '../../models/openaiUsages/functions.js';
 import { getInsightsRuntime } from '../insights/RuntimeService.js';
 import { llmPricingSnapshot } from '../insights/PricingService.js';
@@ -96,48 +96,40 @@ function extractionPrompt(input: StructuredExtractionInput): string {
 }
 
 export class StructuredAnswerExtractionService {
+  /** Reads one engine's answer into structured fields. Always through OpenRouter, so a slow or
+   * out-of-quota direct key can't hold up an analysis. */
   async extract(input: StructuredExtractionInput, context: { userId: number; auditId: number; promptRunId: number }): Promise<StructuredExtractionResult> {
     const prompt = extractionPrompt(input);
     const failures: string[] = [];
-    let lastProvider: ExtractionProvider | 'unconfigured' = 'unconfigured';
     let lastModel = 'unconfigured';
     let lastFailure: StructuredExtractionResult | null = null;
-    for (const provider of ['gemini', 'openai', 'openrouter'] as const) {
-      const credentials = (await getAllActiveAdminCredentials(provider as AdminApiPlatform)).filter((credential) => Boolean(credential.apiKey));
-      for (const credential of credentials) {
-        const config = credential.config as CredentialConfig;
-        const model = provider === 'openrouter'
-          ? configString(config, 'aiVisibilityExtractionModel', 'openai/gpt-4.1-mini')
-          : configString(config, 'extractionModel', provider === 'openai' ? configString(config, 'model', 'gpt-4.1-mini') : configString(config, 'model', 'gemini-2.5-flash'));
-        lastProvider = provider;
-        lastModel = model;
-        const startedAt = Date.now();
-        try {
-          if ((await getInsightsRuntime()).pricingGuardEnabled) await llmPricingSnapshot(model, provider);
-          const result = provider === 'openai'
-            ? await this.extractWithOpenAi(credential.apiKey, config, model, prompt)
-            : provider === 'gemini'
-              ? await this.extractWithGemini(credential.apiKey, config, model, prompt)
-              : await this.extractWithOpenRouter(credential.apiKey, config, model, prompt);
-          await Promise.allSettled([
-            updateAdminCredentialLastUsed(credential.id),
-            this.logUsage(provider, result, context, Date.now() - startedAt),
-          ]);
-          return result;
-        } catch (error) {
-          const message = error instanceof Error ? error.message : `${provider} extraction failed`;
-          failures.push(`${provider}: ${message}`);
-          const providerError = error instanceof StructuredExtractionProviderError ? error : null;
-          lastFailure = {
-            status: 'failed', method: 'structured_llm_v1', fidelity: 'live_api', provider, model,
-            inputTokens: providerError?.inputTokens, outputTokens: providerError?.outputTokens,
-            costCents: providerError?.costCents || 0, error: message,
-          };
-          await Promise.allSettled([
-            updateAdminCredentialLastUsed(credential.id),
-            this.logUsage(provider, lastFailure, context, Date.now() - startedAt),
-          ]);
-        }
+    const credentials = (await getAllActiveAdminCredentials('openrouter')).filter((credential) => Boolean(credential.apiKey));
+    for (const credential of credentials) {
+      const config = credential.config as CredentialConfig;
+      const model = configString(config, 'aiVisibilityExtractionModel', 'openai/gpt-4.1-mini');
+      lastModel = model;
+      const startedAt = Date.now();
+      try {
+        if ((await getInsightsRuntime()).pricingGuardEnabled) await llmPricingSnapshot(model, 'openrouter');
+        const result = await this.extractWithOpenRouter(credential.apiKey, config, model, prompt);
+        await Promise.allSettled([
+          updateAdminCredentialLastUsed(credential.id),
+          this.logUsage('openrouter', result, context, Date.now() - startedAt),
+        ]);
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'openrouter extraction failed';
+        failures.push(`openrouter: ${message}`);
+        const providerError = error instanceof StructuredExtractionProviderError ? error : null;
+        lastFailure = {
+          status: 'failed', method: 'structured_llm_v1', fidelity: 'live_api', provider: 'openrouter', model,
+          inputTokens: providerError?.inputTokens, outputTokens: providerError?.outputTokens,
+          costCents: providerError?.costCents || 0, error: message,
+        };
+        await Promise.allSettled([
+          updateAdminCredentialLastUsed(credential.id),
+          this.logUsage('openrouter', lastFailure, context, Date.now() - startedAt),
+        ]);
       }
     }
     return {
@@ -145,61 +137,11 @@ export class StructuredAnswerExtractionService {
       status: 'failed',
       method: 'structured_llm_v1',
       fidelity: 'live_api',
-      provider: lastProvider,
+      provider: credentials.length ? 'openrouter' : 'unconfigured',
       model: lastModel,
       costCents: lastFailure?.costCents || 0,
-      error: failures.length ? failures.join(' | ') : 'Gemini, OpenAI, and OpenRouter structured-output credentials are not configured.',
+      error: failures.length ? failures.join(' | ') : 'An OpenRouter API key is needed to read AI engine answers.',
     };
-  }
-
-  private async extractWithOpenAi(apiKey: string, config: CredentialConfig, model: string, prompt: string): Promise<StructuredExtractionResult> {
-    const data = await jsonRequest('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        input: prompt,
-        text: { format: { type: 'json_schema', name: 'ai_visibility_extraction', strict: true, schema: extractionJsonSchema } },
-      }),
-    });
-    const output = Array.isArray(data.output) ? data.output as Array<Record<string, unknown>> : [];
-    const content = output.flatMap((item) => Array.isArray(item.content) ? item.content as Array<Record<string, unknown>> : []);
-    const outputText = typeof data.output_text === 'string' ? data.output_text : content.map((item) => typeof item.text === 'string' ? item.text : '').filter(Boolean).join('');
-    const usage = (data.usage || {}) as Record<string, unknown>;
-    const inputTokens = Number(usage.input_tokens || 0) || undefined;
-    const outputTokens = Number(usage.output_tokens || 0) || undefined;
-    const costCents = calculateCost(config, inputTokens, outputTokens);
-    if (!outputText) throw new StructuredExtractionProviderError('OpenAI returned no structured extraction payload.', inputTokens, outputTokens, costCents);
-    try {
-      return { status: 'completed', method: 'structured_llm_v1', fidelity: 'live_api', provider: 'openai', model, extraction: parseStructuredPayload(outputText), inputTokens, outputTokens, costCents };
-    } catch (error) {
-      throw new StructuredExtractionProviderError(error instanceof Error ? error.message : 'OpenAI returned invalid structured extraction data.', inputTokens, outputTokens, costCents);
-    }
-  }
-
-  private async extractWithGemini(apiKey: string, config: CredentialConfig, model: string, prompt: string): Promise<StructuredExtractionResult> {
-    const data = await jsonRequest(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: extractionJsonSchema },
-      }),
-    });
-    const candidates = Array.isArray(data.candidates) ? data.candidates as Array<Record<string, unknown>> : [];
-    const content = (candidates[0]?.content || {}) as Record<string, unknown>;
-    const parts = Array.isArray(content.parts) ? content.parts as Array<Record<string, unknown>> : [];
-    const outputText = parts.map((part) => typeof part.text === 'string' ? part.text : '').filter(Boolean).join('');
-    const usage = (data.usageMetadata || {}) as Record<string, unknown>;
-    const inputTokens = Number(usage.promptTokenCount || 0) || undefined;
-    const outputTokens = Number(usage.candidatesTokenCount || 0) || undefined;
-    const costCents = calculateCost(config, inputTokens, outputTokens);
-    if (!outputText) throw new StructuredExtractionProviderError('Gemini returned no structured extraction payload.', inputTokens, outputTokens, costCents);
-    try {
-      return { status: 'completed', method: 'structured_llm_v1', fidelity: 'live_api', provider: 'gemini', model, extraction: parseStructuredPayload(outputText), inputTokens, outputTokens, costCents };
-    } catch (error) {
-      throw new StructuredExtractionProviderError(error instanceof Error ? error.message : 'Gemini returned invalid structured extraction data.', inputTokens, outputTokens, costCents);
-    }
   }
 
   private async extractWithOpenRouter(apiKey: string, config: CredentialConfig, model: string, prompt: string): Promise<StructuredExtractionResult> {

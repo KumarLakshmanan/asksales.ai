@@ -96,8 +96,10 @@ describe('AI Visibility foundation contracts', () => {
     expect(compactSource(orchestrator)).toContain(compactSource('Failed calls remain visible and are never replaced with synthetic values.'));
     expect(compactSource(provider)).toContain(compactSource("fidelity: 'live_api'"));
     expect(compactSource(provider)).not.toContain(compactSource("fidelity: 'simulated'"));
-    expect(compactSource(provider)).toContain(compactSource("AI_VISIBILITY_OBSERVATION_PROVIDERS = ['openai', 'gemini']"));
-    expect(provider).not.toMatch(/perplexity|sonar/i);
+    expect(compactSource(provider)).toContain(compactSource("AI_VISIBILITY_OBSERVATION_PROVIDERS = ['openai', 'gemini', 'perplexity', 'claude']"));
+    // Every engine, Perplexity included, is asked through OpenRouter; the retired direct
+    // Perplexity integration and the direct OpenAI and Gemini APIs are not called.
+    expect(provider).not.toMatch(/api\.perplexity\.ai|api\.openai\.com|generativelanguage\.googleapis\.com/);
     expect(compactSource(orchestrator)).toContain(compactSource('AI_VISIBILITY_OBSERVATION_PROVIDERS'));
   });
 
@@ -236,7 +238,7 @@ describe('AI Visibility foundation contracts', () => {
     expect(compactSource(orchestrator)).toContain(compactSource("eq(aiVisibilityPromptRunsTable.extractionMethod, 'structured_llm_v1')"));
     expect(compactSource(orchestrator)).toContain(compactSource("inArray(aiVisibilityPromptRunsTable.extractionStatus, ['completed', 'corrected', 'cached'])"));
     expect(compactSource(extractor)).toContain(compactSource("type: 'json_schema'"));
-    expect(compactSource(extractor)).toContain(compactSource("responseJsonSchema: extractionJsonSchema"));
+    expect(compactSource(extractor)).toContain(compactSource("json_schema: { name: 'ai_visibility_extraction', strict: true, schema: extractionJsonSchema }"));
     expect(extractor).not.toMatch(/best\|leading\|recommended/);
   });
 

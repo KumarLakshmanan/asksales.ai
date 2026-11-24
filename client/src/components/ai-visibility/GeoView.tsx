@@ -63,13 +63,16 @@ export function GeoView({ projectId }: { projectId: number }) {
   const successful = runs.filter((run) => run.status === 'completed');
   const extracted = runs.filter(measured);
   const compatible = compatibleMeasurements(query.data?.audit, comparison.data?.audit);
-  const compatibleAudits =
+  const otherCompletedAudits =
     audits.data?.audits.filter(
       (audit) =>
         audit.id !== query.data?.audit?.id &&
-        ['completed', 'completed_with_warnings'].includes(audit.status) &&
-        compatibleMeasurements(query.data?.audit, audit),
+        ['completed', 'completed_with_warnings'].includes(audit.status),
     ) || [];
+  const otherCompleted = otherCompletedAudits.length;
+  const compatibleAudits = otherCompletedAudits.filter((audit) =>
+    compatibleMeasurements(query.data?.audit, audit),
+  );
   const filtered = useMemo(
     () =>
       prompts
@@ -262,6 +265,13 @@ export function GeoView({ projectId }: { projectId: number }) {
             message="Comparison history is unavailable."
             onRetry={() => audits.refetch()}
           />
+        ) : audits.isSuccess && !compatibleAudits.length ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            {otherCompleted
+              ? `None of the ${otherCompleted} other completed ${otherCompleted === 1 ? 'analysis' : 'analyses'} can be compared with this one. They used a different country, language, region or settings, or were run before settings were recorded.`
+              : 'There is no other completed analysis yet.'}{' '}
+            Run another analysis with the same settings to compare.
+          </p>
         ) : (
           <>
             <label className="mt-3 block text-sm">

@@ -40,6 +40,7 @@ const PROVIDER_NAMES: Record<string, string> = {
   openai: 'ChatGPT (OpenAI)',
   gemini: 'Gemini (Google)',
   perplexity: 'Perplexity',
+  claude: 'Claude (Anthropic)',
 };
 
 /** The AI engine's product name, as people know it, for a stored provider id. */

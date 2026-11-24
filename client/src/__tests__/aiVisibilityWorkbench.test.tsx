@@ -1233,6 +1233,23 @@ describe('Cross-section roles and GEO evidence filters', () => {
     await userEvent.selectOptions(screen.getByLabelText('Has citations'), 'all');
     expect(screen.getByText('No observations match these filters.')).toBeInTheDocument();
   });
+
+  it('says why no earlier analysis can be compared instead of an empty list', async () => {
+    // Saved before analyses recorded their settings, so it can't be compared.
+    const older = { ...audit, id: 1, inputSnapshot: {}, createdAt: '2026-08-13T00:00:00Z' };
+    mocks.api.listAudits.mockResolvedValue({ audits: [audit, older] });
+    mocks.api.prompts.mockResolvedValue({
+      audit,
+      prompts: [{ id: 1, prompt: 'Which service solves my problem?', intent: 'discovery', isGeneric: true, locale: 'en-IN' }],
+      runs: [{ ...observedRun, promptId: 1 }],
+    });
+    wrap(<GeoView projectId={7} />);
+    await userEvent.click(await screen.findByText('Compare compatible measurements'));
+    expect(
+      await screen.findByText(/None of the 1 other completed analysis can be compared with this one\./),
+    ).toHaveTextContent('Run another analysis with the same settings to compare.');
+    expect(screen.queryByLabelText('Compare with')).not.toBeInTheDocument();
+  });
 });
 
 describe('Complete question and asset lists', () => {

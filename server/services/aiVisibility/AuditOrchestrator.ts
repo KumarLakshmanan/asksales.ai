@@ -897,7 +897,8 @@ export class AuditOrchestrator {
     const failuresByProvider = new Map<string, number>();
     const failureReasons = new Map<string, string>();
     for (const prompt of prompts) {
-      for (const provider of AI_VISIBILITY_OBSERVATION_PROVIDERS) {
+      // The engines are asked at the same time; each takes 5 to 20 seconds.
+      await Promise.all(AI_VISIBILITY_OBSERVATION_PROVIDERS.map(async (provider) => {
         const [existing] = await db
           .select({ id: aiVisibilityPromptRunsTable.id })
           .from(aiVisibilityPromptRunsTable)
@@ -908,7 +909,7 @@ export class AuditOrchestrator {
             ),
           )
           .limit(1);
-        if (existing) continue;
+        if (existing) return;
         const blockedReason = blockedProviders.get(provider);
         if (blockedReason) {
           await db.insert(aiVisibilityPromptRunsTable).values({
@@ -926,7 +927,7 @@ export class AuditOrchestrator {
             error: blockedReason,
           });
           skipped += 1;
-          continue;
+          return;
         }
         const configuredModel = prompt.isGeneric
           ? await providerObservationService.getConfiguredModel(provider)
@@ -1006,7 +1007,7 @@ export class AuditOrchestrator {
               cacheKey,
               cachedFromRunId: cached.run.id,
             });
-            continue;
+            return;
           }
         }
         const observation = await providerObservationService.collect(
@@ -1046,7 +1047,7 @@ export class AuditOrchestrator {
           if (!failureReasons.has(provider))
             failureReasons.set(provider, quotaFailure ? platformAIQuotaMessage() : (observation.error || 'request failed').slice(0, 180));
         }
-      }
+      }));
     }
     const providerDetails = [...failuresByProvider.entries()]
       .map(
@@ -1070,7 +1071,7 @@ export class AuditOrchestrator {
         ? {
             warning: noProviderConfigured
               ? quotaNotice ? `AI visibility measurements were skipped. ${quotaNotice}`
-                : 'No AI provider is configured for visibility measurements. All observations were excluded without sending requests. An administrator must configure an active OpenAI or Gemini API credential, then run a new analysis.'
+                : 'No AI engine could be asked, so no requests were sent. An AskSales administrator needs to add an OpenRouter API key, then run a new analysis.'
               : `${failures.length} failed and ${skipped} skipped or excluded provider observations. ${providerDetails || 'Unconfigured providers were excluded.'} Only successful observations contribute to the score. Failed calls remain visible and are never replaced with synthetic values.`,
           }
         : {}),
@@ -1109,11 +1110,12 @@ export class AuditOrchestrator {
             ),
           );
     const outcomes: string[] = [];
-    for (let index = 0; index < runs.length; index += 3) {
+    // Each answer takes about 2 seconds to read; 8 at a time keeps 16 answers under 10 seconds.
+    for (let index = 0; index < runs.length; index += 8) {
       outcomes.push(
         ...(await Promise.all(
           runs
-            .slice(index, index + 3)
+            .slice(index, index + 8)
             .map((record: { run: PromptRunRecord; prompt: PromptRecord }) =>
               this.extractProviderRun(record, context, competitors),
             ),

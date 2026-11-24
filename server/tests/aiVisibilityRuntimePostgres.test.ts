@@ -246,10 +246,10 @@ jest.unstable_mockModule('../models/adminApiCredentials/functions.js', () => ({
 jest.unstable_mockModule(
   '../services/aiVisibility/ProviderObservationService.js',
   () => ({
-    AI_VISIBILITY_OBSERVATION_PROVIDERS: ['openai', 'gemini'],
+    AI_VISIBILITY_OBSERVATION_PROVIDERS: ['openai', 'gemini', 'perplexity', 'claude'],
     providerObservationService: {
       readiness: async () =>
-        ['openai', 'gemini'].map((provider) => ({
+        ['openai', 'gemini', 'perplexity', 'claude'].map((provider) => ({
           provider,
           configured: true,
           model: 'synthetic-model',

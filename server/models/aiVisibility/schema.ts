@@ -36,10 +36,9 @@ export type StageStatus =
   | 'failed'
   | 'skipped'
   | 'cancelled';
-// The retired provider value remains in this storage type only so historical
-// production audit rows can still be rendered. New observation runs are
-// constrained by AI_VISIBILITY_OBSERVATION_PROVIDERS in the service layer.
-export type ProviderName = 'openai' | 'gemini' | 'perplexity' | 'manual';
+// New observation runs are constrained by AI_VISIBILITY_OBSERVATION_PROVIDERS
+// in the service layer; 'manual' is kept for older rows.
+export type ProviderName = 'openai' | 'gemini' | 'perplexity' | 'claude' | 'manual';
 export type ProviderFidelity = 'live_api' | 'manual_capture' | 'simulated';
 export type RecommendationStatus = 'open' | 'in_progress' | 'resolved' | 'rejected';
 export type PillarStatus = 'scored' | 'not_applicable' | 'unavailable';

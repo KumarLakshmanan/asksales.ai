@@ -109,6 +109,8 @@ function providerLabel(value: string): string {
   const labels: Record<string, string> = {
     openai: 'OpenAI',
     gemini: 'Gemini',
+    perplexity: 'Perplexity',
+    claude: 'Claude',
     manual: 'Manual',
   };
   return labels[value.toLowerCase()] || titleCase(value);

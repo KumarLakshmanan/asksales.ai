@@ -21,6 +21,46 @@ describe('AI Visibility alert detection', () => {
     expect(alerts.find((alert) => alert.type === 'new_competitor')?.evidence).toEqual({ competitors: ['New Rival'] });
   });
 
+  it('compares AI answers only from engines asked in both analyses', () => {
+    const input = {
+      currentScore: 70,
+      previousScore: 70,
+      currentIssues: [],
+      previousIssues: [],
+      highImpactRecommendations: [],
+      auditedNames: ['Audited Brand'],
+      hasPreviousAudit: true,
+    };
+    // Claude and Perplexity were added: their answers are not "new" competitors.
+    const added = deriveVisibilityAlerts({
+      ...input,
+      currentRuns: [
+        { provider: 'openai', brandMentioned: true, competitors: ['Existing Rival'] },
+        { provider: 'claude', brandMentioned: false, competitors: ['Claude Rival'] },
+        { provider: 'perplexity', brandMentioned: false, competitors: ['Perplexity Rival'] },
+      ],
+      previousRuns: [{ provider: 'openai', brandMentioned: true, competitors: ['Existing Rival'] }],
+    });
+    expect(added).toEqual([]);
+    // An engine that is no longer asked does not read as lost mentions.
+    const dropped = deriveVisibilityAlerts({
+      ...input,
+      currentRuns: [{ provider: 'openai', brandMentioned: true, competitors: [] }],
+      previousRuns: [
+        { provider: 'openai', brandMentioned: true, competitors: [] },
+        { provider: 'gemini', brandMentioned: true, competitors: ['Gone Rival'] },
+      ],
+    });
+    expect(dropped).toEqual([]);
+    // A shared engine still reports real changes.
+    const changed = deriveVisibilityAlerts({
+      ...input,
+      currentRuns: [{ provider: 'openai', brandMentioned: false, competitors: ['New Rival'] }],
+      previousRuns: [{ provider: 'openai', brandMentioned: true, competitors: [] }],
+    });
+    expect(changed.map((alert) => alert.type).sort()).toEqual(['mention_loss', 'new_competitor']);
+  });
+
   it('does not report a regression when the SEO rule set itself changed between audits', () => {
     const alerts = deriveVisibilityAlerts({
       currentScore: 60,
