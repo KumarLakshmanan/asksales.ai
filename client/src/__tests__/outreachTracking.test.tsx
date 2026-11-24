@@ -70,8 +70,16 @@ describe('Message tracking list', () => {
     const row = link.closest('tr')!;
     expect(within(row).getByText('WhatsApp · diwali_sale')).toBeInTheDocument();
     expect(within(row).getAllByText('300 of 400 sent').length).toBeGreaterThan(0);
-    expect(within(row).getByText('Sending')).toBeInTheDocument();
+    // Every unsent message is held by a sending limit, so nothing is going out right now.
+    expect(within(row).getByText('Waiting for sending limit')).toBeInTheDocument();
     expect(mocks.get).toHaveBeenCalledWith('/api/outreach/batches', { params: { state: 'all', page: 1, pageSize: 20 } });
+  });
+
+  it('says Sending only while some messages are actually going out', async () => {
+    mocks.get.mockResolvedValue(list([{ ...batch, counts: counts({ total: 400, sent: 40, delivered: 200, read: 60, waitingLimit: 80, sending: 10, failed: 8, expired: 2 }) }]));
+    render(<TrackingHome />);
+    const row = (await screen.findByRole('link', { name: 'Diwali offer' })).closest('tr')!;
+    expect(within(row).getByText('Sending')).toBeInTheDocument();
   });
 
   it('explains an empty list and offers the next step', async () => {
@@ -122,7 +130,7 @@ describe('Outreach tracking detail', () => {
       expect(within(within(tiles).getByText(label).closest('article')!).getByText(value)).toBeInTheDocument();
     expect(within(tiles).getByText('Includes 2 expired')).toBeInTheDocument();
     expect(within(tiles).getByText('2 skipped before sending')).toBeInTheDocument();
-    expect(screen.getByText('90 messages are waiting for your daily sending limit')).toBeInTheDocument();
+    expect(screen.getByText('90 messages are waiting for a sending limit')).toBeInTheDocument();
     expect(screen.getByText(/Anything not sent by .* will expire\./)).toBeInTheDocument();
     expect(screen.getByText('Lead has opted out or is blocked from outreach')).toBeInTheDocument();
     expect(await screen.findByText(/It may not be on WhatsApp/)).toBeInTheDocument();

@@ -17,6 +17,7 @@ export const outreachProgressDisplay: Record<OutreachProgress, { label: string; 
   preparing: { label: "Preparing", tone: "progress" },
   scheduled: { label: "Scheduled", tone: "info" },
   sending: { label: "Sending", tone: "progress" },
+  waiting_limit: { label: "Waiting for sending limit", tone: "warning" },
   needs_attention: { label: "Needs attention", tone: "warning" },
   not_sent: { label: "Not sent", tone: "danger" },
   finished_with_failures: { label: "Finished with failures", tone: "warning" },
@@ -63,7 +64,9 @@ export function failureExplanation(providerCode: string | null, reason: string):
 /** The short note under a recipient's status. */
 export function recipientNote(recipient: OutreachRecipient): string | null {
   switch (recipient.state) {
-    case "waiting_limit": return "Held until your daily sending limit resets";
+    // The same state covers the account's daily allowance and WhatsApp's own limits.
+    case "waiting_limit": return recipient.providerCode && providerCodeHelp[recipient.providerCode]
+      ? providerCodeHelp[recipient.providerCode] : "Held until your daily sending limit resets";
     case "expired": return "Not sent before its time ran out";
     case "failed":
     case "needs_attention": return recipient.reason ? failureExplanation(recipient.providerCode, recipient.reason) : null;

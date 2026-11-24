@@ -2,7 +2,9 @@ import {afterAll,beforeAll,beforeEach,describe,expect,it,jest} from '@jest/globa
 import {randomUUID} from 'node:crypto';
 import {Client} from 'pg';
 import {drizzle,type NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {sql} from 'drizzle-orm';
 import {withBusinessScope} from '../tenancy/businessContext.js';
+import {messageProviderCode} from '../services/outreach/OutreachDeliveryState.js';
 import {installReportingFixture} from './helpers/outreachReportingFixture.js';
 import type {ToolContext} from '../mastra/tools/toolRegistry.js';
 let client: Client,database: NodePgDatabase;
@@ -52,6 +54,18 @@ run('shared campaign reporting with real PostgreSQL',()=>{
     expect(queue.channels).toEqual(report.channels);
     expect(campaignReportStats(report,'30d')).toMatchObject({totalSent:2,delivered:1,byStatus:{sent:2,pending:1,failed:1}});
     expect(campaignReportStats(report)).toMatchObject({totalSent:2,totalMessages:4});
+  });
+  it('shows a WhatsApp retry code only while that retry is pending, not on a later different failure',async()=>{
+    // Retried for 131049, then the last attempt failed before reaching WhatsApp.
+    await client.query(`UPDATE outreach_messages SET metadata='{"outreachQueue":{"reason":"provider_limit","providerCode":131049}}',
+      error_message='The confirmed official provider account is not ready or no longer matches.' WHERE id=4`);
+    // Still queued for the same limit: the code explains it.
+    await client.query(`INSERT INTO outreach_messages(id,user_id,conversation_id,direction,message_kind,status,created_at,metadata,error_message) VALUES
+      (5,991,2,'outbound','outreach','pending','2026-10-03','{"outreachQueue":{"reason":"provider_limit","providerCode":131049,"nextAttemptAt":"2026-11-04T00:00:00Z"}}','Meta marketing limit reached.')`);
+    const report=await read({messageKind:'all'});
+    expect(report.failures).toEqual([{channel:'whatsapp',code:null,reason:'The confirmed official provider account is not ready or no longer matches.',count:1}]);
+    const rows=await database.execute(sql`SELECT id,${messageProviderCode} AS code FROM outreach_messages m WHERE id IN(4,5) ORDER BY id`);
+    expect(rows.rows).toEqual([{id:4,code:null},{id:5,code:'131049'}]);
   });
   it('keeps separate prepared campaigns distinct even when they use the same imported audience',async()=>{
     const first=randomUUID(),other=randomUUID(),foreign=randomUUID();

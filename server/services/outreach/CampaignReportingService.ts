@@ -6,7 +6,7 @@ import { assertOwnedCampaignThread } from '../CampaignWorkspaceService.js';
 import { campaignReportUrl, type CampaignReport, type CampaignReportFilters, type CampaignDeliveryCounts } from '../../../shared/campaignReporting.js';
 import type { CampaignReportOptions } from '../../../shared/campaignReporting.js';
 import {customerReportingIdentityCtes} from './CustomerReportingIdentity.js';
-import { deliveryStateSql, reportStateSql } from './OutreachDeliveryState.js';
+import { deliveryStateSql, messageProviderCode, reportStateSql } from './OutreachDeliveryState.js';
 
 export class CampaignReportError extends Error {
   constructor(message: string, public readonly status = 400) { super(message); }
@@ -180,7 +180,7 @@ export function canonicalOutreachCtes(userId: number, filters?: CampaignReportFi
         m.sent_at,m.created_at,COALESCE(m.delivered_at,receipt.delivered_at) AS delivered_at,m.read_at,
         m.manual_review_required OR m.status IN('manual_review','setup_required') AS needs_review,
         m.metadata->'outreachQueue'->>'reason' AS reason,
-        m.metadata->'outreachQueue'->>'providerCode' AS provider_code,
+        ${messageProviderCode} AS provider_code,
         COALESCE(m.metadata->'outreachQueue'->>'nextAttemptAt',m.metadata->>'scheduledAt') AS next_attempt_at,
         m.error_message AS error,receipt.opened_at,receipt.clicked_at,
         receipt.reply_received_at,NULL::text AS reply_message_id,receipt.sentiment

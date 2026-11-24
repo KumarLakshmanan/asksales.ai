@@ -8,7 +8,7 @@ import {
   type TemplatePerformance, type TemplatePerformanceReport, type UpcomingDay, type UpcomingSchedule,
 } from '../../../shared/outreachTracking.js';
 import { ADMISSION_STALE_MINUTES } from './OutreachBatchService.js';
-import { messageDeliveryState, messageNextAttemptAt, recipientRawStatuses } from './OutreachDeliveryState.js';
+import { messageDeliveryState, messageNextAttemptAt, messageProviderCode, recipientRawStatuses } from './OutreachDeliveryState.js';
 import { getEffectiveDailyLimit } from './QuotaService.js';
 import { nextDailyCapacityTime } from './providerRetry.js';
 import { addUtcDays, projectSends, utcDay, type WaitingGroup } from './OutreachUpcomingProjection.js';
@@ -241,7 +241,7 @@ async function selectRecipients(userId: number, business: number, batchId: strin
       SELECT m.id,m.conversation_id,c.lead_id,c.lead_name,${recipientAddress} AS recipient,${deliveryState} AS state,
         ${utc(sql`m.sent_at`)} AS sent_at,${utc(sql`m.delivered_at`)} AS delivered_at,${utc(sql`m.read_at`)} AS read_at,
         ${utc(sql`m.failed_at`)} AS failed_at,${nextAttemptAt} AS next_at,NULLIF(m.error_message,'') AS reason,
-        m.metadata->'outreachQueue'->>'providerCode' AS provider_code
+        ${messageProviderCode} AS provider_code
       FROM outreach_messages m JOIN outreach_conversations c ON c.id=m.conversation_id
         AND c.user_id=m.user_id AND c.business_profile_id=m.business_profile_id
       WHERE ${sql.join(inner, sql` AND `)}
@@ -404,7 +404,7 @@ export async function listOutreachFailures(userId: number, id: unknown, input: u
   // Reasons that differ only by a number or an id (a phone number, a message id, a retry count) are one reason.
   // Each group shows one real example of its wording.
   const result = await db.execute(sql`SELECT provider_code,MIN(reason) AS reason,COUNT(*)::int AS count FROM (
-      SELECT ${deliveryState} AS state,m.metadata->'outreachQueue'->>'providerCode' AS provider_code,
+      SELECT ${deliveryState} AS state,${messageProviderCode} AS provider_code,
         COALESCE(NULLIF(m.error_message,''),'No reason was recorded') AS reason
       FROM outreach_messages m WHERE m.batch_id=${batchId}::uuid AND m.user_id=${userId} AND m.business_profile_id=${business}
         AND m.direction='outbound' AND ${kindPredicate(filters.kind)}

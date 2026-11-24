@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageEmptyState } from "@/components/EmptyState";
 import { outreachReportChannels } from "../../../../../shared/campaignReporting";
 import {
-  deliveredCount, failedCount, outreachProgress, outreachTrackingUrl, reachedCount, trackingChannelLabel,
+  activeOutreachProgress, deliveredCount, failedCount, outreachProgress, outreachTrackingUrl, reachedCount, trackingChannelLabel,
   type OutreachBatchList, type OutreachBatchListItem, type ReceiptSupport,
 } from "../../../../../shared/outreachTracking";
 import { ActivityByDayView } from "./ActivityByDayView";
@@ -79,7 +79,7 @@ const columns: DataTableColumn<OutreachBatchListItem>[] = [
 ];
 
 const stillChanging = (list: OutreachBatchList) =>
-  list.items.some(item => ["preparing", "scheduled", "sending"].includes(outreachProgress(item.counts, item.admission)));
+  list.items.some(item => activeOutreachProgress.includes(outreachProgress(item.counts, item.admission)));
 
 export function TrackingHome() {
   // Remount on a business switch so one business's outreach never shows under another.

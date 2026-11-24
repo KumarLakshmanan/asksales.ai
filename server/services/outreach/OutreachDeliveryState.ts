@@ -92,6 +92,22 @@ export function reportStateSql(state: SQL): SQL {
 const nextAttemptText = sql`COALESCE(m.metadata->'outreachQueue'->>'nextAttemptAt',m.metadata->>'scheduledAt')`;
 export const messageNextAttemptAt = sql`(CASE WHEN ${nextAttemptText} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' THEN (${nextAttemptText})::timestamptz END)`;
 
+/**
+ * The provider error code saved on an `outreach_messages m` row, or NULL when
+ * it no longer explains the message.
+ *
+ * `outreachQueue.providerCode` is written only when WhatsApp's marketing limit
+ * (131049) puts a message back in the queue. It explains the message while that
+ * retry is waiting or sending, or when nothing else was recorded. A later
+ * attempt that ends the message with its own error keeps the old code: on one
+ * business, 5,800 failures read "Provider code 131049" beside "the sending
+ * account was disconnected" or "insufficient credits", attempts that never
+ * reached WhatsApp.
+ */
+export const messageProviderCode = sql`(CASE WHEN m.status IN(${list([...rawStatuses.waiting, ...rawStatuses.sending])})
+    OR m.metadata->'outreachQueue'->>'enqueueNeeded'='true' OR NULLIF(m.error_message,'') IS NULL
+  THEN m.metadata->'outreachQueue'->>'providerCode' END)`;
+
 /** The delivery state of an `outreach_messages m` row. */
 export const messageDeliveryState = deliveryStateSql({
   status: sql`m.status`, deliveredAt: sql`m.delivered_at`, readAt: sql`m.read_at`,

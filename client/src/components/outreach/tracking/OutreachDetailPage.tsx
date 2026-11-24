@@ -15,7 +15,7 @@ import { Callout } from "@/components/ui/callout";
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { PageEmptyState } from "@/components/EmptyState";
 import {
-  deliveredCount, failedCount, outreachProgress, outreachTrackingUrl, reachedCount, trackingChannelLabel, waitingCount,
+  activeOutreachProgress, deliveredCount, failedCount, outreachProgress, outreachTrackingUrl, reachedCount, trackingChannelLabel, waitingCount,
   type OutreachBatchSummary, type RecipientFilter,
 } from "../../../../../shared/outreachTracking";
 import { addDays, toDateValue, type DateRange } from "@/components/ui/date-range-field";
@@ -41,7 +41,7 @@ function activityRange(createdAt: string, lastActivityAt: string | null, active:
 }
 
 const stillChanging = (summary: OutreachBatchSummary) =>
-  ["preparing", "scheduled", "sending"].includes(outreachProgress(summary.counts, summary.batch.admission));
+  activeOutreachProgress.includes(outreachProgress(summary.counts, summary.batch.admission));
 
 export function OutreachDetailPage({ id }: { id: string }) {
   // Remount on a business switch so one business's outreach never shows under another.
@@ -129,8 +129,11 @@ function OutreachDetailPanel({ id }: { id: string }) {
       ) : null}
       {scheduledAhead ? <Callout tone="info" title={`Scheduled for ${formatDateTime(batch.scheduledAt)}`}>Sending starts on its own at that time.</Callout> : null}
       {counts.waitingLimit > 0 ? (
-        <Callout tone="warning" title={`${formatCount(counts.waitingLimit)} ${counts.waitingLimit === 1 ? "message is" : "messages are"} waiting for your daily sending limit`}>
-          They go out on their own as the limit resets each day.
+        <Callout tone="warning" title={`${formatCount(counts.waitingLimit)} ${counts.waitingLimit === 1 ? "message is" : "messages are"} waiting for a sending limit`}>
+          {batch.channel === "whatsapp"
+            // WhatsApp also holds marketing messages to people who got several recently (131049), retried hours later.
+            ? "They go out on their own once the limit allows: your daily sending limit, or WhatsApp's limit on marketing messages to the same person, which is retried a few hours later."
+            : "They go out on their own as the limit resets each day."}
           {nextAttemptAt ? ` Next send: ${formatDateTime(nextAttemptAt)}.` : ""}
           {batch.expiresAt ? ` Anything not sent by ${formatDateTime(batch.expiresAt)} will expire.` : ""}
         </Callout>

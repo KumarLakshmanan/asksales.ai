@@ -12,7 +12,7 @@ export type DeliveryState = typeof deliveryStates[number];
 
 /** Plain-language name for each state, used on screen and in downloads. */
 export const deliveryStateLabels: Record<DeliveryState, string> = {
-  scheduled: 'Scheduled', waiting: 'Waiting to send', waiting_limit: 'Waiting for daily limit', sending: 'Sending',
+  scheduled: 'Scheduled', waiting: 'Waiting to send', waiting_limit: 'Waiting for sending limit', sending: 'Sending',
   sent: 'Sent', delivered: 'Delivered', read: 'Read', failed: 'Failed', expired: 'Expired',
   needs_attention: 'Needs attention', cancelled: 'Cancelled',
 };
@@ -84,12 +84,18 @@ export type OutreachBatchSource = 'new_outreach' | 'prepared' | 'assistant' | 'l
 export type OutreachBatchAdmission = 'admitting' | 'queued' | 'interrupted';
 
 /** The single word shown for a whole outreach. */
-export type OutreachProgress = 'preparing' | 'scheduled' | 'sending' | 'needs_attention' | 'not_sent' | 'finished_with_failures' | 'finished';
+export type OutreachProgress = 'preparing' | 'scheduled' | 'sending' | 'waiting_limit' | 'needs_attention' | 'not_sent' | 'finished_with_failures' | 'finished';
+
+/** Still has messages to send; the page keeps refreshing while it does. */
+export const activeOutreachProgress: readonly OutreachProgress[] = ['preparing', 'scheduled', 'sending', 'waiting_limit'];
 
 export function outreachProgress(counts: BatchCounts, admission: OutreachBatchAdmission): OutreachProgress {
   if (admission === 'admitting') return 'preparing';
   const waiting = waitingCount(counts);
-  if (waiting > 0) return waiting === counts.scheduled && reachedCount(counts) === 0 ? 'scheduled' : 'sending';
+  if (waiting > 0 && waiting === counts.scheduled && reachedCount(counts) === 0) return 'scheduled';
+  // Every unsent message is held by a sending limit (daily allowance or WhatsApp's), so nothing is going out now.
+  if (waiting > 0 && waiting === counts.waitingLimit) return 'waiting_limit';
+  if (waiting > 0) return 'sending';
   if (counts.needsAttention > 0) return 'needs_attention';
   // Nothing left to send. Say plainly when none, or only some, of it got through.
   if (failedCount(counts) > 0) return reachedCount(counts) === 0 ? 'not_sent' : 'finished_with_failures';
