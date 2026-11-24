@@ -412,9 +412,11 @@ export class ChannelGateway {
               await db.transaction(async (tx: typeof db) => {
                 await tx.execute(sql`
                   INSERT INTO outreach_messages (
-                    conversation_id, user_id, direction, content, phone_number_id, message_type, status, is_ai_generated, metadata, created_at, updated_at
+                    conversation_id, user_id, direction, message_kind, content, phone_number_id, message_type, status, is_ai_generated, metadata, created_at, updated_at
                   ) VALUES (
-                    ${msg.conversationId}, ${msg.userId}, 'outbound', ${replyText}, ${msg.phoneNumberId || null}, 'text', 'pending_approval', true,
+                    -- A drafted answer to the customer, not campaign outreach: the column
+                    -- default ('outreach') put these in campaign Reports as needing review.
+                    ${msg.conversationId}, ${msg.userId}, 'outbound', 'reply', ${replyText}, ${msg.phoneNumberId || null}, 'text', 'pending_approval', true,
                     ${JSON.stringify(metadata)}::jsonb,
                     NOW(), NOW()
                   )

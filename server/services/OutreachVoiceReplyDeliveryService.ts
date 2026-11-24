@@ -36,10 +36,11 @@ export type VoiceReplyDeliveryResult = {
 async function ensureOutboundMessage(input: VoiceReplyDeliveryInput, deliveryActionId: number): Promise<{ id: number; inserted: boolean; messageType: string }> {
   const inserted = await db.execute(sql`
     INSERT INTO outreach_messages (
-      conversation_id, user_id, direction, content, phone_number_id, message_type,
+      conversation_id, user_id, direction, message_kind, content, phone_number_id, message_type,
       status, is_ai_generated, metadata, delivery_action_id, created_at, updated_at
     ) VALUES (
-      ${input.conversationId}, ${input.userId}, 'outbound', ${input.replyText},
+      -- An answer to the customer's voice note; the column default would file it as campaign outreach.
+      ${input.conversationId}, ${input.userId}, 'outbound', 'reply', ${input.replyText},
       ${input.phoneNumberId || null}, 'text', 'pending', true,
       ${JSON.stringify({
         channel: input.channel,
