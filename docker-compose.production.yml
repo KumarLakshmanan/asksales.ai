@@ -4,11 +4,14 @@
 # PostgreSQL and Redis run natively on host (not containerized)
 # ───────────────────────────────────────────────────────────────────────────────
 
+# Logs go to the systemd journal so they outlive each deploy's new containers
+# (json-file logs were deleted with the old container). Size and age limits
+# live in docker/ops/journald-90-asksales.conf. `docker logs` still works;
+# older history: journalctl CONTAINER_NAME=sm-api --since "2 days ago".
 x-runtime-logging: &runtime-logging
-  driver: json-file
+  driver: journald
   options:
-    max-size: "10m"
-    max-file: "3"
+    tag: "{{.Name}}"
 
 services:
   upload-init:
