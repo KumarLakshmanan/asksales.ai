@@ -40,6 +40,7 @@ function Harness({ account = "1234" }: { account?: string }) {
   );
 }
 beforeEach(() => {
+  localStorage.clear();
   vi.clearAllMocks();
   changes = vi.fn();
   vi.mocked(api.upload).mockResolvedValue({ mediaId: "98765" });
@@ -119,6 +120,48 @@ describe("template selection drawer", () => {
     await open();
     expect(screen.queryByText("Ready · offer.png")).not.toBeInTheDocument();
     expect(changes).not.toHaveBeenCalled();
+  });
+  it("offers the last uploaded header again for the same template and number", async () => {
+    const first = render(<Harness />);
+    let user = await open();
+    await user.click(screen.getByRole("button", { name: /2nightstay/ }));
+    await user.upload(
+      screen.getByLabelText("Upload template image"),
+      new File(["png"], "offer.png", { type: "image/png" }),
+    );
+    await screen.findByText("Ready · offer.png");
+    await waitFor(() =>
+      expect(localStorage.getItem("whatsapp-template-media:1234:8")).toContain("98765"),
+    );
+    first.unmount();
+
+    render(<Harness />);
+    user = await open();
+    await user.click(screen.getByRole("button", { name: /2nightstay/ }));
+    expect(screen.getByText("Ready · offer.png")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Use template" }));
+    expect(changes).toHaveBeenCalledWith("8");
+    expect(api.upload).toHaveBeenCalledTimes(1);
+  });
+  it("does not offer a header from another number or one older than 28 days", async () => {
+    localStorage.setItem(
+      "whatsapp-template-media:5678:8",
+      JSON.stringify({ mediaId: "other", mediaName: "other.png", savedAt: Date.now() }),
+    );
+    localStorage.setItem(
+      "whatsapp-template-media:1234:8",
+      JSON.stringify({
+        mediaId: "old",
+        mediaName: "old.png",
+        savedAt: Date.now() - 29 * 24 * 60 * 60 * 1000,
+      }),
+    );
+    render(<Harness />);
+    const user = await open();
+    await user.click(screen.getByRole("button", { name: /2nightstay/ }));
+    expect(screen.queryByText(/Ready ·/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Use template" })).toBeDisabled();
+    expect(localStorage.getItem("whatsapp-template-media:1234:8")).toBeNull();
   });
   it("closes and resets pending selection when the sending account changes", async () => {
     const view = render(<Harness />);

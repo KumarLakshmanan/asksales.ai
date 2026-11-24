@@ -9,6 +9,12 @@ import {
   ImageIcon,
 } from "lucide-react";
 import api from "@/lib/api";
+import {
+  forgetTemplateMedia,
+  imagePreviewDataUrl,
+  recallTemplateMedia,
+  rememberTemplateMedia,
+} from "@/lib/whatsappTemplateMediaMemory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
@@ -96,6 +102,20 @@ function TemplateDrawer({
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
+  // The header last uploaded for this template and number, so it is not asked for again.
+  const withRememberedMedia = (id: string, base: Record<string, string>) => {
+    if (!id || base.mediaId || !providerAccountId) return base;
+    const remembered = recallTemplateMedia(providerAccountId, id);
+    return remembered
+      ? {
+          ...base,
+          mediaId: remembered.mediaId,
+          mediaAccountId: providerAccountId,
+          mediaName: remembered.mediaName,
+          mediaPreview: remembered.mediaPreview || "",
+        }
+      : base;
+  };
   const changeOpen = (next: boolean) => {
     request.current?.abort();
     request.current = null;
@@ -103,7 +123,7 @@ function TemplateDrawer({
     setError("");
     if (next) {
       setDraftId(templateId);
-      setDraft({ ...values });
+      setDraft(withRememberedMedia(templateId, { ...values }));
       setSearch("");
     }
     setOpen(next);
@@ -121,6 +141,7 @@ function TemplateDrawer({
       mediaName: "",
       media: "",
     }));
+    if (draftId) forgetTemplateMedia(providerAccountId, draftId);
     const accepted =
       kind === "image"
         ? ["image/jpeg", "image/png"]
@@ -155,6 +176,17 @@ function TemplateDrawer({
         mediaName: file.name,
         mediaPreview: preview,
       }));
+      // Offer this upload next time the template is chosen for this number.
+      if (draftId) {
+        const templateForUpload = draftId;
+        void imagePreviewDataUrl(file).then((thumbnail) =>
+          rememberTemplateMedia(providerAccountId, templateForUpload, {
+            mediaId: result.mediaId,
+            mediaName: file.name,
+            mediaPreview: thumbnail,
+          }),
+        );
+      }
     } catch (cause) {
       if (!controller.signal.aborted && request.current === controller)
         setError(
@@ -254,7 +286,12 @@ function TemplateDrawer({
                       setUploading(false);
                       setError("");
                       setDraftId(item.id);
-                      setDraft(item.id === templateId ? { ...values } : {});
+                      setDraft(
+                        withRememberedMedia(
+                          item.id,
+                          item.id === templateId ? { ...values } : {},
+                        ),
+                      );
                     }}
                     className={`rounded-xl border p-3 text-left transition-colors hover:bg-muted/50 ${draftId === item.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"}`}
                   >
