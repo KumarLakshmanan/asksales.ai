@@ -181,7 +181,7 @@ async function rateFor(market: string, category: WhatsAppCategory, currency: str
   return row ? Number(row.rate) : null;
 }
 
-async function templateCategory(userId: number, name?: string, language?: string): Promise<WhatsAppCategory> {
+export async function templateCategory(userId: number, name?: string, language?: string): Promise<WhatsAppCategory> {
   if (!name) return 'marketing';
   const [row] = rows<{ category: string }>(await db.execute(sql`
     SELECT category FROM whatsapp_templates

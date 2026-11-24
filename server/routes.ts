@@ -213,7 +213,7 @@ import {
   uploadWhatsAppTemplateMediaMiddleware,
 } from "./controllers/whatsappTemplateController";
 import { preflightTemplateMedia } from './controllers/whatsappTemplateMediaPreflightController';
-import { getWhatsAppBilling, quoteWhatsAppMessages } from './controllers/whatsappBillingController';
+import { checkWhatsAppMarketingLimit, getWhatsAppBilling, quoteWhatsAppMessages } from './controllers/whatsappBillingController';
 import {
   addDomain as addResendDomain,
   verifyDomain as verifyResendDomain,
@@ -593,6 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WhatsApp platform billing: month-to-date Meta message charges and pre-send price quotes
   app.get("/api/whatsapp/billing/summary", authenticateToken, getWhatsAppBilling);
   app.post("/api/whatsapp/billing/quote", authenticateToken, quoteWhatsAppMessages);
+  app.post("/api/whatsapp/marketing-limit", authenticateToken, checkWhatsAppMarketingLimit);
 
   // WhatsApp Template routes
   app.get("/api/whatsapp/templates", authenticateToken, getWhatsAppTemplates);

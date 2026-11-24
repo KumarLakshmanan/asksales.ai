@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { WhatsAppCostPreview } from "./WhatsAppCostPreview";
+import { WhatsAppMarketingLimitNotice } from "./WhatsAppMarketingLimitNotice";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Card,
@@ -2035,6 +2036,14 @@ function OutreachCreationForm({ allowQueryHandoff, ownerScope, embedded }: { all
                           templateName: typeof message.templateName === "string" ? message.templateName : undefined,
                           templateLanguage: typeof message.templateLanguage === "string" ? message.templateLanguage : undefined,
                         }))}
+                      />
+                    )}
+                    {channel === "whatsapp" && (
+                      <WhatsAppMarketingLimitNotice
+                        phoneNumberId={account?.providerAccountId}
+                        leadIds={deliveries.map(({ recipient }) => Number(recipient.id))}
+                        templateName={typeof deliveries[0]?.message.templateName === "string" ? deliveries[0].message.templateName : undefined}
+                        templateLanguage={typeof deliveries[0]?.message.templateLanguage === "string" ? deliveries[0].message.templateLanguage : undefined}
                       />
                     )}
                     <div>

@@ -7,6 +7,7 @@ import type { Request, Response } from 'express';
 import { businessOwnerUserId } from '../tenancy/businessContext.js';
 import { logger } from '../utils/logger.js';
 import { getWhatsAppBillingSummary, quoteWhatsAppBatch } from '../services/whatsapp/WhatsAppBillingService.js';
+import { MAX_MARKETING_LIMIT_LEADS, recentMarketingLimitLeads } from '../services/whatsapp/WhatsAppMarketingLimit.js';
 
 const MAX_QUOTE_ITEMS = 5000;
 
@@ -47,5 +48,27 @@ export async function quoteWhatsAppMessages(req: Request, res: Response) {
   } catch (error) {
     logger.error({ err: error, userId }, '[WhatsAppBilling] Quote failed');
     return res.status(500).json({ error: 'The WhatsApp message price could not be worked out.' });
+  }
+}
+
+/** Which of these contacts Meta recently held a marketing template back from (131049). */
+export async function checkWhatsAppMarketingLimit(req: Request, res: Response) {
+  const userId = businessOwnerUserId(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const leadIds = Array.isArray(req.body?.leadIds) ? req.body.leadIds.map(Number) : null;
+  if (!leadIds?.length || leadIds.length > MAX_MARKETING_LIMIT_LEADS) {
+    return res.status(400).json({ error: `Check between 1 and ${MAX_MARKETING_LIMIT_LEADS.toLocaleString('en-US')} contacts.` });
+  }
+  try {
+    return res.json(await recentMarketingLimitLeads({
+      userId,
+      leadIds,
+      phoneNumberId: phoneNumberIdOf(req.body?.phoneNumberId),
+      templateName: typeof req.body?.templateName === 'string' ? req.body.templateName.slice(0, 512) : undefined,
+      templateLanguage: typeof req.body?.templateLanguage === 'string' ? req.body.templateLanguage.slice(0, 20) : undefined,
+    }));
+  } catch (error) {
+    logger.error({ err: error, userId }, '[WhatsAppBilling] Marketing limit check failed');
+    return res.status(500).json({ error: 'Recent WhatsApp marketing limits could not be checked.' });
   }
 }
