@@ -55,6 +55,19 @@ describe("WhatsApp library and details improvements", () => {
       languages: ["en_US", "ta"],
     });
   });
+  it("syncs with Meta when the library opens, at most every 10 minutes", async () => {
+    sessionStorage.removeItem("whatsapp-templates-auto-sync");
+    mocks.post.mockResolvedValue({ count: 1 });
+    const first = render(<WhatsAppTemplateLibrary />);
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledWith("/api/whatsapp/templates/sync", {}));
+    // The list is reloaded after the sync so new Meta templates appear.
+    await waitFor(() => expect(mocks.get.mock.calls.length).toBeGreaterThanOrEqual(2));
+    first.unmount();
+    render(<WhatsAppTemplateLibrary />);
+    await screen.findAllByText("appointment_reminder");
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+    expect(mocks.toast).not.toHaveBeenCalled();
+  });
   it("restores server filters, table layout and pagination from the URL and preserves them in detail navigation", async () => {
     mocks.params = new URLSearchParams(
       "page=2&layout=table&language=ta&status=APPROVED&sort=name_asc",

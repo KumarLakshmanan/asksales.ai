@@ -286,6 +286,31 @@ export default function WhatsAppTemplateLibrary() {
     if (filters.source === "saved") void load();
     return invalidateRequest;
   }, [load, filters.source, invalidateRequest]);
+  // Templates created or approved in Meta only appear here after a sync, so
+  // sync quietly when the page opens (at most every 10 minutes per session).
+  // A failure stays silent: the Sync button reports errors on demand.
+  const autoSynced = useRef(false);
+  useEffect(() => {
+    if (autoSynced.current) return;
+    autoSynced.current = true;
+    const key = "whatsapp-templates-auto-sync";
+    try {
+      const last = Number(sessionStorage.getItem(key) || 0);
+      if (Date.now() - last < 10 * 60_000) return;
+      sessionStorage.setItem(key, String(Date.now()));
+    } catch {
+      // Storage unavailable: still sync once for this visit.
+    }
+    void (async () => {
+      try {
+        await api.post("/api/whatsapp/templates/sync", {});
+        cache.current.clear();
+        await load(true);
+      } catch {
+        // Silent: the Sync button shows sync errors when asked.
+      }
+    })();
+  }, [load]);
   const saved = data?.templates || [];
   const serverPaginated = typeof data?.total === "number";
   const localFiltered = saved
