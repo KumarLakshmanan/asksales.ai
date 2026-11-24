@@ -81,6 +81,20 @@ run('shared campaign reporting with real PostgreSQL',()=>{
     await client.query(`UPDATE sent_messages SET business_profile_id=2 WHERE id=1; UPDATE outreach_jobs SET business_profile_id=2 WHERE id=1`);
     expect((await read()).counts.delivered).toBe(1);
   });
+  it('counts an older Gmail send record once when it names its email message, even under a CRM contact',async()=>{
+    const before=(await read({messageKind:'all'})).counts.total;
+    // The conversation is keyed by its CRM contact, the send record by its lead, and the channels are spelled differently.
+    await client.query(`INSERT INTO crm_contacts(id,user_id,business_profile_id,lead_id) VALUES(80,991,1,NULL);
+      INSERT INTO outreach_conversations(id,user_id,channel,provider_account_id,lead_id,crm_contact_id) VALUES(8,991,'email','me@example.com',NULL,80);
+      INSERT INTO outreach_messages(id,user_id,conversation_id,direction,message_kind,status,created_at,sent_at,external_message_id) VALUES
+        (30,991,8,'outbound','outreach','sent','2026-10-05','2026-10-05','<msg-30@mail>');
+      INSERT INTO sent_messages(id,user_id,lead_id,channel,status,message_id,outreach_message_id,sent_at,follow_up_step) VALUES
+        (5,991,9,'gmail','sent','<msg-30@mail>',30,'2026-10-05',1);`);
+    expect((await read({messageKind:'all'})).counts.total).toBe(before+1);
+    // Without the stored link, a provider ID alone does not join different customers.
+    await client.query(`UPDATE sent_messages SET outreach_message_id=NULL WHERE id=5`);
+    expect((await read({messageKind:'all'})).counts.total).toBe(before+2);
+  });
   it('does not deduplicate distinct recipients sharing a provider identity in bad legacy data',async()=>{
     await client.query(`INSERT INTO sent_messages(id,user_id,lead_id,channel,status,message_id,sent_at) VALUES(1,991,8,'whatsapp','sent','wamid-1','2026-10-01')`);
     expect((await read()).counts.total).toBe(4);
