@@ -54,6 +54,8 @@ import {
   deleteAlert,
   getAlertLogs,
   syncContactsToLeads,
+  getDuplicateContacts,
+  mergeContact,
 } from '../controllers/crmController.js';
 
 import { getAssignees, getWorkspaceSummary, getWorkspaceTimeline, getContactConversationMessages,
@@ -96,6 +98,8 @@ router.get('/assignees', getAssignees);
 router.get('/work', heavyCrmRead, getWork);
 router.get('/reports', heavyCrmRead, getReports);
 router.get('/contacts/export', exportContacts);
+router.get('/contacts/duplicates', boundedRead, getDuplicateContacts);
+router.post('/contacts/:id/merge', validateParams(positiveIdParams), validateBody(z.object({ intoContactId: z.coerce.number().int().positive() })), mergeContact);
 router.post('/contacts/bulk', bulkUpdateContacts);
 router.get('/contacts/:id/automation-handoffs', validateParams(contactRefParams), getAutomationHandoffs);
 router.post('/contacts/:id/automation-handoffs/:transitionId/retry', validateParams(contactRefParams.extend({ transitionId:z.coerce.number().int().positive().max(2147483647) })), retryAutomationHandoff);

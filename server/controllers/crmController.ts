@@ -939,3 +939,31 @@ export const syncContactsToLeads = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Failed to sync contacts to Email Outreach' });
   }
 };
+
+/** Contacts that share a phone or email, for the owner to review and merge. */
+export const getDuplicateContacts = async (req: Request, res: Response) => {
+  try {
+    const userId = businessOwnerUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const { listDuplicateContacts } = await import('../services/CRMDuplicateContactsService.js');
+    return res.json({ success: true, data: await listDuplicateContacts(userId) });
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to list duplicate CRM contacts');
+    return res.status(500).json({ error: 'Possible duplicates could not be loaded.' });
+  }
+};
+
+/** Merge contact :id into body.intoContactId, which is kept. */
+export const mergeContact = async (req: Request, res: Response) => {
+  const { ContactMergeError, mergeDuplicateContact } = await import('../services/CRMDuplicateContactsService.js');
+  try {
+    const userId = businessOwnerUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const result = await mergeDuplicateContact(userId, Number(req.params.id), Number(req.body?.intoContactId));
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof ContactMergeError) return res.status(error.status).json({ error: error.message });
+    logger.error({ err: error }, 'Failed to merge CRM contacts');
+    return res.status(500).json({ error: 'The contacts could not be merged. Nothing was changed.' });
+  }
+};

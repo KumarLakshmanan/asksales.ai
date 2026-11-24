@@ -22,6 +22,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Spinner } from '@/components/ui/spinner';
 import { CreateContactDialog } from '@/components/crm/CreateContactDialog';
 import { CreateConversationDialog } from '@/components/crm/CreateConversationDialog';
+import { DuplicateContactsDialog } from '@/components/crm/DuplicateContactsDialog';
 import { CrmNavigation } from '@/components/crm/CrmNavigation';
 import { CrmCollectionFilters, crmSelectClass, useCrmAssignees, useCrmCollectionScope } from '@/components/crm/CrmCollectionFilters';
 import api from '@/lib/api';
@@ -87,6 +88,7 @@ export default function CRMContactsPage() {
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<CrmContact | null>(null);
   const [showConversationDialog, setShowConversationDialog] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
   const pipelineStages = crmStagesForStatuses(configuredStages, [...contacts.map(contact => contact.pipelineStatus), ...(filters.pipelineStatus && filters.pipelineStatus !== 'all' ? [filters.pipelineStatus] : [])]);
   const originalEdit = contacts.find(contact => contact.id === editingContactId);
   const editDirty = Boolean(originalEdit && (editForm.company !== (originalEdit.company || '') || editForm.dealValue !== (originalEdit.dealValue || '') || editForm.pipelineStatus !== (originalEdit.pipelineStatus || 'new')));
@@ -230,6 +232,7 @@ export default function CRMContactsPage() {
       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline"><MoreHorizontal className="mr-2 h-4 w-4" />More actions</Button></DropdownMenuTrigger><DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => navigate('/dashboard/leads/new?returnTo=/dashboard/crm/contacts')}>Add Lead</DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/dashboard/crm/import/analyze')}>Import</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setShowDuplicates(true)}><Users className="mr-2 h-4 w-4" />Review possible duplicates</DropdownMenuItem>
         <DropdownMenuItem disabled={exporting} onClick={() => void exportContacts()}>{exporting ? <Spinner size="sm" label={null} className="mr-2" /> : <Download className="mr-2 h-4 w-4" />}Export filtered CSV</DropdownMenuItem>
         <DropdownMenuItem disabled={syncingToOutreach} onClick={() => void syncToOutreach()}>{syncingToOutreach ? <Spinner size="sm" label={null} className="mr-2" /> : <RefreshCw className="mr-2 h-4 w-4" />}Sync to Email Outreach</DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -266,6 +269,7 @@ export default function CRMContactsPage() {
     </div>}
     <Dialog open={viewDialog} onOpenChange={setViewDialog}><DialogContent><DialogHeader><DialogTitle>Save contact view</DialogTitle><DialogDescription>Keep these filters and sorting for this account and business.</DialogDescription></DialogHeader><Label htmlFor="contact-view-name">View name</Label><Input id="contact-view-name" value={viewName} maxLength={80} placeholder="My overdue follow-ups" onChange={event => setViewName(event.target.value)} /><DialogFooter><Button variant="outline" onClick={() => setViewDialog(false)}>Cancel</Button><Button disabled={!viewName.trim() || !userId} onClick={saveView}>Save view</Button></DialogFooter></DialogContent></Dialog>
     <CreateContactDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} onCreated={() => { void fetchContacts(); void fetchAnalytics(); }} />
+    <DuplicateContactsDialog open={showDuplicates} onOpenChange={setShowDuplicates} onMerged={() => { void fetchContacts(); void fetchAnalytics(); }} />
     {selectedContact && <CreateConversationDialog open={showConversationDialog} onOpenChange={setShowConversationDialog} contactId={selectedContact.id} contactName={contactName(selectedContact)} leadId={selectedContact.leadId} />}
   </PageShell>;
 }

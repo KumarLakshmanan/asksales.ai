@@ -96,6 +96,24 @@ export async function mergeContactByPhone(
     return sourceId;
   }
   const targetId = matches[0].id;
+  await mergeContactRecords(tx, userId, source, targetId, stagedDuplicate,
+    { identifierType: 'phone', subject: 'Contacts merged by phone number' });
+  return targetId;
+}
+
+/**
+ * Moves one contact into another inside the caller's CRM resolution lock: the
+ * survivor keeps its own values and gains only fields it lacks, counters add
+ * up, and every contact reference (conversations, campaigns, activities,
+ * tickets, proposals, import receipts) follows it. The source is soft-deleted
+ * with merged_into_contact_id set. Lead IDs and messages stay as they are.
+ */
+export async function mergeContactRecords(
+  tx: any, userId: number, source: { id: number | string; business_profile_id: number | null; lead_id: number | null },
+  targetId: number, stagedDuplicate: boolean,
+  reason: { identifierType: 'phone' | 'manual'; subject: string; mergedBy?: number },
+): Promise<void> {
+  const sourceId = Number(source.id);
   const fillable = ['first_name', 'last_name', 'email', 'phone', 'company', 'role', 'linkedin_url', 'website',
     'avatar_url', 'business_category_name', 'icp_tier'] as const;
   await tx.execute(sql`
@@ -160,9 +178,9 @@ export async function mergeContactByPhone(
   `);
   await tx.execute(sql`
     INSERT INTO crm_activities (business_profile_id, user_id, contact_id, type, subject, metadata, idempotency_key)
-    VALUES (${source.business_profile_id}, ${userId}, ${targetId}, 'contact_merge', 'Contacts merged by phone number',
-      ${JSON.stringify({ sourceContactId: sourceId, targetContactId: targetId, identifierType: 'phone' })}::jsonb,
+    VALUES (${source.business_profile_id}, ${userId}, ${targetId}, 'contact_merge', ${reason.subject},
+      ${JSON.stringify({ sourceContactId: sourceId, targetContactId: targetId, identifierType: reason.identifierType,
+        ...(reason.mergedBy ? { mergedBy: reason.mergedBy } : {}) })}::jsonb,
       ${`crm-contact-merge:${sourceId}`}) ON CONFLICT DO NOTHING
   `);
-  return targetId;
 }
