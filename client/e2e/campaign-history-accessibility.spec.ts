@@ -1,4 +1,4 @@
-import type { Page, Request, Route, TestInfo } from '@playwright/test';
+import type { Page, Route, TestInfo } from '@playwright/test';
 import { expect, expectNoHorizontalOverflow, installAppShellMocks, test } from './fixtures/app';
 import { campaignRecords, campaignTargets } from './fixtures/icon-actions';
 
@@ -133,31 +133,32 @@ test('List primary entry follows native links and keeps Delete focus and activat
     await entry.tap();
     await expectDestination(page);
   } else {
-    // Headless Chromium on the release runner can leave a background tab
-    // mid-navigation for minutes, even after activating it (its URL stays "").
-    // What matters is that a native link sent a new tab to the destination and
-    // left this list where it was, so check the tab's own navigation request.
-    const opened = async (open: () => Promise<void>) => {
-      const tabRequests: string[] = [];
-      const record = (request: Request) => {
-        if (!request.isNavigationRequest()) return;
-        // A new tab's first request can be sent before its frame exists; only a new tab does that.
-        let fromNewTab = true;
-        try { fromNewTab = request.frame().page() !== page; } catch { /* no frame yet: the new tab */ }
-        if (fromNewTab) tabRequests.push(new URL(request.url()).pathname);
-      };
-      page.context().on('request', record);
-      const tabPromise = page.context().waitForEvent('page');
-      await open();
-      const tab = await tabPromise;
-      await expect.poll(() => tabRequests.at(-1) ?? (tab.url().startsWith('http') ? new URL(tab.url()).pathname : '')).toBe(firstDestination);
-      page.context().off('request', record);
-      await tab.close();
+    // Chromium can send the navigation while Playwright is still waiting for
+    // the background tab to initialize. Observe the request across the context.
+    const destinationURL = new URL(firstDestination, page.url()).href;
+    const expectNewTabNavigation = async (open: () => Promise<void>) => {
       await page.bringToFront();
+      await Promise.all([
+        page.context().waitForEvent('request', {
+          timeout: 15_000,
+          predicate: request => {
+            if (!request.isNavigationRequest() || request.url() !== destinationURL) return false;
+            try {
+              return request.frame().page() !== page;
+            } catch {
+              // The new tab can send its first request before its frame exists.
+              return true;
+            }
+          },
+        }),
+        open(),
+      ]);
       await expect(page).toHaveURL(/\/dashboard\/chats\?fixture-query=retained$/);
     };
-    await opened(() => entry.click({ modifiers: ['Control'] }));
-    await opened(() => entry.click({ button: 'middle' }));
+    await test.step('Ctrl-click requests the campaign in a new tab', () =>
+      expectNewTabNavigation(() => entry.click({ modifiers: ['Control'] })));
+    await test.step('Middle-click requests the campaign in a new tab', () =>
+      expectNewTabNavigation(() => entry.click({ button: 'middle' })));
     await entry.click({ button: 'right' });
     await page.keyboard.press('Escape');
     await expect(page).toHaveURL(/\/dashboard\/chats\?fixture-query=retained$/);
