@@ -21,6 +21,13 @@ type QueryArgs = [string | QueryConfig, unknown[]?];
 // 25 s inside API requests, a longer background bound everywhere else) and an
 // idle_in_transaction_session_timeout, so neither a slow query nor a leaked
 // open transaction can hold a pooled connection indefinitely.
+//
+// JIT is off for application SQL. These are short interactive and background
+// queries over one business's rows; compiling them never pays off, while a
+// high planner estimate (wide CTE reports, or a disabled join method) makes
+// PostgreSQL JIT-compile and inline hundreds of expressions per execution.
+// The campaign report spent 19 s of a 19.1 s request compiling a 17 ms query,
+// and the CRM work queue of the largest business already plans with JIT.
 const CONFIGURE = `SELECT set_config('role', $1, true),
     set_config('app.business_profile_id', $2, true),
     set_config('app.current_user_id', $3, true),
@@ -30,7 +37,8 @@ const CONFIGURE = `SELECT set_config('role', $1, true),
     set_config('app.billing_actor_user_id', $6, true),
     set_config('app.business_actor_user_id', $7, true),
     set_config('statement_timeout', $8, true),
-    set_config('idle_in_transaction_session_timeout', $9, true)`;
+    set_config('idle_in_transaction_session_timeout', $9, true),
+    set_config('jit', 'off', true)`;
 
 interface Limits { statementMs: number; idleInTransactionMs: number }
 
