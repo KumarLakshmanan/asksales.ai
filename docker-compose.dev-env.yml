@@ -1,0 +1,191 @@
+name: salesmarketing-dev
+
+# Isolated v7 stack for dev.asksales.ai.
+# Run with: docker compose --env-file server/.env -f docker-compose.dev-env.yml ...
+services:
+  upload-init:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["/bin/sh", "-c", "mkdir -p /uploads && chown -R 1001:1001 /uploads && chmod -R u+rwX,g+rwX /uploads"]
+    volumes:
+      - sm-dev-uploads:/uploads
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: sm-dev-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - sm-dev-db-data:/var/lib/postgresql/data
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: sm-dev-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command: ["/bin/sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - sm-dev-redis-data:/data
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: sm-dev-api
+    security_opt:
+      - seccomp=./docker/chromium-seccomp.json
+    ports:
+      - "127.0.0.1:8081:8080"
+    env_file:
+      - server/.env
+    environment: &server-environment
+      NODE_ENV: production
+      WORKER_HEALTH_PORT: 9090
+      APP_URL: https://dev.asksales.ai
+      API_URL: https://dev.asksales.ai
+      CLIENT_URL: https://dev.asksales.ai
+      FRONTEND_URL: https://dev.asksales.ai
+      ADMIN_URL: https://dev.asksales.ai
+      GMAIL_REDIRECT_URI: https://dev.asksales.ai/api/gmail/oauth/callback
+      GOOGLE_SIGN_IN_CLIENT_ID: ${GOOGLE_SIGN_IN_CLIENT_ID:?GOOGLE_SIGN_IN_CLIENT_ID is required}
+      META_APP_ID: ${META_APP_ID:?META_APP_ID is required}
+      META_APP_SECRET: ${META_APP_SECRET:?META_APP_SECRET is required}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_DATABASE: ${DB_NAME:?DB_NAME is required}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      SECRETS_ENCRYPTION_KEY: ${SECRETS_ENCRYPTION_KEY:?SECRETS_ENCRYPTION_KEY is required}
+      LOCAL_STORAGE_PATH: /app/server/uploads
+      LOCAL_STORAGE_URL: /uploads
+      AI_VISIBILITY_BROWSER_FALLBACK: "true"
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - sm-dev-uploads:/app/server/uploads
+      - sm-dev-exports:/app/exports
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  worker-1:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.worker
+    container_name: sm-dev-worker-1
+    env_file:
+      - server/.env
+    environment: *server-environment
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    volumes:
+      - sm-dev-uploads:/app/server/uploads
+    stop_grace_period: 150s
+    restart: unless-stopped
+
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:9090/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker-2:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.worker
+    container_name: sm-dev-worker-2
+    env_file:
+      - server/.env
+    environment: *server-environment
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    volumes:
+      - sm-dev-uploads:/app/server/uploads
+    stop_grace_period: 150s
+    restart: unless-stopped
+
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:9090/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+        NEXT_PUBLIC_APP_URL: https://dev.asksales.ai
+        NEXT_PUBLIC_WS_URL: wss://dev.asksales.ai
+        NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: ${GOOGLE_SIGN_IN_CLIENT_ID:?GOOGLE_SIGN_IN_CLIENT_ID is required}
+        BACKEND_URL: http://api:8080
+    container_name: sm-dev-client
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ""
+      NEXT_PUBLIC_APP_URL: https://dev.asksales.ai
+      NEXT_PUBLIC_WS_URL: wss://dev.asksales.ai
+      NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: ${GOOGLE_SIGN_IN_CLIENT_ID:?GOOGLE_SIGN_IN_CLIENT_ID is required}
+      BACKEND_URL: http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  sm-dev-db-data:
+  sm-dev-redis-data:
+  sm-dev-uploads:
+  sm-dev-exports:

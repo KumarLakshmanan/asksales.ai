@@ -1,0 +1,834 @@
+[
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/proposals",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 525,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/integrations/instagram/events",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 737,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/settings/outreach/orchestration",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 796,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 495,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 594,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/seo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/aeo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/geo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/commerce",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/competitors",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 1655,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/fixes",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/assets",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 326,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "desktop-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/reports",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 836,
+          "left": 256,
+          "top": 64,
+          "width": 1184
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 795,
+          "left": 256,
+          "top": 122,
+          "width": 1184
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/proposals",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 781,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/integrations/instagram/events",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 1095,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/settings/outreach/orchestration",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 1555.75,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 691,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 611,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/seo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 343,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/aeo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 343,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/geo",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 705,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/commerce",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 1198,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/competitors",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 2092,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/fixes",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 343,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/assets",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 705,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  },
+  {
+    "project": "mobile-chromium",
+    "route": "/dashboard/ai-visibility/websites/1/reports",
+    "mainFacts": [
+      {
+        "bounds": {
+          "height": 780,
+          "left": 0,
+          "top": 64,
+          "width": 390
+        },
+        "id": "main-content",
+        "nested": false,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      },
+      {
+        "bounds": {
+          "height": 874,
+          "left": 0,
+          "top": 118,
+          "width": 390
+        },
+        "id": "",
+        "nested": true,
+        "role": null,
+        "tag": "MAIN",
+        "visible": true
+      }
+    ]
+  }
+]

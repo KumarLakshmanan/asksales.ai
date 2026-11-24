@@ -1,0 +1,169 @@
+{
+  "workflow_id": "linkedin_company_employees_posts",
+  "platform": "linkedin_company_employees_posts",
+  "title": "LinkedIn Company Employee Posts",
+  "description": "Extract employees from target LinkedIn companies and then scrape their recent posts with engagement data. Best for Account-Based Marketing (ABM) content strategy \u2014 discover what topics decision-makers at target companies are discussing and sharing. Use when planning ABM campaigns to understand the content interests of key stakeholders before outreach, or to find employees actively posting about relevant topics.",
+  "version": "1.0",
+  "tips": "- companies MUST be full LinkedIn company URLs.\n- This chained workflow requires Full employee profiles (without email search) so the posts actor receives a usable public LinkedIn profile URL. Short mode can return opaque profile identifiers rejected by the posts actor. Show Full mode in the review; do not promise Short mode.\n- Optional jobTitles, locations, searchQuery and seniorityLevelIds may be empty when requested.\n- Use jobTitles to target specific decision-maker roles.\n- Use seniorityLevelIds for C-suite (310=CXO, 300=VP, 220=Director).\n- maxPosts of 3-5 per employee balances depth with cost.\n- This reveals WHAT your target accounts care about for content intelligence.",
+  "nodes": [
+    {
+      "id": "linkedin_company_employees",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Extract Company Employees",
+        "actorId": "harvestapi/linkedin-company-employees",
+        "actorName": "LinkedIn Company Employees Scraper",
+        "description": "Extract employees from LinkedIn company pages",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "companies": "{{companies}}",
+          "maxItems": "{{maxItems}}",
+          "profileScraperMode": "Full ($8 per 1k)",
+          "searchQuery": "{{searchQuery}}",
+          "locations": "{{locations}}",
+          "jobTitles": "{{jobTitles}}",
+          "seniorityLevelIds": "{{seniorityLevelIds}}"
+        },
+        "output_key": "company_employees",
+        "finalValues": {
+          "profileScraperMode": "Full ($8 per 1k)",
+          "startPage": 1
+        }
+      }
+    },
+    {
+      "id": "linkedin_employee_posts",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Employee Posts",
+        "actorId": "harvestapi/linkedin-profile-posts",
+        "actorName": "LinkedIn Profile Posts",
+        "description": "Extract recent posts from employee profiles",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "targetUrls": [
+            "{_current_item.linkedinUrl}"
+          ],
+          "maxPosts": 5,
+          "postedLimit": "month"
+        },
+        "iterate_over": "company_employees",
+        "output_key": "employee_posts",
+        "field_mapping": {
+          "targetUrls": "linkedinUrl"
+        }
+      }
+    },
+    {
+      "id": "db_save_employees",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Employees as Leads",
+        "description": "Save LinkedIn company employees to leads table",
+        "iterate_over": "company_employees",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'company_employee'",
+          "fullName": "firstName + ' ' + lastName",
+          "name": "firstName + ' ' + lastName",
+          "firstName": "firstName",
+          "lastName": "lastName",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "headline": "headline",
+          "title": "headline",
+          "email": "email",
+          "bio": "about",
+          "location": "location.parsed.text",
+          "company": "experience[0].companyName",
+          "companyName": "experience[0].companyName",
+          "jobTitle": "experience[0].position",
+          "publicId": "publicIdentifier",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    },
+    {
+      "id": "db_save_employee_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Employee Posts",
+        "description": "Save LinkedIn employee posts to posts table",
+        "iterate_over": "employee_posts",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "post_id": "entityId",
+          "postId": "entityId",
+          "content": "content",
+          "text": "content",
+          "url": "linkedinUrl",
+          "postUrl": "linkedinUrl",
+          "author_handle": "author.universalName",
+          "authorName": "author.name",
+          "authorUsername": "author.universalName",
+          "authorProfileUrl": "author.linkedinUrl",
+          "likes_count": "engagement.likes",
+          "likesCount": "engagement.likes",
+          "comments_count": "engagement.comments",
+          "shares_count": "engagement.shares",
+          "posted_at": "postedAt.date",
+          "createdAt": "postedAt.date",
+          "source": "'linkedin'",
+          "mediaUrls": "postImages"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_employees_to_posts",
+      "source": "linkedin_company_employees",
+      "target": "linkedin_employee_posts",
+      "animated": true
+    },
+    {
+      "id": "e_employees_to_save",
+      "source": "linkedin_company_employees",
+      "target": "db_save_employees",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_save",
+      "source": "linkedin_employee_posts",
+      "target": "db_save_employee_posts",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

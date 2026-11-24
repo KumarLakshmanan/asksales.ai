@@ -1,0 +1,6 @@
+{
+  "name": "asksales-documentation-diagrams",
+  "private": true,
+  "scripts": { "render": "node render.cjs" },
+  "devDependencies": { "mermaid": "12.2.0" }
+}

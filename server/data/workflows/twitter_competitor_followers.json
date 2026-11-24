@@ -1,0 +1,133 @@
+{
+  "workflow_id": "twitter_competitor_followers",
+  "platform": "twitter_competitor_followers",
+  "title": "Twitter Competitor Followers",
+  "description": "Find public followers of specific Twitter/X competitor accounts or industry influencers. Use when you know the exact public handles whose audiences are relevant to your research. Captures public follower profiles with bios, follower counts, and account metadata.",
+  "version": "1.0",
+  "tips": "- twitterHandles must be an array of exact public Twitter/X handles without the @ prefix.\n- maxItems controls how many source competitor profiles are resolved; the reviewed global lead cap controls follower persistence.\n- Followers are public relationship signals, not proof of contact consent or purchase intent.\n- Private/protected account followers cannot be scraped.",
+  "nodes": [
+    {
+      "id": "competitor_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Get Competitor Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter/X User Scraper",
+        "description": "Scrape competitor/influencer profile details",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "twitterHandles": "{{twitterHandles}}",
+          "maxItems": "{{maxItems}}"
+        },
+        "reviewableInputFields": [
+          "twitterHandles",
+          "maxItems"
+        ],
+        "requiredInputFields": [
+          "twitterHandles"
+        ],
+        "sourceTargetField": "twitterHandles",
+        "sourceLimitField": "maxItems",
+        "output_key": "competitor_users",
+        "finalValues": {
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        }
+      }
+    },
+    {
+      "id": "follower_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Scrape Followers",
+        "actorId": "powerai/twitter-followers-scraper",
+        "actorName": "Twitter/X Followers Scraper",
+        "description": "Scrape follower profiles of competitor accounts",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "screenname": "{_current_item.userName}",
+          "maxResults": 60
+        },
+        "iterate_over": "competitor_users",
+        "output_key": "followers",
+        "field_mapping": {
+          "screenname": "userName"
+        }
+      }
+    },
+    {
+      "id": "db_save_followers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Followers",
+        "description": "Save follower profiles to leads table",
+        "iterate_over": "followers",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "engagementType": "'competitor_follower'",
+          "fullName": "name",
+          "name": "name",
+          "twitterHandle": "screen_name",
+          "twitterUsername": "screen_name",
+          "profileUrl": "'https://twitter.com/' + screen_name",
+          "twitterUrl": "'https://twitter.com/' + screen_name",
+          "bio": "description",
+          "about": "description",
+          "location": "location",
+          "profilePicture": "profile_image",
+          "photo": "profile_image",
+          "profileId": "user_id",
+          "followersCount": "followers_count",
+          "twitterFollowers": "followers_count",
+          "followingCount": "friends_count",
+          "postsCount": "statuses_count",
+          "verified": "verified",
+          "website": "website",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_comp_to_followers",
+      "source": "competitor_profiles",
+      "target": "follower_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_followers_to_save",
+      "source": "follower_profiles",
+      "target": "db_save_followers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

@@ -1,0 +1,15 @@
+stateDiagram-v2
+  accTitle: Outreach draft and delivery outcomes
+  accDescr: Reviewed inputs can enter the queue only after readiness checks. Changed inputs require review again. Queue acceptance is separate from provider and delivery outcomes.
+  [*] --> Draft
+  Draft --> Reviewed: Inspect recipients, content and account
+  Reviewed --> Draft: Inputs or settings change
+  Reviewed --> Blocked: Admission readiness fails
+  Reviewed --> Queued: Readiness passes
+  Queued --> Held: Final readiness fails
+  Queued --> ProviderAccepted: Provider accepts attempt
+  Queued --> Failed: Definitive failure
+  Queued --> Uncertain: Receipt not confirmed
+  ProviderAccepted --> DeliveryReceipt: Provider reports delivery state
+  Held --> ExplicitReview: No automatic replay
+  Uncertain --> InspectActivity: Review before retry

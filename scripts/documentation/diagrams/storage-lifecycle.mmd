@@ -1,0 +1,13 @@
+stateDiagram-v2
+  accTitle: File retention and Trash lifecycle
+  accDescr: Active files move to Trash after dependency review. Trash retains quota for thirty days and can restore eligible files. Permanent deletion is separately confirmed. Trash does not revoke published URLs.
+  [*] --> Active: Confirmed upload
+  Active --> Trash: Dependency review and confirmation
+  Trash --> Active: Restore before expiry
+  Trash --> Purge: Thirty-day retention expires
+  Trash --> Purge: Separately confirm permanent deletion
+  Purge --> ObjectCleanup: Remove stored object
+  ObjectCleanup --> CleanupRetry: Cleanup failed
+  CleanupRetry --> ObjectCleanup: Retry cleanup
+  ObjectCleanup --> Removed: Confirmed cleanup
+  note right of Trash: Quota retained. Published URLs are not revoked by Trash.

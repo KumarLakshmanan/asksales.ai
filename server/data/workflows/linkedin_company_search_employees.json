@@ -1,0 +1,126 @@
+{
+  "workflow_id": "linkedin_company_search_employees",
+  "platform": "linkedin_company_search_employees",
+  "title": "LinkedIn Company Employee Extraction",
+  "description": "Search for LinkedIn companies by name, industry, or location, then extract employees from matched companies with job title and seniority filters. Best for comprehensive B2B prospecting when you want to discover companies that match your ICP and immediately find decision-makers within them. Use when you don't have specific company URLs but want to find companies in a target industry/location and pull their employees for outreach.",
+  "version": "1.0",
+  "tips": "- First step finds companies matching your industry/location criteria.\n- Second step extracts employees from those companies with role filters.\n- Use companySize to target companies of the right size (e.g., '51-200').\n- Use jobTitles in the employee extraction step to find decision-makers.\n- seniorityLevelIds: 220=Director, 300=VP, 310=CXO.\n- This is the FULL B2B pipeline \u2014 company discovery to contact identification.",
+  "nodes": [
+    {
+      "id": "linkedin_company_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "LinkedIn Company Search",
+        "actorId": "harvestapi/linkedin-company-search",
+        "actorName": "LinkedIn Company Search Scraper",
+        "description": "Search for LinkedIn companies with filters",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchQuery": "{{searchQuery}}",
+          "maxItems": "{{maxItems}}",
+          "locations": "{{locations}}",
+          "companySize": "{{companySize}}",
+          "scraperMode": "full"
+        },
+        "output_key": "linkedin_companies",
+        "finalValues": {
+          "scraperMode": "full",
+          "startPage": 1
+        }
+      }
+    },
+    {
+      "id": "linkedin_company_employees",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Extract Company Employees",
+        "actorId": "harvestapi/linkedin-company-employees",
+        "actorName": "LinkedIn Company Employees Scraper",
+        "description": "Extract employees from discovered companies",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "companies": [
+            "{_current_item.linkedinUrl}"
+          ],
+          "maxItems": 10,
+          "profileScraperMode": "Short ($4 per 1k)",
+          "jobTitles": "{{jobTitles}}",
+          "seniorityLevelIds": "{{seniorityLevelIds}}"
+        },
+        "iterate_over": "linkedin_companies",
+        "output_key": "company_employees",
+        "field_mapping": {
+          "companies": "linkedinUrl"
+        }
+      }
+    },
+    {
+      "id": "db_save_employees",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Employees as Leads",
+        "description": "Save company employees to leads table",
+        "iterate_over": "company_employees",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'company_employee'",
+          "fullName": "firstName + ' ' + lastName",
+          "name": "firstName + ' ' + lastName",
+          "firstName": "firstName",
+          "lastName": "lastName",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "headline": "headline",
+          "title": "headline",
+          "email": "email",
+          "bio": "about",
+          "location": "location.parsed.text",
+          "company": "experience[0].companyName",
+          "companyName": "experience[0].companyName",
+          "jobTitle": "experience[0].position",
+          "publicId": "publicIdentifier",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_employees",
+      "source": "linkedin_company_search",
+      "target": "linkedin_company_employees",
+      "animated": true
+    },
+    {
+      "id": "e_employees_to_save",
+      "source": "linkedin_company_employees",
+      "target": "db_save_employees",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

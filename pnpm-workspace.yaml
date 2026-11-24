@@ -1,0 +1,29 @@
+packages:
+  - client
+  - server
+
+allowBuilds:
+  bufferutil: set this to true or false
+  core-js: set this to true or false
+  esbuild: set this to true or false
+  ffmpeg-static: true
+  msgpackr-extract: set this to true or false
+  protobufjs: set this to true or false
+  puppeteer: set this to true or false
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
+
+ignoredBuiltDependencies:
+  - bufferutil
+  - esbuild
+  - msgpackr-extract
+  - protobufjs
+  - sharp
+  - unrs-resolver
+
+# Advisories reviewed and accepted. Remove an entry once a patched release exists.
+# GHSA-fc5q-39xc-vjpf (picomatch <=4.0.7 ReDoS, no patched version yet): reachable only
+# through client build tooling (tailwindcss > chokidar/tinyglobby) with trusted glob patterns.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf

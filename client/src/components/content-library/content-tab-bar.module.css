@@ -1,0 +1,40 @@
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+.tab {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  height: auto;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  white-space: normal;
+  text-align: left;
+}
+
+.tab[aria-pressed='true'] {
+  border-color: hsl(var(--primary) / 0.35);
+  background: hsl(var(--primary) / 0.08);
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+  color: hsl(var(--foreground));
+}
+
+.tab:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.icon { flex-shrink: 0; }
+.label { min-width: 0; flex: 1; overflow-wrap: anywhere; font-size: 12px; line-height: 1.4; }
+.count {
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  padding: 2px 5px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}

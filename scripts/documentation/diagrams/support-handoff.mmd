@@ -1,0 +1,14 @@
+flowchart TD
+  accTitle: Support ownership and AI readiness
+  accDescr: Incoming tickets can have human ownership or no human takeover. No takeover does not prove AI readiness. Customer replies require delivery checks; internal notes stay internal.
+  I[Incoming conversation] --> T[Scoped ticket and team routing]
+  T --> H{Human takeover?}
+  H -->|Yes| P[Human handling; AI paused by ticket state]
+  H -->|No| A{Assigned assistant and runtime ready?}
+  A -->|No| B[AI unavailable or blocked]
+  A -->|Yes| D[Prepare eligible AI reply]
+  P --> N[Internal note stays internal]
+  P --> R[Review customer reply]
+  D --> G[Current account and delivery checks]
+  R --> G
+  G --> O[Recorded delivery outcome]

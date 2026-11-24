@@ -1,0 +1,397 @@
+{
+  "id": "apidojo/twitter-user-scraper",
+  "name": "🏯 Twitter (X) User Scraper (Pay Per Result)",
+  "description": "Introducing Twitter (X) User Scraper, the ultimate solution for direct user extraction from Twitter (X). It offers blazing speed and comprehensiveness, delivering lightning-fast user extraction features.",
+  "inputSchema": {
+    "title": "Twitter User Scraper",
+    "description": "The Ultimate Twitter (X) User Scraper. The fastest and most comprehensive, yet most affordable solution on the market.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "startUrls": {
+        "title": "Start URLs",
+        "type": "array",
+        "description": "Twitter (X) URLs. Paste Profile or Tweet URLs and get the results immediately.",
+        "editor": "stringList",
+        "prefill": [
+          "https://twitter.com/apify",
+          "https://twitter.com/BillGates",
+          "https://twitter.com/SpaceX/status/1725852544587727145",
+          "https://twitter.com/search?q=elon&src=typed_query"
+        ]
+      },
+      "searchTerms": {
+        "title": "Search users by keyword",
+        "type": "array",
+        "description": "Apply search terms to retrieve users from Twitter (X).",
+        "editor": "stringList",
+        "prefill": [
+          "elonmusk",
+          "taylorswift13"
+        ]
+      },
+      "maxItems": {
+        "title": "Maximum number of items on output",
+        "type": "integer",
+        "description": "Maximum number of items that you want as output. Provider requires a minimum fetch budget of 5 objects. The reviewed saved-lead cap is enforced separately.",
+        "editor": "number",
+        "prefill": 1000,
+        "minimum": 5
+      },
+      "twitterHandles": {
+        "title": "Twitter handles",
+        "type": "array",
+        "description": "Twitter handles that you want to retrieve from Twitter (X).",
+        "editor": "stringList",
+        "prefill": [
+          "elonmusk",
+          "taylorswift13"
+        ],
+        "sectionCaption": "Get Users via Profile",
+        "sectionDescription": "You can get followers, followings or user's profile by using these options."
+      },
+      "twitterUserIds": {
+        "title": "Twitter User IDs",
+        "type": "array",
+        "description": "Twitter user IDs that you want to retrieve from Twitter (X).",
+        "editor": "stringList",
+        "prefill": [
+          "44196397",
+          "17919972"
+        ]
+      },
+      "getFollowers": {
+        "title": "Enable follower extraction",
+        "type": "boolean",
+        "description": "If selected, the actor will scrape followers of the given Twitter (X) profiles.",
+        "editor": "checkbox",
+        "default": true
+      },
+      "getFollowing": {
+        "title": "Enable following extraction",
+        "type": "boolean",
+        "description": "If selected, the actor will scrape followed profiles of the given Twitter (X) profiles.",
+        "editor": "checkbox",
+        "default": true
+      },
+      "getAbout": {
+        "title": "Enable profile about extraction",
+        "type": "boolean",
+        "description": "Enable this to extract account metadata including creation date, username change history, verification timestamps, account source, location accuracy, profile image details, and avatar URL. Triggers Profile About Query charge.",
+        "editor": "checkbox",
+        "default": false
+      },
+      "getRetweeters": {
+        "title": "Get retweeters",
+        "type": "boolean",
+        "description": "If selected, the actor will scrape retweeters of the given tweets. This option is only available when using tweets as start URLs.",
+        "editor": "checkbox",
+        "sectionCaption": "Get Users via Tweet URL",
+        "sectionDescription": "You can get followers, followings or user's profile by using these options.",
+        "default": true
+      },
+      "includeUnavailableUsers": {
+        "title": "Include unavailable users",
+        "type": "boolean",
+        "description": "If selected, the actor will include users that are not available (e.g. suspended) in the output.",
+        "editor": "checkbox",
+        "default": false
+      },
+      "customMapFunction": {
+        "title": "Custom map function",
+        "type": "string",
+        "nullable": true,
+        "description": "Function that takes each object as an argument and returns data that will be mapped by the function itself. This function is not intended for filtering; please don't use it for filtering purposes or you will be banned automatically.",
+        "prefill": "(object) => { return {...object} }",
+        "editor": "javascript",
+        "sectionCaption": "Advanced Options",
+        "sectionDescription": "Capabilities for power users."
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "pinnedTweetIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Pinned tweet ids"
+      },
+      "withheldInCountries": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Withheld in countries"
+      },
+      "canDm": {
+        "type": "boolean",
+        "description": "Can dm"
+      },
+      "canMediaTag": {
+        "type": "boolean",
+        "description": "Can media tag"
+      },
+      "hasCustomTimelines": {
+        "type": "boolean",
+        "description": "Has custom timelines"
+      },
+      "hasGraduatedAccess": {
+        "type": "boolean",
+        "description": "Has graduated access"
+      },
+      "hasNftAvatar": {
+        "type": "boolean",
+        "description": "Has nft avatar"
+      },
+      "isTranslator": {
+        "type": "boolean",
+        "description": "Is translator"
+      },
+      "isVerified": {
+        "type": "boolean",
+        "description": "Is verified"
+      },
+      "possiblySensitive": {
+        "type": "boolean",
+        "description": "Possibly sensitive"
+      },
+      "protected": {
+        "type": "boolean",
+        "description": "Protected"
+      },
+      "fastFollowersCount": {
+        "type": "number",
+        "description": "Fast followers count"
+      },
+      "favouritesCount": {
+        "type": "number",
+        "description": "Favourites count"
+      },
+      "followers": {
+        "type": "number",
+        "description": "Followers"
+      },
+      "following": {
+        "type": "number",
+        "description": "Following"
+      },
+      "listedCount": {
+        "type": "number",
+        "description": "Listed count"
+      },
+      "mediaCount": {
+        "type": "number",
+        "description": "Media count"
+      },
+      "statusesCount": {
+        "type": "number",
+        "description": "Statuses count"
+      },
+      "entities": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "object",
+            "properties": {
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "display_url": {
+                      "type": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "url": {
+            "type": "object",
+            "properties": {
+              "urls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "indices": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "display_url": {
+                      "type": "string"
+                    },
+                    "expanded_url": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Entities"
+      },
+      "professional": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "icon_name": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "professional_type": {
+            "type": "string"
+          },
+          "rest_id": {
+            "type": "string"
+          }
+        },
+        "description": "Professional"
+      },
+      "coverPicture": {
+        "type": "string",
+        "description": "Cover picture"
+      },
+      "createdAt": {
+        "type": "string",
+        "description": "Created at"
+      },
+      "description": {
+        "type": "string",
+        "description": "Description"
+      },
+      "followerOf": {
+        "type": "string",
+        "description": "Follower of"
+      },
+      "id": {
+        "type": "string",
+        "description": "Id"
+      },
+      "inputSource": {
+        "type": "string",
+        "description": "Input source"
+      },
+      "location": {
+        "type": "string",
+        "description": "Location"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name"
+      },
+      "profileInterstitialType": {
+        "type": "string",
+        "description": "Profile interstitial type"
+      },
+      "profilePicture": {
+        "type": "string",
+        "description": "Profile picture"
+      },
+      "status": {
+        "type": "string",
+        "description": "Status"
+      },
+      "twitterUrl": {
+        "type": "string",
+        "description": "Twitter url"
+      },
+      "type": {
+        "type": "string",
+        "description": "Type"
+      },
+      "url": {
+        "type": "string",
+        "description": "Url"
+      },
+      "userName": {
+        "type": "string",
+        "description": "User name"
+      },
+      "demo": {
+        "type": "boolean",
+        "description": "Demo"
+      },
+      "affiliatesHighlightedLabel": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "object",
+            "properties": {
+              "badge": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              },
+              "url": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "urlType": {
+                    "type": "string"
+                  }
+                }
+              },
+              "description": {
+                "type": "string"
+              },
+              "userLabelDisplayType": {
+                "type": "string"
+              },
+              "userLabelType": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "description": "Affiliates highlighted label"
+      },
+      "followedBy": {
+        "type": "string",
+        "description": "Followed by"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [],
+  "validation_rules": []
+}

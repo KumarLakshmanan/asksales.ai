@@ -1,0 +1,78 @@
+# ─── Worker Dockerfile ─────────────────────────────────────────────────────────
+# Runs BullMQ workers as a separate process for horizontal scaling
+# Build context: monorepo root (context: . in docker-compose)
+FROM node:24.18.1-alpine AS builder
+
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+WORKDIR /app
+
+# Copy workspace root files
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+
+# Copy server package.json
+COPY server/package.json ./server/
+
+# Install all workspace dependencies
+RUN pnpm install --frozen-lockfile
+
+# Remove pnpm-created symlinks in server/node_modules before copying source
+RUN rm -rf server/node_modules
+
+# Copy server source
+COPY server/ ./server/
+
+# Copy monorepo-shared runtime contracts imported by worker dependencies.
+COPY shared/ ./shared/
+
+# Build worker entry with esbuild
+RUN cd server && npx esbuild workers/worker-entry.ts \
+    --platform=node \
+    --packages=external \
+    --bundle \
+    --format=esm \
+    --outfile=dist/worker-entry.js
+
+
+FROM node:24.18.1-alpine AS runtime
+
+ENV BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
+
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+# ffmpeg provides both ffmpeg and ffprobe, required by MediaTranscodingService.
+RUN apk add --no-cache chromium ffmpeg
+
+WORKDIR /app
+
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+
+# Copy workspace root files
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+
+# Copy server package.json
+COPY server/package.json ./server/
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod && \
+    chown -R appuser:appgroup /app
+
+# Copy built output
+COPY --from=builder --chown=appuser:appgroup /app/server/dist/ ./server/dist/
+
+# Copy runtime data files needed by workers
+COPY --chown=appuser:appgroup server/data/ ./server/data/
+
+# Create upload directory
+RUN mkdir -p server/uploads && chown appuser:appgroup server/uploads
+
+USER appuser
+
+ENV NODE_ENV=production
+
+# Workers don't need a port
+
+# Keep revision metadata after filesystem layers so releases reuse dependencies.
+ARG RELEASE_SHA=unknown
+LABEL org.opencontainers.image.revision=$RELEASE_SHA
+
+CMD ["node", "server/dist/worker-entry.js"]

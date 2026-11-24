@@ -1,0 +1,24 @@
+import { assignTemplateVariant, parseAiEmailAsset } from '../utils/templateAbTesting';
+
+describe('template A/B testing', () => {
+  it('assigns the same lead to the same variant on retries', () => {
+    const input = { testId: 7, campaignId: 12, leadId: 42, manualPercentage: 50 };
+    expect(assignTemplateVariant(input)).toBe(assignTemplateVariant(input));
+  });
+
+  it('honors boundary traffic splits', () => {
+    expect(assignTemplateVariant({ testId: 1, campaignId: 1, leadId: 1, manualPercentage: 100 })).toBe('manual');
+    expect(assignTemplateVariant({ testId: 1, campaignId: 1, leadId: 1, manualPercentage: 0 })).toBe('ai');
+  });
+
+  it('extracts subject and html from an AI email asset', () => {
+    expect(parseAiEmailAsset(JSON.stringify({ subject: 'Hello', body: 'Plain', html: '<p>Rich</p>' }))).toEqual({
+      subject: 'Hello',
+      body: '<p>Rich</p>',
+    });
+  });
+
+  it('keeps plain-text AI assets usable', () => {
+    expect(parseAiEmailAsset('Hello from AI')).toEqual({ subject: null, body: 'Hello from AI' });
+  });
+});

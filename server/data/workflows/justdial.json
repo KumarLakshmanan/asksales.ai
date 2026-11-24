@@ -1,0 +1,347 @@
+{
+  "workflow_id": "justdial_b2b",
+  "platform": "justdial",
+  "title": "JustDial Business Search",
+  "description": "Discover local businesses through JustDial location-based search and business listings. Best for B2B lead generation targeting Indian businesses \u2014 find companies by category and city (e.g., 'CA firms in Bangalore' or 'web developers in Delhi'). Captures business name, address, phone number, website, and ratings. Use when prospecting local Indian businesses and service providers.",
+  "version": "3.0",
+  "tips": "- JustDial is an INDIA-ONLY directory. For category search, city MUST be an Indian city name and search a simple business category.\n- Alternatively use startUrls containing only verified JustDial URLs supplied by the user. For URL-only requests OMIT city and search entirely; do not derive them from the ICP or URL.\n- Preserve explicit maxItems and global caps, including 1.\n- If the ICP targets businesses outside India, do NOT use JustDial.",
+  "nodes": [
+    {
+      "id": "justdial_search",
+      "type": "actor",
+      "position": {
+        "x": -368.24375,
+        "y": 474.5
+      },
+      "data": {
+        "label": "JustDial Business Search",
+        "actorId": "memo23/justdial-business-scraper",
+        "actorName": "JustDial Business Scraper",
+        "description": "Scrape public JustDial business listings with built-in India anti-blocking and retry handling",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "city": "{{location}}",
+          "search": "{{search}}",
+          "maxItems": "{{maxItems}}"
+        },
+        "output_key": "justdial_businesses",
+        "finalValues": {
+          "scrapeDetails": true,
+          "enrichEmails": false,
+          "useMobileApi": true,
+          "maxConcurrency": 3,
+          "maxRequestRetries": 12
+        }
+      },
+      "width": 200,
+      "height": 116,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -368.24375,
+        "y": 474.5
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-justdial-save-leads",
+      "type": "saveToLeads",
+      "position": {
+        "x": 587.3563915567516,
+        "y": 517.2812802633325
+      },
+      "data": {
+        "label": "Save JustDial Businesses",
+        "description": "Save JustDial business data to leads table",
+        "iterate_over": "justdial_businesses",
+        "field_mapping": {
+          "platform": "'justdial'",
+          "source": "'justdial'",
+          "leadType": "'local_business'",
+          "platformType": "'justdial'",
+          "engagementType": "'search'",
+          "fullName": "name",
+          "companyName": "name",
+          "company": "name",
+          "phone": "phone",
+          "whatsapp": "whatsapp",
+          "website": "website",
+          "address": "address",
+          "bio": "category",
+          "about": "category",
+          "profileUrl": "businessUrl",
+          "photo": "images[0]",
+          "rating": "rating",
+          "reviewCount": "ratingCount",
+          "verified": "verified",
+          "categories": "categories",
+          "industry": "category",
+          "latitude": "latitude",
+          "longitude": "longitude",
+          "status": "'uncontacted'"
+        },
+        "nodeId": "save-to-leads"
+      },
+      "width": 200,
+      "height": 116,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 587.3563915567516,
+        "y": 517.2812802633325
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "justdial_search",
+      "sourceHandle": null,
+      "target": "node-justdial-save-leads",
+      "targetHandle": null,
+      "id": "reactflow__edge-justdial_search-node-justdial-save-leads",
+      "selected": false
+    }
+  ],
+  "mappings": [
+    {
+      "sourceNodeId": "justdial_search",
+      "targetNodeId": "node-justdial-save-leads",
+      "fieldMappings": [
+        {
+          "id": "mapping_justdial_platform",
+          "sourceFieldPath": "'justdial'",
+          "targetFieldPath": "platform",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_justdial_source",
+          "sourceFieldPath": "'justdial'",
+          "targetFieldPath": "source",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_local_business_lead_type",
+          "sourceFieldPath": "'local_business'",
+          "targetFieldPath": "lead_type",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_name",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "name",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_company",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "company",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_VNumber_phone",
+          "sourceFieldPath": "phone",
+          "targetFieldPath": "phone",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_weburl_website",
+          "sourceFieldPath": "website",
+          "targetFieldPath": "website",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_NewAddress_address",
+          "sourceFieldPath": "address",
+          "targetFieldPath": "address",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_businessType_bio",
+          "sourceFieldPath": "category",
+          "targetFieldPath": "bio",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_shared_url_profile_url",
+          "sourceFieldPath": "businessUrl",
+          "targetFieldPath": "profile_url",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_compRating_rating",
+          "sourceFieldPath": "rating",
+          "targetFieldPath": "rating",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_totJdReviews_reviewCount",
+          "sourceFieldPath": "ratingCount",
+          "targetFieldPath": "reviewCount",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_nwtaglin_categories",
+          "sourceFieldPath": "categories",
+          "targetFieldPath": "categories",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_lat_latitude",
+          "sourceFieldPath": "latitude",
+          "targetFieldPath": "latitude",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_lon_longitude",
+          "sourceFieldPath": "longitude",
+          "targetFieldPath": "longitude",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_thumbnail_imageUrl",
+          "sourceFieldPath": "images[0]",
+          "targetFieldPath": "imageUrl",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_uncontacted_status",
+          "sourceFieldPath": "'uncontacted'",
+          "targetFieldPath": "status",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_0_score",
+          "sourceFieldPath": "0",
+          "targetFieldPath": "score",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_local_business_leadType",
+          "sourceFieldPath": "'local_business'",
+          "targetFieldPath": "leadType",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_justdial_platformType",
+          "sourceFieldPath": "'justdial'",
+          "targetFieldPath": "platformType",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_fullName",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "fullName",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_companyName",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "companyName",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_shared_url_profileUrl",
+          "sourceFieldPath": "businessUrl",
+          "targetFieldPath": "profileUrl",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_thumbnail_photo",
+          "sourceFieldPath": "images[0]",
+          "targetFieldPath": "photo",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_businessType_about",
+          "sourceFieldPath": "category",
+          "targetFieldPath": "about",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        }
+      ],
+      "arrayIterationConfig": {
+        "sourceArrayPath": "$.justdial_businesses",
+        "iterationMode": "sequential",
+        "batchSize": null,
+        "itemReferenceVariable": "_current_item"
+      }
+    }
+  ],
+  "updatedAt": "2025-11-21T04:06:06.477Z"
+}

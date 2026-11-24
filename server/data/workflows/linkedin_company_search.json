@@ -1,0 +1,91 @@
+{
+  "workflow_id": "linkedin_company_search",
+  "platform": "linkedin_company_search",
+  "title": "LinkedIn Company Search",
+  "description": "Search and discover LinkedIn companies by name, industry, location, and company size. Best for building target account lists for B2B sales and ABM campaigns. Use when you need to find companies matching specific firmographic criteria \u2014 industry vertical, geographic region, or company size range. Captures company details including website, employee count, and specialties.",
+  "version": "1.0",
+  "tips": "- searchQuery should be industry keywords or company names from the ICP.\n- locations should use official city/country names.\n- companySize filters by employee count range (e.g., \"11-50\", \"51-200\", \"201-500\").\n- This is ideal for discovering TARGET COMPANIES that match ICP criteria.\n- MULTIPLE SEARCHES: When targeting different industries or regions, generate multiple entries.",
+  "nodes": [
+    {
+      "id": "linkedin_company_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "LinkedIn Company Search",
+        "actorId": "harvestapi/linkedin-company-search",
+        "actorName": "LinkedIn Company Search Scraper",
+        "description": "Search for LinkedIn companies with filters",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchQuery": "{{searchQuery}}",
+          "maxItems": "{{maxItems}}",
+          "locations": "{{locations}}",
+          "companySize": "{{companySize}}",
+          "scraperMode": "full"
+        },
+        "output_key": "linkedin_companies",
+        "finalValues": {
+          "scraperMode": "full",
+          "startPage": 1
+        }
+      }
+    },
+    {
+      "id": "db_save_companies",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Companies",
+        "description": "Save LinkedIn companies to leads table",
+        "iterate_over": "linkedin_companies",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'company'",
+          "platformType": "'linkedin'",
+          "engagementType": "'company_search'",
+          "fullName": "name",
+          "name": "name",
+          "companyName": "name",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "website": "website",
+          "bio": "description",
+          "about": "description",
+          "headline": "tagline",
+          "photo": "logo",
+          "profilePicture": "logo",
+          "industry": "industries[0].name",
+          "location": "locations[0].parsed.text",
+          "followersCount": "followerCount",
+          "linkedinFollowerCount": "followerCount",
+          "company": "name",
+          "companySize": "employeeCountRange.start + '-' + employeeCountRange.end",
+          "publicId": "universalName",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_db",
+      "source": "linkedin_company_search",
+      "target": "db_save_companies",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

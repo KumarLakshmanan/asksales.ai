@@ -1,0 +1,18 @@
+sequenceDiagram
+  accTitle: Contact import and receipt recovery
+  accDescr: The wizard maps and validates a CSV. The import records a receipt and saved skipped or invalid outcomes. A lost response is reconciled with the same file and mapping.
+  actor U as Workspace member
+  participant W as Import wizard
+  participant I as Scoped import service
+  U->>W: Select CSV and review mapping
+  W->>W: Validate supported fields
+  W->>I: Submit file and mapping identity
+  I->>I: Record import receipt and row outcomes
+  alt Response received
+    I-->>W: Saved, skipped and invalid counts
+  else Response lost
+    W->>I: Reconcile import status
+    U->>W: Reselect identical file if requested
+    W->>I: Recover same operation and mapping
+    I-->>W: Existing recorded result
+  end

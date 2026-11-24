@@ -1,0 +1,14 @@
+.team {
+  container: support-widget / inline-size;
+}
+
+@container support-widget (min-width: 56rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.45fr);
+  }
+
+  .aside {
+    border-left-width: 1px;
+    border-top-width: 0;
+  }
+}

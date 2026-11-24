@@ -1,0 +1,77 @@
+{
+  "workflow_id": "facebook_competitor_pages",
+  "platform": "facebook_competitor_pages",
+  "title": "Facebook Competitor Page Followers",
+  "description": "Find and scrape followers of competitor Facebook pages to build a list of potential leads who already engage with similar brands. Best for competitive intelligence and audience poaching on Facebook. Use when you know specific competitor page names or URLs and want to target people already interested in your market. Captures follower profiles with names and engagement data.",
+  "version": "1.0",
+  "tips": "- \"startUrls\" MUST contain full Facebook page URLs (e.g., \"https://www.facebook.com/CompetitorBrand\").\n- These should be DIRECT COMPETITOR pages whose followers match your ICP audience.\n- Start with a small resultsLimit because each page can have many followers.\n- The page's Followers section must be publicly visible without Facebook login.",
+  "nodes": [
+    {
+      "id": "facebook_followers_actor",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Get Competitor Page Followers",
+        "actorId": "apify/facebook-followers-following-scraper",
+        "actorName": "Facebook Followers/Following Scraper",
+        "description": "Get followers of competitor Facebook pages",
+        "config": {
+          "timeout": 900,
+          "memory": 6144
+        },
+        "inputMapping": {
+          "startUrls": "{{startUrls}}",
+          "resultsLimit": "{{resultsLimit}}",
+          "followType": "follower"
+        },
+        "output_key": "facebook_followers",
+        "finalValues": {
+          "followType": "follower"
+        }
+      }
+    },
+    {
+      "id": "db_save_followers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Followers as Leads",
+        "description": "Save competitor page followers as leads",
+        "iterate_over": "facebook_followers",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "source": "'facebook'",
+          "leadType": "'profile'",
+          "platformType": "'facebook'",
+          "engagementType": "'competitor_follower'",
+          "fullName": "title",
+          "name": "title",
+          "profileId": "id",
+          "facebookUrl": "url",
+          "profileUrl": "url",
+          "photo": "image",
+          "profilePicture": "image",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_followers_to_leads",
+      "source": "facebook_followers_actor",
+      "target": "db_save_followers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

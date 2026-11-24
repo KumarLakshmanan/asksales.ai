@@ -1,0 +1,1 @@
+Archived workflow contract fixtures copied verbatim from commit `15cb4611^`, before obsolete production workflow files were removed. These files are loaded only by local source-contract tests; they are not registered or executable workflows.

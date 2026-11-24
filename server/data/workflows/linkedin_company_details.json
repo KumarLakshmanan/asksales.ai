@@ -1,0 +1,86 @@
+{
+  "workflow_id": "linkedin_company_details",
+  "platform": "linkedin_company_details",
+  "title": "LinkedIn Company Details Enrichment",
+  "description": "Enrich LinkedIn companies with full details including website, phone number, employee count, office locations, specialties, and founding date. Best for B2B prospecting when you have a list of target company names or LinkedIn URLs and need firmographic data for qualification. Use when building target account lists, qualifying leads by company size, or enriching CRM records with company intelligence.",
+  "version": "1.0",
+  "tips": "- Provide either 'companies' (LinkedIn URLs) or 'searches' (company names to look up).\n- This returns rich firmographic data: website, phone, employee count, industries, locations.\n- Ideal for building or enriching a target account list with company intelligence.\n- Use company names in 'searches' when you don't have LinkedIn URLs.\n- Generate MULTIPLE entries for large account lists, 5-10 companies per batch.",
+  "nodes": [
+    {
+      "id": "linkedin_company_details",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Get Company Details",
+        "actorId": "harvestapi/linkedin-company",
+        "actorName": "LinkedIn Company Details Scraper",
+        "description": "Extract full company details from LinkedIn",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "companies": "{{companies}}",
+          "searches": "{{searches}}"
+        },
+        "output_key": "linkedin_company_details"
+      }
+    },
+    {
+      "id": "db_save_companies",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Company Details",
+        "description": "Save enriched LinkedIn company details to leads table",
+        "iterate_over": "linkedin_company_details",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'company'",
+          "platformType": "'linkedin'",
+          "engagementType": "'company_enrichment'",
+          "fullName": "name",
+          "name": "name",
+          "companyName": "name",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "website": "website",
+          "bio": "description",
+          "about": "description",
+          "headline": "tagline",
+          "photo": "logo",
+          "profilePicture": "logo",
+          "industry": "industries[0].name",
+          "location": "locations[0].parsed",
+          "followersCount": "followerCount",
+          "linkedinFollowerCount": "followerCount",
+          "company": "name",
+          "companySize": "employeeCountRange.start + '-' + employeeCountRange.end",
+          "companyType": "companyType",
+          "phone": "phone.number",
+          "publicId": "universalName",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_details_to_db",
+      "source": "linkedin_company_details",
+      "target": "db_save_companies",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

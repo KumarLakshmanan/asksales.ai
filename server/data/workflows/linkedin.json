@@ -1,0 +1,99 @@
+{
+  "workflow_id": "linkedin_b2b",
+  "platform": "linkedin",
+  "title": "LinkedIn Profile Search",
+  "description": "Search LinkedIn profiles by keywords, job title, location, or skills and save them as leads with full profile details and emails when available. The foundational LinkedIn strategy \u2014 best for B2B prospecting when looking for individuals by role or expertise. Use when you need to find decision-makers, hiring managers, or professionals matching specific criteria. For company-focused searches, use the LinkedIn Company Search strategys instead.",
+  "version": "5.0",
+  "tips": "- NEVER use OR operators in searchQuery for job titles (e.g., \"CFO OR CTO OR VP\" is WRONG). Instead, put all target titles in the currentJobTitles array.\n- searchQuery should be a single broad role keyword or left empty when using currentJobTitles.\n- currentJobTitles is the MOST EFFECTIVE filter \u2014 always use it with an array of ICP decision-maker titles.\n- locations should use full, official names.\n- Use seniorityLevelIds to target decision-makers (e.g., \"220\" for Director+, \"300\" for VP, \"310\" for CXO).\n- MULTIPLE SEARCHES: When 6+ distinct job titles across different seniority levels, generate MULTIPLE search inputs in a \"searches\" array. Split by seniority tier or function.\n- For simple ICPs (1-5 titles), return a single flat JSON object without the \"searches\" wrapper.",
+  "nodes": [
+    {
+      "id": "linkedin_profile_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "LinkedIn Profile Search",
+        "actorId": "harvestapi/linkedin-profile-search",
+        "actorName": "LinkedIn Profile Search",
+        "description": "Search and find LinkedIn profiles by query, location, job title - returns full profile details including email",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchQuery": "{{searchQuery}}",
+          "maxItems": "{{maxItems}}",
+          "locations": "{{locations}}",
+          "currentJobTitles": "{{currentJobTitles}}",
+          "seniorityLevelIds": "{{seniorityLevelIds}}",
+          "profileScraperMode": "{{profileScraperMode}}"
+        },
+        "output_key": "linkedin_profiles",
+        "finalValues": {
+          "startPage": 1,
+          "autoQuerySegmentation": false,
+          "profileDeduplicationMode": "off",
+          "recentlyChangedJobs": false
+        }
+      }
+    },
+    {
+      "id": "db_save_profiles",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save LinkedIn Profiles",
+        "description": "Save LinkedIn profiles with full details and email to leads table",
+        "iterate_over": "linkedin_profiles",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'search'",
+          "firstName": "firstName",
+          "lastName": "lastName",
+          "fullName": "firstName + ' ' + lastName",
+          "name": "firstName + ' ' + lastName",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "publicId": "publicIdentifier",
+          "headline": "headline",
+          "title": "headline",
+          "bio": "about",
+          "about": "about",
+          "location": "location.parsed.text",
+          "email": "emails[0]",
+          "photo": "photo",
+          "profilePicture": "photo",
+          "company": "currentPosition[0].companyName",
+          "companyName": "currentPosition[0].companyName",
+          "role": "experience[0].position",
+          "industry": "industries[0].name",
+          "connectionsCount": "connectionsCount",
+          "followersCount": "followerCount",
+          "linkedinFollowerCount": "followerCount",
+          "verified": "verified",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_save",
+      "source": "linkedin_profile_search",
+      "target": "db_save_profiles",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

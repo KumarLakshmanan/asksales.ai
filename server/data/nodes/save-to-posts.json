@@ -1,0 +1,315 @@
+{
+  "id": "save-to-posts",
+  "name": "Save to Posts",
+  "description": "Save social media posts to the posts database table. Supports posts from Twitter, Facebook, and Instagram.",
+  "inputSchema": {
+    "title": "Save to Posts Configuration",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "iterate_over": {
+        "title": "Iterate Over",
+        "description": "Path to the array of posts to iterate over (e.g., 'posts', 'data.tweets', 'results')",
+        "type": "string",
+        "editor": "textfield",
+        "example": "posts"
+      },
+      "field_mapping": {
+        "title": "Field Mapping",
+        "description": "Map source fields to posts table columns",
+        "type": "object",
+        "editor": "json",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform",
+            "description": "Social media platform (twitter, facebook, instagram)",
+            "example": "'twitter'"
+          },
+          "postId": {
+            "type": "string",
+            "title": "Post ID",
+            "description": "Unique post identifier",
+            "example": "id"
+          },
+          "postUrl": {
+            "type": "string",
+            "title": "Post URL",
+            "example": "url"
+          },
+          "authorId": {
+            "type": "string",
+            "title": "Author ID",
+            "example": "author.id"
+          },
+          "authorUsername": {
+            "type": "string",
+            "title": "Author Username",
+            "example": "author.username"
+          },
+          "authorName": {
+            "type": "string",
+            "title": "Author Name",
+            "example": "author.name"
+          },
+          "authorProfileUrl": {
+            "type": "string",
+            "title": "Author Profile URL",
+            "example": "author.url"
+          },
+          "text": {
+            "type": "string",
+            "title": "Post Text",
+            "example": "text"
+          },
+          "caption": {
+            "type": "string",
+            "title": "Caption (Instagram)",
+            "example": "caption"
+          },
+          "hashtags": {
+            "type": "string",
+            "title": "Hashtags (JSON array)",
+            "example": "hashtags"
+          },
+          "mentions": {
+            "type": "string",
+            "title": "Mentions (JSON array)",
+            "example": "mentions"
+          },
+          "mediaUrls": {
+            "type": "string",
+            "title": "Media URLs (JSON array)",
+            "example": "mediaUrls"
+          },
+          "mediaTypes": {
+            "type": "string",
+            "title": "Media Types (JSON array)",
+            "example": "mediaTypes"
+          },
+          "postType": {
+            "type": "string",
+            "title": "Post Type",
+            "description": "image, video, carousel, text, etc.",
+            "example": "type"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Created At",
+            "example": "createdAt"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "example": "timestamp"
+          },
+          "likesCount": {
+            "type": "string",
+            "title": "Likes Count",
+            "example": "likesCount"
+          },
+          "commentsCount": {
+            "type": "string",
+            "title": "Comments Count",
+            "example": "commentsCount"
+          },
+          "sharesCount": {
+            "type": "string",
+            "title": "Shares Count (Facebook)",
+            "example": "sharesCount"
+          },
+          "retweetCount": {
+            "type": "string",
+            "title": "Retweet Count (Twitter)",
+            "example": "retweetCount"
+          },
+          "replyCount": {
+            "type": "string",
+            "title": "Reply Count (Twitter)",
+            "example": "replyCount"
+          },
+          "quoteCount": {
+            "type": "string",
+            "title": "Quote Count (Twitter)",
+            "example": "quoteCount"
+          },
+          "bookmarkCount": {
+            "type": "string",
+            "title": "Bookmark Count (Twitter)",
+            "example": "bookmarkCount"
+          },
+          "viewCount": {
+            "type": "string",
+            "title": "View Count",
+            "example": "viewCount"
+          },
+          "reactionCount": {
+            "type": "string",
+            "title": "Reaction Count (Facebook)",
+            "example": "reactionCount"
+          },
+          "topReactions": {
+            "type": "string",
+            "title": "Top Reactions (Facebook, JSON)",
+            "example": "topReactions"
+          },
+          "videoViewCount": {
+            "type": "string",
+            "title": "Video View Count (Facebook)",
+            "example": "videoViewCount"
+          },
+          "videoDuration": {
+            "type": "string",
+            "title": "Video Duration",
+            "example": "videoDuration"
+          },
+          "isReply": {
+            "type": "string",
+            "title": "Is Reply (Twitter)",
+            "example": "isReply"
+          },
+          "isRetweet": {
+            "type": "string",
+            "title": "Is Retweet (Twitter)",
+            "example": "isRetweet"
+          },
+          "isQuote": {
+            "type": "string",
+            "title": "Is Quote (Twitter)",
+            "example": "isQuote"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Language Code",
+            "example": "lang"
+          },
+          "sourceApp": {
+            "type": "string",
+            "title": "Source App (Twitter)",
+            "example": "source"
+          },
+          "ownerFullName": {
+            "type": "string",
+            "title": "Owner Full Name (Instagram)",
+            "example": "ownerFullName"
+          },
+          "ownerId": {
+            "type": "string",
+            "title": "Owner ID (Instagram)",
+            "example": "ownerId"
+          },
+          "carouselMediaCount": {
+            "type": "string",
+            "title": "Carousel Media Count (Instagram)",
+            "example": "carouselMediaCount"
+          },
+          "videoPlayCount": {
+            "type": "string",
+            "title": "Video Play Count (Instagram)",
+            "example": "videoPlayCount"
+          },
+          "locationName": {
+            "type": "string",
+            "title": "Location Name",
+            "example": "locationName"
+          },
+          "locationLat": {
+            "type": "string",
+            "title": "Location Latitude",
+            "example": "locationLat"
+          },
+          "locationLng": {
+            "type": "string",
+            "title": "Location Longitude",
+            "example": "locationLng"
+          },
+          "searchHashtag": {
+            "type": "string",
+            "title": "Search Hashtag",
+            "example": "searchHashtag"
+          },
+          "searchQuery": {
+            "type": "string",
+            "title": "Search Query",
+            "example": "searchQuery"
+          },
+          "searchLocation": {
+            "type": "string",
+            "title": "Search Location",
+            "example": "searchLocation"
+          },
+          "scrapedAt": {
+            "type": "string",
+            "title": "Scraped At",
+            "description": "Timestamp when the post was scraped",
+            "example": "scrapedAt"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source platform name",
+            "example": "twitter"
+          }
+        }
+      },
+      "batch_insert": {
+        "title": "Batch Insert",
+        "description": "Insert multiple posts at once for better performance",
+        "type": "boolean",
+        "default": true
+      },
+      "on_conflict": {
+        "title": "On Conflict Strategy",
+        "description": "What to do when a post with the same ID already exists",
+        "type": "string",
+        "enum": ["skip", "update", "error"],
+        "enumTitles": ["Skip (ignore duplicate)", "Update (merge data)", "Error (fail on duplicate)"],
+        "default": "skip"
+      }
+    },
+    "required": ["iterate_over", "field_mapping"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "saved_count": {
+        "type": "integer",
+        "description": "Number of posts successfully saved"
+      },
+      "skipped_count": {
+        "type": "integer",
+        "description": "Number of posts skipped (duplicates)"
+      },
+      "error_count": {
+        "type": "integer",
+        "description": "Number of posts that failed to save"
+      },
+      "saved_ids": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "description": "IDs of successfully saved posts"
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "postId": {
+              "type": "string"
+            },
+            "error": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "List of errors encountered"
+      }
+    }
+  },
+  "iterate_over": null,
+  "skip_if_empty": [],
+  "required_inputs": ["iterate_over", "field_mapping"],
+  "validation_rules": {}
+}

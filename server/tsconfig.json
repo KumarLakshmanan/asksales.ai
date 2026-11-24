@@ -1,0 +1,37 @@
+{
+  "_phase_5_16_rationale": "This codebase uses a mix of `.js` and no-extension imports deliberately: ESM (run via tsx/esbuild) requires the *emitted* extension on relative imports, so any `import './foo.js'` works in both the TS source and the JS runtime. The trade-off is that the TypeScript checker doesn't see the extension (only the runtime does) and `allowImportingTsExtensions: true` lets us use `.ts` for type-only files like `globals.ts` and `types/express.ts`. We accept the mixed style for the operational simplicity of a single import path that works in both worlds. A future migration to pure ESM with explicit extensions (or pure ESM with bundler-only paths) is tracked separately.",
+  "include": [
+    "./**/*",
+    "../shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "vite.ts"
+  ],
+  "compilerOptions": {
+    "incremental": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "target": "ES2022",
+    "strict": true,
+    "lib": [
+      "ES2022"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "types": [
+      "node",
+      "jest"
+    ],
+    "paths": {
+      "@shared/*": [
+        "../shared/*"
+      ]
+    }
+  }
+}

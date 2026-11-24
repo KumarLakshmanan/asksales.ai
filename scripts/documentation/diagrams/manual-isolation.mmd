@@ -1,0 +1,14 @@
+flowchart TD
+  accTitle: Campaign manual follow-up isolation
+  accDescr: Each campaign and channel owns a saved sequence. Each reviewed batch captures immutable sequence and template revisions. New saves do not rewrite prior enrollments.
+  A[Campaign A and selected channel] --> R1[Saved sequence revision 1]
+  R1 --> B1[Batch 1 reviewed recipient snapshots]
+  A --> R2[Explicit save: sequence revision 2]
+  R2 --> B2[Later batch loads selected campaign revision 2]
+  B1 --> E[Existing enrollments retain revision 1]
+  R2 --> P[Preview eligible unsent revisions]
+  P --> C[Inspect each recipient and explicitly confirm]
+  C --> G{Delivery state safe?}
+  G -->|Yes| U[Apply reviewed eligible revision]
+  G -->|No| H[Keep blocked; no replay]
+  X[Campaign B and selected channel] --> Y[Independent sequence and enrollments]

@@ -1,0 +1,135 @@
+{
+  "actorId": "harvestapi/linkedin-profile-scraper",
+  "title": "LinkedIn Profile Scraper + Email (No Cookies)",
+  "description": "Extract detailed information from LinkedIn profiles in bulk, including complete work experience, education history, skills and more. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Profile details", "description": "$4 per 1000 profiles", "priceUsd": 0.004 },
+      { "title": "Profile details + email search", "description": "$10 per 1000 profiles", "priceUsd": 0.01 }
+    ]
+  },
+  "input": {
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Choose the mode for scraping LinkedIn profiles. 'Profile details' scrapes detailed profile information, while 'Profile details + email search' attempts to find the email address.",
+      "enum": ["Profile details no email ($4 per 1k)", "Profile details + email search ($10 per 1k)"],
+      "default": "Profile details no email ($4 per 1k)"
+    },
+    "queries": {
+      "type": "array",
+      "title": "Target URLs",
+      "description": "List of LinkedIn profile URLs or Public Identifiers to scrape.",
+      "required": true,
+      "example": ["https://www.linkedin.com/in/williamhgates", "https://www.linkedin.com/in/towhid-rahman"]
+    },
+    "urls": {
+      "type": "array",
+      "title": "Profile URLs",
+      "description": "List of LinkedIn profile URLs to scrape.",
+      "required": false
+    },
+    "publicIdentifiers": {
+      "type": "array",
+      "title": "Public Identifiers",
+      "description": "List of LinkedIn Public Identifiers (the last part in the URL).",
+      "required": false
+    },
+    "profileIds": {
+      "type": "array",
+      "title": "LinkedIn Profile IDs",
+      "description": "List of LinkedIn profile IDs to scrape.",
+      "required": false
+    }
+  },
+  "output": {
+    "firstName": { "type": "string", "description": "First name" },
+    "lastName": { "type": "string", "description": "Last name" },
+    "headline": { "type": "string", "description": "LinkedIn headline" },
+    "about": { "type": "string|null", "description": "About section text" },
+    "id": { "type": "string", "description": "LinkedIn profile ID" },
+    "publicIdentifier": { "type": "string", "description": "LinkedIn public identifier" },
+    "linkedinUrl": { "type": "string", "description": "LinkedIn profile URL" },
+    "photo": { "type": "string|null", "description": "Profile photo URL" },
+    "connectionsCount": { "type": "number", "description": "Number of connections" },
+    "followerCount": { "type": "number", "description": "Number of followers" },
+    "location": {
+      "type": "object",
+      "description": "Location details",
+      "properties": {
+        "linkedinText": "string",
+        "countryCode": "string",
+        "parsed": {
+          "city": "string",
+          "country": "string",
+          "countryFull": "string",
+          "state": "string",
+          "text": "string"
+        }
+      }
+    },
+    "currentPosition": {
+      "type": "array",
+      "description": "Current employment positions",
+      "items": {
+        "companyName": "string",
+        "companyId": "string|null",
+        "companyLinkedinUrl": "string|null",
+        "dateRange": "object"
+      }
+    },
+    "experience": {
+      "type": "array",
+      "description": "Full work experience history",
+      "items": {
+        "position": "string",
+        "companyName": "string",
+        "companyLinkedinUrl": "string",
+        "description": "string|null",
+        "duration": "string|null",
+        "location": "string|null",
+        "startDate": "object",
+        "endDate": "object"
+      }
+    },
+    "education": {
+      "type": "array",
+      "description": "Education history",
+      "items": {
+        "schoolName": "string",
+        "degree": "string|null",
+        "fieldOfStudy": "string|null",
+        "period": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skills list",
+      "items": {
+        "name": "string",
+        "endorsements": "string"
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "description": "Certifications"
+    },
+    "languages": {
+      "type": "array",
+      "description": "Languages spoken"
+    },
+    "industries": {
+      "type": "array",
+      "description": "Industry associations"
+    },
+    "emails": { "type": "array|null", "description": "Email addresses found (if email search mode enabled)" },
+    "premium": { "type": "boolean", "description": "Premium account status" },
+    "openToWork": { "type": "boolean", "description": "Open to work status" },
+    "verified": { "type": "boolean", "description": "Verified profile" },
+    "influencer": { "type": "boolean", "description": "LinkedIn influencer" },
+    "hiring": { "type": "boolean", "description": "Currently hiring" },
+    "profileActions": { "type": "array", "description": "Profile action buttons/links" }
+  }
+}

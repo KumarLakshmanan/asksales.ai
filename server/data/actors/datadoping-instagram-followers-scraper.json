@@ -1,0 +1,79 @@
+{
+  "id": "datadoping/instagram-followers-scraper",
+  "name": "Instagram Followers Scraper (No Cookie)",
+  "description": "Extract Instagram profile followers in bulk without requiring login, session ID, or cookies. Provides complete API support and seamless export options, making large-scale follower collection efficient and reliable.",
+  "category": "Social Media",
+  "platform": "instagram",
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      {
+        "title": "Follower",
+        "description": "Each follower written to the dataset.",
+        "priceUsd": 0.0012
+      }
+    ]
+  },
+  "isDeprecated": false,
+  "inputSchema": {
+    "title": "Instagram Followers Scraper Input",
+    "description": "Provide one or more Instagram usernames. Each should be on a separate line.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "usernames": {
+        "title": "Instagram Usernames or User ID or URL",
+        "type": "array",
+        "description": "List of Instagram usernames/userId/URL to scrape. Enter one username/userId/URL per line.",
+        "editor": "stringList",
+        "prefill": [
+          "mrbeast"
+        ]
+      },
+      "max_count": {
+        "title": "Max Followers",
+        "type": "integer",
+        "description": "Maximum followers to scrape per username. Default=50",
+        "prefill": 50,
+        "minimum": 50
+      }
+    },
+    "required": [
+      "usernames",
+      "max_count"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "username": {
+        "type": "string",
+        "description": "Instagram username of the follower"
+      },
+      "full_name": {
+        "type": "string",
+        "description": "Full name of the follower"
+      },
+      "id": {
+        "type": "string",
+        "description": "Instagram user ID"
+      },
+      "profile_pic_url": {
+        "type": "string",
+        "description": "Profile picture URL"
+      },
+      "is_private": {
+        "type": "boolean",
+        "description": "Whether the account is private"
+      },
+      "is_verified": {
+        "type": "boolean",
+        "description": "Whether the account is verified"
+      },
+      "follower_of": {
+        "type": "string",
+        "description": "Username of the account whose followers were scraped"
+      }
+    }
+  }
+}

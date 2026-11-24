@@ -1,0 +1,249 @@
+{
+  "workflow_id": "instagram_post_authors_followers",
+  "platform": "instagram_post_authors_followers",
+  "title": "Instagram Post Author Followers",
+  "description": "Search Instagram posts by hashtags, scrape author profiles, then extract followers of those authors with enriched profiles. Best for building audience lists from people who already follow relevant Instagram creators. Use when you want to reach an audience that is pre-qualified by their interest in specific content creators or hashtag communities.",
+  "version": "1.0",
+  "tips": "- Hashtags should be relevant to the ICP industry AND location.\n- This workflow finds followers of top content creators in your niche.\n- Followers of niche influencers are highly relevant potential leads.\n- Keep resultsLimit low (5-15) as each author generates many followers.\n- If the user supplied exact hashtags, preserve them and use keywordSearch=false. Otherwise use keywordSearch=true with concise industry/location phrases; do not invent concatenated hashtags. Multi-word phrases require keywordSearch=true.\n- resultsLimit is per hashtag/keyword, not a final saved-lead cap. Review both limits before execution.",
+  "nodes": [
+    {
+      "id": "instagram_hashtag_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Instagram Hashtag Search",
+        "actorId": "apify/instagram-hashtag-scraper",
+        "actorName": "Instagram Hashtag Scraper",
+        "description": "Search Instagram posts by hashtags",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "hashtags": "{{hashtags}}",
+          "resultsLimit": "{{resultsLimit}}",
+          "keywordSearch": "{{keywordSearch}}"
+        },
+        "output_key": "instagram_posts",
+        "finalValues": {
+          "resultsType": "posts"
+        },
+        "reviewableInputFields": [
+          "hashtags",
+          "resultsLimit",
+          "keywordSearch",
+          "resultsType"
+        ]
+      }
+    },
+    {
+      "id": "instagram_author_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Author Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Get detailed author profiles for posts (batch mode)",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": []
+        },
+        "batch_collect": {
+          "enabled": true,
+          "source_field": "ownerUsername",
+          "target_field": "usernames"
+        },
+        "iterate_over": "instagram_posts",
+        "output_key": "instagram_author_profiles",
+        "field_mapping": {
+          "usernames": "ownerUsername"
+        }
+      }
+    },
+    {
+      "id": "instagram_followers",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Followers",
+        "actorId": "datadoping/instagram-followers-scraper",
+        "actorName": "Instagram Followers Scraper (No Cookie)",
+        "description": "Get followers of authors (no cookie required)",
+        "config": {
+          "timeout": 1200,
+          "memory": 6144
+        },
+        "inputMapping": {
+          "usernames": [
+            "{_current_item.username}"
+          ],
+          "max_count": 50
+        },
+        "iterate_over": "instagram_author_profiles",
+        "output_key": "instagram_followers",
+        "field_mapping": {
+          "username": "username"
+        }
+      }
+    },
+    {
+      "id": "instagram_follower_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 850
+      },
+      "data": {
+        "label": "Get Follower Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Get detailed profiles for followers (batch mode)",
+        "isProfileEnrichment": true,
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": []
+        },
+        "batch_collect": {
+          "enabled": true,
+          "source_field": "username",
+          "target_field": "usernames"
+        },
+        "iterate_over": "instagram_followers",
+        "output_key": "instagram_follower_profiles",
+        "field_mapping": {
+          "usernames": "username"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Instagram Posts",
+        "description": "Save source Instagram posts before derived follower leads",
+        "iterate_over": "instagram_posts",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "post_id": "id",
+          "postId": "id",
+          "content": "caption",
+          "text": "caption",
+          "url": "url",
+          "postUrl": "url",
+          "author_handle": "ownerUsername",
+          "authorName": "ownerFullName",
+          "authorUsername": "ownerUsername",
+          "likes_count": "likesCount",
+          "likesCount": "likesCount",
+          "comments_count": "commentsCount",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'instagram'",
+          "mediaUrls": "displayUrl"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_followers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 850
+      },
+      "data": {
+        "label": "Save Follower Profiles",
+        "description": "Save Instagram follower profiles to leads table",
+        "iterate_over": "instagram_follower_profiles",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "name": "fullName",
+          "bio": "biography",
+          "source": "'instagram'",
+          "leadType": "'profile'",
+          "platformType": "'instagram'",
+          "profileId": "id",
+          "instagramHandle": "username",
+          "fullName": "fullName",
+          "about": "biography",
+          "profilePicture": "profilePicUrl",
+          "photo": "profilePicUrl",
+          "instagramUrl": "'https://instagram.com/' + username",
+          "profileUrl": "'https://instagram.com/' + username",
+          "postUrl": "postUrl",
+          "followersCount": "followersCount",
+          "followingCount": "followsCount",
+          "postsCount": "postsCount",
+          "verified": "verified",
+          "website": "externalUrl",
+          "categories": "businessCategoryName",
+          "engagementType": "'follower'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_authors",
+      "source": "instagram_hashtag_search",
+      "target": "instagram_author_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "instagram_hashtag_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_authors_to_followers",
+      "source": "instagram_author_profiles",
+      "target": "instagram_followers",
+      "animated": true
+    },
+    {
+      "id": "e_followers_to_profiles",
+      "source": "instagram_followers",
+      "target": "instagram_follower_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_follower_profiles_to_db",
+      "source": "instagram_follower_profiles",
+      "target": "db_save_followers",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_follower_save",
+      "source": "db_save_posts",
+      "target": "db_save_followers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

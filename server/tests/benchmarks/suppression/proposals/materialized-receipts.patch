@@ -1,0 +1,37 @@
+--- a/server/services/outreach/RecipientSuppressionService.ts
++++ b/server/services/outreach/RecipientSuppressionService.ts
+@@ -47,24 +47,22 @@
+         VALUES (${phone}), (regexp_replace(COALESCE(l.whatsapp,''),'[^0-9]','','g'))
+       ) AS alias(destination)` : sql``} WHERE l.user_id=${userId}
+         AND (COALESCE(l.blacklisted,false) OR COALESCE(l.do_not_contact,false) ${email ? sql`OR COALESCE(l.email_unsubscribed,false)` : sql``})
+-    )
++    ) ${email ? sql`, suppressed_receipts AS MATERIALIZED (
++      SELECT lower(trim(COALESCE(NULLIF(receipt.recipient_address,''),
++        CASE WHEN receipt.lead_name ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' THEN receipt.lead_name END))) AS destination
++      FROM sent_messages receipt WHERE receipt.user_id=${userId}
++        AND receipt.channel IN ('email','gmail','resend')
++        AND (receipt.bounced_at IS NOT NULL OR receipt.status IN ('bounced','complained') OR receipt.delivery_status IN ('bounced','complained'))
++    )` : sql``}
+     SELECT destination FROM unnest(ARRAY[${sql.join(
+       destinations.map((destination) => sql`${destination}`),
+       sql`, `,
+     )}]::text[]) AS address(destination)
+     WHERE EXISTS (
+       SELECT 1 FROM suppressed_leads blocked WHERE blocked.destination=address.destination
+-    ) ${
+-      email
+-        ? sql`OR EXISTS (
+-      SELECT 1 FROM sent_messages receipt WHERE receipt.user_id=${userId}
+-        AND receipt.channel IN ('email','gmail','resend')
+-        AND lower(trim(COALESCE(NULLIF(receipt.recipient_address,''),
+-          CASE WHEN receipt.lead_name ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' THEN receipt.lead_name END)))=destination
+-        AND (receipt.bounced_at IS NOT NULL OR receipt.status IN ('bounced','complained') OR receipt.delivery_status IN ('bounced','complained'))
+-    )`
+-        : sql``
+-    }
++    ) ${email ? sql`OR EXISTS (
++      SELECT 1 FROM suppressed_receipts blocked_receipt WHERE blocked_receipt.destination=address.destination
++    )` : sql``}
+   `);
+   return new Set(
+     (result.rows as Array<{ destination: string }>).map(

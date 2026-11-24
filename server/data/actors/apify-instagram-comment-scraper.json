@@ -1,0 +1,70 @@
+{
+  "id": "apify/instagram-comment-scraper",
+  "name": "Instagram Comments Scraper",
+  "description": "Scrape public comments and commenter identities from Instagram post or reel URLs.",
+  "inputSchema": {
+    "title": "Input schema for Instagram Comments scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "required": [
+      "directUrls"
+    ],
+    "properties": {
+      "directUrls": {
+        "title": "Instagram posts or reels URLs",
+        "type": "array",
+        "description": "One or more public Instagram post or reel URLs.",
+        "editor": "stringList",
+        "uniqueItems": true,
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "resultsLimit": {
+        "title": "Up to this many comments per URL",
+        "type": "integer",
+        "description": "Maximum comments to return for each supplied URL.",
+        "minimum": 1,
+        "default": 15
+      },
+      "includeNestedComments": {
+        "title": "Include replies",
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "postUrl": {
+        "type": ["string", "null"]
+      },
+      "id": {
+        "type": ["string", "null"]
+      },
+      "text": {
+        "type": ["string", "null"]
+      },
+      "ownerUsername": {
+        "type": ["string", "null"]
+      },
+      "ownerProfilePicUrl": {
+        "type": ["string", "null"]
+      },
+      "timestamp": {
+        "type": ["string", "null"]
+      },
+      "likesCount": {
+        "type": ["number", "null"]
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "directUrls"
+  ],
+  "validation_rules": []
+}

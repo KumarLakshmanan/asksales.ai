@@ -1,0 +1,87 @@
+{
+  "name": "salesmarketing-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=24.18.1 <25"
+  },
+  "pnpm": {
+    "overrides": {
+      "@ai-sdk/provider-utils@>=3.0.0 <3.0.28": "3.0.28",
+      "@ai-sdk/provider-utils@>=4.0.0 <4.0.33": "4.0.33",
+      "@grpc/grpc-js@>=1.14.0 <1.14.5": "1.14.6",
+      "@hono/node-server@<1.19.15": "1.19.15",
+      "@mastra/core>@ai-sdk/provider-utils-v5": "npm:@ai-sdk/provider-utils@3.0.28",
+      "@mastra/core>@ai-sdk/provider-utils-v6": "npm:@ai-sdk/provider-utils@4.0.33",
+      "@modelcontextprotocol/sdk@>=1.0.0 <1.32.0": "1.32.2",
+      "@modelcontextprotocol/server@>=2.0.0 <2.3.0": "2.3.0",
+      "@modelcontextprotocol/node@>=2.0.0 <2.1.0": "2.1.0",
+      "@xmldom/xmldom@>=0.7.0 <0.8.15": "0.8.15",
+      "axios@>=1.0.0 <1.20.0": "1.20.0",
+      "baseline-browser-mapping@<2.11.0": "2.11.0",
+      "basic-ftp@<6.2.1": "6.2.3",
+      "body-parser@<1.20.9": "1.20.9",
+      "body-parser@>=2.0.0 <2.4.0": "2.4.0",
+      "brace-expansion@>=2.0.0 <2.1.7": "2.1.7",
+      "browserslist@<4.28.7": "4.28.7",
+      "csv-parse@<7.0.2": "7.0.2",
+      "deepmerge-ts@<8.0.0": "8.0.0",
+      "eslint-plugin-react-hooks>zod-validation-error": "4.0.2",
+      "fast-copy@<4.1.0": "4.1.0",
+      "fast-uri@>=3.0.0 <3.1.9": "3.1.9",
+      "fast-xml-parser@>=5.0.0 <5.10.1": "5.10.1",
+      "fflate@<0.8.3": "0.8.3",
+      "follow-redirects@>=1.16.0 <1.16.2": "1.16.2",
+      "hono@>=4.0.0 <4.13.11": "4.13.11",
+      "ip-address@>=10.0.0 <10.7.4": "10.7.4",
+      "js-yaml@>=3.0.0 <3.15.2": "3.15.2",
+      "js-yaml@>=4.0.0 <4.3.1": "4.3.1",
+      "lodash@<4.18.0": "4.18.1",
+      "nodemailer@<10.1.4": "10.2.1",
+      "path-to-regexp@<0.1.13": "0.1.13",
+      "path-to-regexp@>=8.0.0 <8.4.0": "8.4.0",
+      "picomatch@>=2.0.0 <2.3.2": "2.3.2",
+      "picomatch@>=4.0.0 <5": "4.0.4",
+      "postcss-selector-parser@>=6.0.0 <7.1.6": "7.1.6",
+      "postcss@<8.5.26": "8.5.26",
+      "protobufjs@<8.0.0": "7.6.5",
+      "protobufjs@>=8.0.0 <8.6.6": "8.6.6",
+      "proxy-addr@<2.0.8": "2.0.8",
+      "qs@<6.16.0": "6.16.0",
+      "semver@>=5.0.0 <5.7.2": "5.7.2",
+      "sharp@<0.35.5": "0.35.5",
+      "source-map-js@<1.2.2": "1.2.2",
+      "systeminformation@<5.33.16": "5.33.16",
+      "underscore@<1.13.8": "1.13.8",
+      "undici@>=7.0.0 <7.30.1": "7.30.1",
+      "uuid@>=10.0.0 <11.1.1": "11.1.1",
+      "yaml@>=2.0.0 <2.8.3": "2.8.3",
+      "zod@<4.6.6": "4.6.7"
+    },
+    "onlyBuiltDependencies": [
+      "bufferutil",
+      "esbuild",
+      "ffmpeg-static",
+      "msgpackr-extract",
+      "protobufjs",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver"
+    ],
+    "ignoredBuiltDependencies": [
+      "bufferutil",
+      "core-js",
+      "esbuild",
+      "msgpackr-extract",
+      "protobufjs",
+      "sharp",
+      "unrs-resolver"
+    ]
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  }
+}

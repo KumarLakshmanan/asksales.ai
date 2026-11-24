@@ -1,0 +1,117 @@
+{
+  "workflow_id": "twitter_post_search",
+  "platform": "twitter_post_search",
+  "title": "Twitter Post Search",
+  "description": "Search Twitter/X posts by keyword and save both the tweets and their authors as leads. The simplest Twitter/X strategy \u2014 best for quick topic research and author discovery. Use when you just need to find relevant tweets and who wrote them, without digging into engagement or followers. Good starting point for Twitter/X prospecting.",
+  "version": "1.0",
+  "tips": "- \"query\" should be a Twitter search query using ICP-relevant keywords, hashtags, or phrases.\n- \"searchType\" should be \"People\" to find user profiles, or \"Top\" to find popular posts.\n- Keep maxResults between 20-50.\n- For targeting multiple themes, generate MULTIPLE search entries in a \"searches\" array.",
+  "nodes": [
+    {
+      "id": "twitter_search_actor",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Search Twitter Posts",
+        "actorId": "powerai/twitter-search-scraper",
+        "actorName": "Twitter Search Scraper",
+        "description": "Search Twitter for posts matching a keyword query",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+        "query": "{{query}}",
+          "searchType": "{{searchType}}",
+          "maxResults": "{{maxResults}}"
+        },
+        "output_key": "twitter_posts"
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": -200,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Tweets as Posts",
+        "description": "Save tweets/posts to posts table",
+        "iterate_over": "twitter_posts",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "source": "'twitter'",
+          "postType": "'tweet'",
+          "content": "text",
+          "url": "url",
+          "publishedAt": "createdAt",
+          "likesCount": "likeCount",
+          "commentsCount": "replyCount",
+          "sharesCount": "retweetCount",
+          "viewsCount": "viewCount",
+          "authorName": "author.name",
+          "authorHandle": "author.userName",
+          "authorProfileUrl": "'https://twitter.com/' + author.userName"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_authors",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Tweet Authors as Leads",
+        "description": "Save tweet authors as leads for outreach",
+        "iterate_over": "twitter_posts",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "engagementType": "'post_author'",
+      "fullName": "user_info.name",
+      "name": "user_info.name",
+      "twitterHandle": "user_info.screen_name",
+      "twitterUrl": "'https://twitter.com/' + user_info.screen_name",
+      "profileUrl": "'https://twitter.com/' + user_info.screen_name",
+      "bio": "user_info.description",
+      "about": "user_info.description",
+      "profilePicture": "user_info.avatar",
+      "photo": "user_info.avatar",
+      "followersCount": "user_info.followers_count",
+      "followingCount": "user_info.friends_count",
+      "verified": "user_info.verified",
+          "status": "'uncontacted'"
+        },
+        "dedup_key": "author.userName",
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_actor_to_posts",
+      "source": "twitter_search_actor",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_actor_to_authors",
+      "source": "twitter_search_actor",
+      "target": "db_save_authors",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

@@ -1,0 +1,167 @@
+{
+  "workflow_id": "facebook_post_likers",
+  "platform": "facebook_post_likers",
+  "title": "Facebook Post Likers",
+  "description": "Search Facebook posts by keyword and save public liker identities from those posts. Best for identifying users who show interest in specific topics through Facebook reactions. Use when you want a broader pool of engaged prospects than commenters; returned public profile data may be sparse.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords for the search query.\n- Likers show engagement intent — they actively interact with content.\n- Keep maxResults at 10-20 (each post can generate multiple likers).\n- Public liker identity data may be sparse; no contact enrichment is performed.",
+  "nodes": [
+    {
+      "id": "facebook_post_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Facebook Post Search",
+        "actorId": "powerai/facebook-post-search-scraper",
+        "actorName": "Facebook Post Search Scraper",
+        "description": "Search for Facebook posts by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{query}}",
+          "maxResults": "{{maxResults}}"
+        },
+        "output_key": "facebook_posts",
+        "finalValues": {
+          "recent_posts": true
+        }
+      }
+    },
+    {
+      "id": "facebook_likes",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Extract Likes",
+        "actorId": "apify/facebook-likes-scraper",
+        "actorName": "Facebook Likes Scraper",
+        "description": "Extract public liker identities from Facebook posts",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "startUrls": [
+            {
+              "url": "{_current_item.url}"
+            }
+          ],
+          "resultsLimit": 20
+        },
+        "iterate_over": "facebook_posts",
+        "output_key": "facebook_likes",
+        "field_mapping": {
+          "startUrls[0].url": "url"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Posts",
+        "description": "Save Facebook posts to posts table",
+        "iterate_over": "facebook_posts",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "post_id": "post_id",
+          "postId": "post_id",
+          "content": "message",
+          "text": "message",
+          "url": "url",
+          "postUrl": "url",
+          "authorName": "author.name",
+          "authorId": "author.id",
+          "authorProfileUrl": "author.url",
+          "likes_count": "reactions_count",
+          "likesCount": "reactions.like",
+          "comments_count": "comments_count",
+          "sharesCount": "reshare_count",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'facebook'",
+          "postType": "type"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_likers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Liker Profiles",
+        "description": "Save Facebook liker profiles to leads table",
+        "iterate_over": "facebook_likes",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "source": "'facebook'",
+          "leadType": "'profile'",
+          "platformType": "'facebook'",
+          "engagementType": "'liker'",
+          "fullName": "name",
+          "name": "name",
+          "facebookUrl": "profileUrl",
+          "profileUrl": "profileUrl",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "postUrl": "postUrl",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_likes",
+      "source": "facebook_post_search",
+      "target": "facebook_likes",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "facebook_post_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_like_extraction",
+      "source": "db_save_posts",
+      "target": "facebook_likes",
+      "animated": false
+    },
+    {
+      "id": "e_likers_to_db",
+      "source": "facebook_likes",
+      "target": "db_save_likers",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_likers",
+      "source": "db_save_posts",
+      "target": "db_save_likers",
+      "animated": false
+    }
+  ],
+  "mappings": []
+}

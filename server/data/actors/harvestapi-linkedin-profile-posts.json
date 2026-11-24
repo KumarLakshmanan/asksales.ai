@@ -1,0 +1,135 @@
+{
+  "actorId": "harvestapi/linkedin-profile-posts",
+  "title": "LinkedIn Profile Posts Scraper (No Cookies)",
+  "description": "Extract posts from LinkedIn profiles, including content, media, engagement, reactions, comments, and more. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "Open Source"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post", "description": "Post result item", "priceUsd": 0.002 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "targetUrls": {
+      "type": "array",
+      "title": "Target URLs",
+      "description": "List of LinkedIn profile or company URLs to scrape posts from.",
+      "required": true,
+      "example": ["https://www.linkedin.com/in/satyanadella/", "https://www.linkedin.com/company/google"]
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit",
+      "description": "Fetch posts no older than X time. Options: 'any', '1h', '24h', 'week', 'month', '3months', '6months', 'year'.",
+      "required": false,
+      "default": "month",
+      "enum": ["any", "1h", "24h", "week", "month", "3months", "6months", "year"]
+    },
+    "maxPosts": {
+      "type": "integer",
+      "title": "Maximum number of posts to scrape per each input",
+      "description": "Maximum number of posts to scrape per each profile or company. Default is 10.",
+      "required": false,
+      "default": 5
+    },
+    "includeQuotePosts": {
+      "type": "boolean",
+      "title": "Include Quote Posts",
+      "description": "Include shared posts with comments.",
+      "default": true
+    },
+    "includeReposts": {
+      "type": "boolean",
+      "title": "Include Reposts",
+      "description": "Include shared posts without comments.",
+      "default": false
+    },
+    "scrapeReactions": {
+      "type": "boolean",
+      "title": "Scrape Reactions",
+      "default": false
+    },
+    "scrapeComments": {
+      "type": "boolean",
+      "title": "Scrape Comments",
+      "default": false
+    }
+  },
+  "output": {
+    "content": { "type": "string", "description": "Post text content" },
+    "type": { "type": "string", "description": "Post type" },
+    "linkedinUrl": { "type": "string", "description": "Post URL on LinkedIn" },
+    "shareUrn": { "type": "string", "description": "Post share URN identifier" },
+    "entityId": { "type": "string", "description": "Post entity ID" },
+    "author": {
+      "type": "object",
+      "description": "Post author details",
+      "properties": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "type": "string",
+        "universalName": "string",
+        "info": "string"
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Post engagement metrics",
+      "properties": {
+        "likes": "number",
+        "comments": "number",
+        "shares": "number",
+        "reactions": [{ "type": "string", "count": "number" }]
+      }
+    },
+    "postedAt": {
+      "type": "object",
+      "description": "When the post was created",
+      "properties": {
+        "timestamp": "number",
+        "date": "string",
+        "postedAgoText": "string"
+      }
+    },
+    "postImages": {
+      "type": "array",
+      "description": "Images in the post",
+      "items": {
+        "url": "string",
+        "width": "number",
+        "height": "number"
+      }
+    },
+    "contentAttributes": {
+      "type": "array",
+      "description": "Content attributes including hyperlinks and mentions",
+      "items": {
+        "type": "string",
+        "hyperlink": "string|null",
+        "textLink": "string|null"
+      }
+    },
+    "document": {
+      "type": "object|null",
+      "description": "Attached document/carousel",
+      "properties": {
+        "title": "string",
+        "totalPageCount": "number",
+        "transcribedDocumentUrl": "string"
+      }
+    },
+    "header": {
+      "type": "object",
+      "description": "Post header",
+      "properties": {
+        "text": "string",
+        "linkedinUrl": "string"
+      }
+    },
+    "socialContent": {
+      "type": "object",
+      "description": "Social interaction settings"
+    }
+  }
+}

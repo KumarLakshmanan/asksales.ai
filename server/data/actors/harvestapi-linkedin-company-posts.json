@@ -1,0 +1,97 @@
+{
+  "actorId": "harvestapi/linkedin-company-posts",
+  "title": "LinkedIn Company Posts Scraper (No Cookies)",
+  "description": "Extract posts from LinkedIn company pages including content, engagement metrics, and media. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "Content Discovery"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post", "description": "Post result item", "priceUsd": 0.002 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "targetUrls": {
+      "type": "array",
+      "title": "Target URLs",
+      "description": "List of LinkedIn company or profile URLs to scrape posts from.",
+      "required": true,
+      "example": ["https://www.linkedin.com/company/google", "https://www.linkedin.com/company/microsoft"]
+    },
+    "maxPosts": {
+      "type": "integer",
+      "title": "Maximum posts per target",
+      "description": "Maximum number of posts to scrape per each company/profile.",
+      "default": 10,
+      "required": false
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit",
+      "description": "Fetch posts no older than X time.",
+      "enum": ["any", "1h", "24h", "week", "month", "3months", "6months", "year"],
+      "default": "month",
+      "required": false
+    },
+    "scrapeReactions": {
+      "type": "boolean",
+      "title": "Scrape Reactions",
+      "description": "Whether to scrape post reactions.",
+      "default": false
+    },
+    "scrapeComments": {
+      "type": "boolean",
+      "title": "Scrape Comments",
+      "description": "Whether to scrape post comments.",
+      "default": false
+    }
+  },
+  "output": {
+    "content": { "type": "string", "description": "Post text content" },
+    "type": { "type": "string", "description": "Post type" },
+    "linkedinUrl": { "type": "string", "description": "Post URL on LinkedIn" },
+    "shareUrn": { "type": "string", "description": "Post share URN identifier" },
+    "entityId": { "type": "string", "description": "Post entity ID" },
+    "author": {
+      "type": "object",
+      "description": "Post author details",
+      "properties": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "type": "string",
+        "universalName": "string",
+        "info": "string"
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Post engagement metrics",
+      "properties": {
+        "likes": "number",
+        "comments": "number",
+        "shares": "number",
+        "reactions": [{ "type": "string", "count": "number" }]
+      }
+    },
+    "postedAt": {
+      "type": "object",
+      "description": "When the post was created",
+      "properties": {
+        "timestamp": "number",
+        "date": "string",
+        "postedAgoText": "string"
+      }
+    },
+    "postImages": {
+      "type": "array",
+      "description": "Images in the post"
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "targetUrl": "string"
+      }
+    }
+  }
+}

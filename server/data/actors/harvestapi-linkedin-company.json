@@ -1,0 +1,101 @@
+{
+  "actorId": "harvestapi/linkedin-company",
+  "title": "LinkedIn Company Details Scraper (No Cookies)",
+  "description": "Extract detailed information from LinkedIn Companies such as company name, address, phone numbers, website, employee count, and more. Find LinkedIn company URLs by name in Bulk. No cookies or account required.",
+  "categories": ["Automation", "Lead Generation", "Open Source"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Company", "description": "Company details result", "priceUsd": 0.004 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "companies": {
+      "type": "array",
+      "title": "Company LinkedIn URLs",
+      "description": "List of LinkedIn company URLs",
+      "required": false,
+      "example": ["https://www.linkedin.com/company/google", "https://www.linkedin.com/company/microsoft"]
+    },
+    "searches": {
+      "type": "array",
+      "title": "Company names (to search)",
+      "description": "List of company names to search on LinkedIn",
+      "required": false,
+      "example": ["google", "microsoft"]
+    }
+  },
+  "output": {
+    "name": { "type": "string", "description": "Company name" },
+    "universalName": { "type": "string", "description": "LinkedIn universal name (slug)" },
+    "linkedinUrl": { "type": "string", "description": "Company LinkedIn URL" },
+    "website": { "type": "string", "description": "Company website URL" },
+    "description": { "type": "string", "description": "Company description/about" },
+    "tagline": { "type": "string|null", "description": "Company tagline" },
+    "companyType": { "type": "string", "description": "Company type (e.g. public, private)" },
+    "phone": { "type": "object|null", "description": "Phone number" },
+    "employeeCount": { "type": "number", "description": "Exact employee count" },
+    "followerCount": { "type": "number", "description": "LinkedIn follower count" },
+    "employeeCountRange": {
+      "type": "object",
+      "description": "Employee count range",
+      "properties": {
+        "start": "number",
+        "end": "number|null"
+      }
+    },
+    "foundedOn": { "type": "object|null", "description": "Founded date" },
+    "industries": {
+      "type": "array",
+      "description": "Company industries",
+      "items": {
+        "name": "string",
+        "title": "string"
+      }
+    },
+    "locations": {
+      "type": "array",
+      "description": "Company office locations",
+      "items": {
+        "headquarter": "boolean",
+        "city": "string|null",
+        "country": "string",
+        "line1": "string|null",
+        "postalCode": "string|null",
+        "geographicArea": "string|null",
+        "parsed": {
+          "text": "string",
+          "city": "string",
+          "country": "string",
+          "countryFull": "string",
+          "state": "string"
+        }
+      }
+    },
+    "specialities": {
+      "type": "array",
+      "description": "Company specialities/focus areas",
+      "items": "string"
+    },
+    "similarOrganizations": {
+      "type": "array",
+      "description": "Similar companies on LinkedIn",
+      "items": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "website": "string|null",
+        "description": "string|null"
+      }
+    },
+    "logos": {
+      "type": "array",
+      "description": "Company logos"
+    },
+    "active": { "type": "boolean", "description": "Whether company page is active" },
+    "pageVerified": { "type": "boolean", "description": "Whether company page is verified" },
+    "callToActionUrl": { "type": "string", "description": "CTA button URL" },
+    "jobSearchUrl": { "type": "string", "description": "Jobs page URL" },
+    "pageType": { "type": "string", "description": "Page type" }
+  }
+}

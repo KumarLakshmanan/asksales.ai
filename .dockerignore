@@ -1,0 +1,104 @@
+# Dependencies
+**/node_modules
+npm-debug.log
+yarn-error.log
+
+# Build output (rebuilt in Docker)
+**/dist
+**/.next
+out
+.turbo
+
+# Environment files (injected via docker-compose)
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/service-accounts/**
+**/*service-account*.json
+**/*credentials*.json
+.local
+
+# IDE / Editor
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (not needed in image)
+*.md
+ARCHITECTURE_IMPROVEMENTS.md
+CHAT_FLOW.md
+CURRENT_ARCHITECTURE.md
+IDEAL_ARCHITECTURE.md
+LANGGRAPH_ANALYSIS_REPORT.md
+LANGGRAPH_TEAM_BRIEF.md
+FIGMA_VS_CLIENT_REPORT.md
+PROMPTS.md
+
+# Logs and temp files
+*.log
+*.txt
+!server/scripts/requirements-scrapling.txt
+
+# Tests
+coverage
+tests
+__tests__
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+jest.config.*
+# Patterns above without **/ only match at the context root. Keep client test
+# and QA files out of the client image context too, so a test-only change
+# does not invalidate the cached ~10-minute `next build` layer.
+client/e2e
+client/**/__tests__
+client/**/*.test.ts
+client/**/*.test.tsx
+client/**/*.spec.ts
+client/**/*.spec.tsx
+client/playwright*.config.ts
+client/vitest.config.ts
+client/test-results
+client/playwright-report
+client/*qa-*
+client/qa-results
+client/*.tsbuildinfo
+
+# Python cache
+**/.venv-scrapling
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+hermes-microservice/venv
+hermes-microservice/.hermes
+
+# Unrelated services (excluded to reduce context size)
+instagram-microservice
+AD_PUB_SHARE
+
+# Large files
+salesmarketing.sql
+server/uploads/*
+server/exports/*
+!server/uploads/.gitkeep
+!server/exports/.gitkeep
+
+# Docker files (no need to copy into containers)
+docker-compose.yml
+docker-compose*.yml
+Dockerfile*
+**/Dockerfile*
+ecosystem.config.js
+deploy.sh

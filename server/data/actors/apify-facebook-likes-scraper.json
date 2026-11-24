@@ -1,0 +1,96 @@
+{
+  "id": "apify/facebook-likes-scraper",
+  "name": "Facebook Likes Scraper",
+  "description": "Extract Facebook likes data from one or multiple Facebook posts. Get post URL, reaction type (like, love, care, sad, angry, laugh), and basic liker info such as Facebook name and profile URL. Download the data in JSON, CSV Excel and use it in apps, spreadsheets, and reports.",
+  "inputSchema": {
+    "title": "Input schema for the empty project actor.",
+    "description": "This scraper will get likes and reactions from a Facebook post of your choice. To try it out, just paste one or multiple Facebook post URLs and click ▷ Start. If you need any guidance, just <a href='https://blog.apify.com/scrape-facebook-comments-data/' target='_blank' rel='noopener'>follow this tutorial</a>.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "startUrls": {
+        "title": "Facebook URLs",
+        "type": "array",
+        "description": "Valid facebook URL",
+        "editor": "requestListSources",
+        "prefill": [
+          {
+            "url": "https://www.facebook.com/WBBPosts/posts/pfbid02j21mpxEygikxxqKh3AaQxsct5vByRpuZVTgpBMELoKArJT6oJjvek8Y3TdRdDgvYl"
+          }
+        ]
+      },
+      "resultsLimit": {
+        "title": "Results amount",
+        "type": "integer",
+        "description": "If this limit is not set as many results as possible are returned",
+        "editor": "number",
+        "prefill": 10,
+        "minimum": 1
+      }
+    },
+    "required": [
+      "startUrls"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "reactors": {
+        "type": "number",
+        "description": "Reactors"
+      },
+      "error": {
+        "type": "string",
+        "description": "Error"
+      },
+      "errorDescription": {
+        "type": "string",
+        "description": "Error description"
+      },
+      "errorProfile": {
+        "type": "string",
+        "description": "Error profile"
+      },
+      "url": {
+        "type": "string",
+        "description": "Url"
+      },
+      "facebookId": {
+        "type": "string",
+        "description": "Legacy identifier that can match the source post ID; do not treat it as a stable liker profile ID"
+      },
+      "facebookUrl": {
+        "type": "string",
+        "description": "Facebook post URL on which the reaction was left"
+      },
+      "inputUrl": {
+        "type": "string",
+        "description": "Input url"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name"
+      },
+      "profileUrl": {
+        "type": "string",
+        "description": "Public URL of the reacting user's Facebook profile"
+      },
+      "profilePicture": {
+        "type": "string",
+        "description": "Public profile picture URL for the reacting user"
+      },
+      "reaction": {
+        "type": "string",
+        "description": "Reaction"
+      }
+    }
+  },
+  "iterate_over": null,
+  "skip_if_empty": [
+    "startUrls"
+  ],
+  "required_inputs": [
+    "startUrls"
+  ],
+  "validation_rules": {}
+}

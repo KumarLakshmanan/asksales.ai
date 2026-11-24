@@ -1,0 +1,206 @@
+{
+  "workflow_id": "twitter_post_authors_followers",
+  "platform": "twitter_post_authors_followers",
+  "title": "Twitter Post Author Followers",
+  "description": "Search Twitter/X posts by keyword, extract post authors, then scrape followers of those authors with enriched profiles. Best for building audience lists from people following active voices in your niche. Use when you want to reach the followers of Twitter/X thought leaders or influencers who tweet about relevant topics \u2014 pre-qualified by their following behavior.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords or hashtags for searchQuery.\n- Followers of content creators in your niche are high-value prospects.\n- Keep maxTweets low (5-10) as each author generates many followers.\n- Follower profiles are enriched with full user data.",
+  "nodes": [
+    {
+      "id": "twitter_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Twitter Search",
+        "actorId": "powerai/twitter-search-scraper",
+        "actorName": "Twitter Search Scraper",
+        "description": "Search for tweets by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{searchQuery}}",
+          "maxResults": "{{maxTweets}}",
+          "searchType": "Top"
+        },
+        "output_key": "twitter_tweets",
+        "finalValues": {
+          "searchType": "Top"
+        }
+      }
+    },
+    {
+      "id": "twitter_author_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Author Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Get detailed profiles for tweet authors",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "twitterHandles": [
+            "{_current_item.screen_name}"
+          ],
+          "maxItems": 1,
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        },
+        "iterate_over": "twitter_tweets",
+        "output_key": "twitter_author_profiles",
+        "field_mapping": {
+          "twitterHandles": "screen_name"
+        }
+      }
+    },
+    {
+      "id": "twitter_followers",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Followers",
+        "actorId": "powerai/twitter-followers-scraper",
+        "actorName": "Twitter Followers Scraper",
+        "description": "Scrape followers of tweet authors",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "screenname": "{_current_item.userName}",
+          "maxResults": 20
+        },
+        "immediateEnrichment": {
+          "enabled": true,
+          "profileNodeId": "twitter_follower_profiles",
+          "usernameField": "screen_name"
+        },
+        "iterate_over": "twitter_author_profiles",
+        "output_key": "twitter_followers",
+        "field_mapping": {
+          "screenname": "userName"
+        }
+      }
+    },
+    {
+      "id": "twitter_follower_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 850
+      },
+      "data": {
+        "label": "Get Follower Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Enrich follower profiles with full user data",
+        "isProfileEnrichment": true,
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "twitterHandles": [
+            "{_current_item.screen_name}"
+          ],
+          "maxItems": 1,
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        },
+        "iterate_over": "twitter_followers",
+        "output_key": "twitter_follower_profiles",
+        "field_mapping": {
+          "twitterHandles": "screen_name"
+        }
+      }
+    },
+    {
+      "id": "db_save_followers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 850
+      },
+      "data": {
+        "label": "Save Follower Profiles",
+        "description": "Save Twitter follower profiles to leads table",
+        "iterate_over": "twitter_follower_profiles",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "name": "name",
+          "bio": "description",
+          "verified": "isVerified",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "profileId": "id",
+          "fullName": "name",
+          "twitterUsername": "userName",
+          "twitterHandle": "userName",
+          "twitterUrl": "twitterUrl",
+          "profileUrl": "twitterUrl",
+          "website": "url",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "about": "description",
+          "location": "location",
+          "followersCount": "followers",
+          "twitterFollowers": "followers",
+          "followingCount": "following",
+          "registeredAt": "createdAt",
+          "engagementType": "'follower'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_authors",
+      "source": "twitter_search",
+      "target": "twitter_author_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_authors_to_followers",
+      "source": "twitter_author_profiles",
+      "target": "twitter_followers",
+      "animated": true
+    },
+    {
+      "id": "e_followers_to_profiles",
+      "source": "twitter_followers",
+      "target": "twitter_follower_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_follower_profiles_to_db",
+      "source": "twitter_follower_profiles",
+      "target": "db_save_followers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

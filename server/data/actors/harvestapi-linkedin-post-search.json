@@ -1,0 +1,148 @@
+{
+  "actorId": "harvestapi/linkedin-post-search",
+  "title": "LinkedIn Post Search Scraper (No Cookies)",
+  "description": "Search LinkedIn posts by keywords with filters for posted date, content type, author industry, and more. Extract post content, engagement metrics, and author profiles. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "Content Discovery"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post", "description": "Post result item", "priceUsd": 0.002 },
+      { "title": "Short profile", "description": "Short profile enrichment of post author", "priceUsd": 0.002 },
+      { "title": "Main profile", "description": "Main profile enrichment of post author", "priceUsd": 0.004 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "searchQueries": {
+      "type": "array",
+      "title": "Search Queries",
+      "description": "List of search queries to find LinkedIn posts.",
+      "required": true,
+      "example": ["artificial intelligence", "digital marketing", "SaaS startup"]
+    },
+    "maxPosts": {
+      "type": "integer",
+      "title": "Maximum posts per query",
+      "description": "Maximum number of posts to scrape per each search query.",
+      "default": 10,
+      "required": false
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit",
+      "description": "Filter posts no older than X time.",
+      "enum": ["any", "1h", "24h", "week", "month", "3months", "6months", "year"],
+      "default": "month",
+      "required": false
+    },
+    "sortBy": {
+      "type": "string",
+      "title": "Sort By",
+      "description": "Sort order for search results.",
+      "enum": ["relevance", "date"],
+      "default": "relevance",
+      "required": false
+    },
+    "contentType": {
+      "type": "string",
+      "title": "Content Type",
+      "description": "Filter by content type.",
+      "enum": ["all", "videos", "images", "liveVideos", "collaborativeArticles", "documents", "jobs"],
+      "default": "all",
+      "required": false
+    },
+    "authorUrls": {
+      "type": "array",
+      "title": "Author URLs Filter",
+      "description": "Filter posts by specific author LinkedIn URLs.",
+      "required": false
+    },
+    "authorsCompanies": {
+      "type": "array",
+      "title": "Author Companies Filter",
+      "description": "Filter posts by author company names.",
+      "required": false
+    },
+    "authorsIndustryId": {
+      "type": "array",
+      "title": "Author Industry Filter",
+      "description": "Filter posts by author industry IDs.",
+      "required": false
+    },
+    "authorKeywords": {
+      "type": "array",
+      "title": "Author Keywords Filter",
+      "description": "Filter posts by author profile keywords.",
+      "required": false
+    },
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Mode for enriching post author profiles.",
+      "enum": ["short", "main"],
+      "default": "short",
+      "required": false
+    },
+    "scrapeReactions": {
+      "type": "boolean",
+      "title": "Scrape Reactions",
+      "description": "Whether to scrape post reactions.",
+      "default": false
+    },
+    "scrapeComments": {
+      "type": "boolean",
+      "title": "Scrape Comments",
+      "description": "Whether to scrape post comments.",
+      "default": false
+    }
+  },
+  "output": {
+    "content": { "type": "string", "description": "Post text content" },
+    "type": { "type": "string", "description": "Post type" },
+    "linkedinUrl": { "type": "string", "description": "Post URL on LinkedIn" },
+    "shareUrn": { "type": "string", "description": "Post share URN identifier" },
+    "entityId": { "type": "string", "description": "Post entity ID" },
+    "author": {
+      "type": "object",
+      "description": "Post author details",
+      "properties": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "type": "string",
+        "universalName": "string",
+        "info": "string",
+        "headline": "string"
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Post engagement metrics",
+      "properties": {
+        "likes": "number",
+        "comments": "number",
+        "shares": "number",
+        "reactions": [{ "type": "string", "count": "number" }]
+      }
+    },
+    "postedAt": {
+      "type": "object",
+      "description": "When the post was created",
+      "properties": {
+        "timestamp": "number",
+        "date": "string",
+        "postedAgoText": "string"
+      }
+    },
+    "postImages": {
+      "type": "array",
+      "description": "Images in the post"
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "searchQuery": "string"
+      }
+    }
+  }
+}

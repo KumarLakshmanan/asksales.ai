@@ -1,0 +1,16 @@
+flowchart TD
+  accTitle: Automation preview and execution
+  accDescr: A synthetic dry run previews matching and rendered actions without execution. Real events require an active rule and conditions, then ordered steps with recorded outcomes. Customer delivery still passes assistant and provider checks.
+  D[Synthetic dry-run input] --> P[Preview trigger, conditions and rendered actions]
+  P --> N[No action execution]
+  E[Scoped real event] --> A{Rule active and runtime allowed?}
+  A -->|No| S[No new action execution]
+  A -->|Yes| C{Conditions match?}
+  C -->|No| K[Recorded skip where applicable]
+  C -->|Yes| R[Run ordered action steps at saved revision]
+  R --> G{Customer delivery step?}
+  G -->|Yes| B[Check assistant, account and provider readiness]
+  G -->|No| X[Execute supported internal action]
+  B --> O[Record success, failure or uncertain outcome]
+  X --> O
+  O --> V[Review uncertain or partially completed runs]

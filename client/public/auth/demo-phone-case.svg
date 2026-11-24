@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 136" role="img" aria-labelledby="title">
+  <title id="title">Ocean blue phone case</title>
+  <defs>
+    <linearGradient id="backdrop" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#dbeafe"/>
+      <stop offset="1" stop-color="#7db7f6"/>
+    </linearGradient>
+    <linearGradient id="case" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4b9cf1"/>
+      <stop offset=".55" stop-color="#1d5bbd"/>
+      <stop offset="1" stop-color="#123d8f"/>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <rect width="260" height="136" rx="10" fill="url(#backdrop)"/>
+  <circle cx="24" cy="21" r="58" fill="#fff" opacity=".22"/>
+  <circle cx="237" cy="122" r="74" fill="#0c4fae" opacity=".12"/>
+  <path d="M0 99c69-23 135-9 260-55v92H0z" fill="#fff" opacity=".15"/>
+  <ellipse cx="136" cy="120" rx="51" ry="11" fill="#123d8f" opacity=".3" filter="url(#shadow)"/>
+  <g transform="translate(101 4) rotate(12 33 65)">
+    <rect x="2" y="1" width="65" height="132" rx="16" fill="#163c79"/>
+    <rect x="5" y="4" width="59" height="126" rx="14" fill="url(#case)" stroke="#9ed5ff" stroke-width="1.2"/>
+    <rect x="11" y="10" width="27" height="30" rx="8" fill="#174584"/>
+    <circle cx="20" cy="20" r="5" fill="#9bc8ea" stroke="#0d3064" stroke-width="2"/>
+    <circle cx="31" cy="20" r="5" fill="#9bc8ea" stroke="#0d3064" stroke-width="2"/>
+    <circle cx="20" cy="32" r="5" fill="#9bc8ea" stroke="#0d3064" stroke-width="2"/>
+    <path d="M15 57c15-10 34-8 45-19v66c-15 5-30 11-45 15z" fill="#a6d7ff" opacity=".16"/>
+    <circle cx="36" cy="80" r="16" fill="none" stroke="#a9dbff" stroke-width="2" opacity=".65"/>
+  </g>
+</svg>

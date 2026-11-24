@@ -1,0 +1,135 @@
+{
+  "workflow_id": "linkedin_post_search_workflow",
+  "platform": "linkedin_post_search",
+  "title": "LinkedIn Post Search",
+  "description": "Search LinkedIn posts by keywords and extract both the posts content and author profiles as leads. Best for finding thought leaders and active professionals discussing specific topics on LinkedIn. Use when you want to target people based on what they write about \u2014 these are engaged professionals who publicly share expertise in your target area.",
+  "version": "1.0",
+  "tips": "- searchQueries should be industry-specific topics related to the ICP.\n- Use authorKeywords to filter for posts by people matching the ICP roles.\n- This is ideal for CONTENT-BASED lead discovery \u2014 finding people who post about relevant topics.\n- Set maxPosts to 20-50 for good coverage without large datasets.\n- Use postedLimit: 'month' for recent, relevant posts.\n- sortBy: 'relevance' usually works best for ICP-driven searches.\n- Posts with high engagement (likes, comments) often indicate thought leaders.",
+  "nodes": [
+    {
+      "id": "linkedin_post_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Search LinkedIn Posts",
+        "actorId": "harvestapi/linkedin-post-search",
+        "actorName": "LinkedIn Post Search Scraper",
+        "description": "Search LinkedIn posts by keywords",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchQueries": "{{searchQueries}}",
+          "maxPosts": "{{maxPosts}}",
+          "postedLimit": "month",
+          "sortBy": "relevance",
+          "profileScraperMode": "short"
+        },
+        "output_key": "linkedin_searched_posts",
+        "finalValues": {
+          "postedLimit": "month",
+          "sortBy": "relevance",
+          "contentType": "all",
+          "profileScraperMode": "short",
+          "scrapeReactions": false,
+          "scrapeComments": false
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save LinkedIn Posts",
+        "description": "Save searched LinkedIn posts to posts table",
+        "iterate_over": "linkedin_searched_posts",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "post_id": "entityId",
+          "postId": "entityId",
+          "content": "content",
+          "text": "content",
+          "url": "linkedinUrl",
+          "postUrl": "linkedinUrl",
+          "author_handle": "author.universalName",
+          "authorName": "author.name",
+          "authorUsername": "author.universalName",
+          "authorProfileUrl": "author.linkedinUrl",
+          "likes_count": "engagement.likes",
+          "likesCount": "engagement.likes",
+          "comments_count": "engagement.comments",
+          "shares_count": "engagement.shares",
+          "posted_at": "postedAt.date",
+          "createdAt": "postedAt.date",
+          "source": "'linkedin'",
+          "mediaUrls": "postImages"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_post_authors",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Post Authors",
+        "description": "Save LinkedIn post authors to leads table",
+        "iterate_over": "linkedin_searched_posts",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'post_author'",
+          "fullName": "author.name",
+          "name": "author.name",
+          "linkedinUrl": "author.linkedinUrl",
+          "profileUrl": "author.linkedinUrl",
+          "profilePicture": "author.avatar.url",
+          "headline": "author.info",
+          "title": "author.info",
+          "publicId": "author.universalName",
+          "linkedinUsername": "author.universalName",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_posts",
+      "source": "linkedin_post_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_authors",
+      "source": "linkedin_post_search",
+      "target": "db_save_post_authors",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_authors",
+      "source": "db_save_posts",
+      "target": "db_save_post_authors",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

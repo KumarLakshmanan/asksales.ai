@@ -1,0 +1,54 @@
+{
+  "$schema": "./greetings.schema.json",
+  "_comment": "Phase 7.4 / LANG-004: centralised conversational-phrase list. Edit here, not in code. The list is intentionally duplicated across locales — translations are not 1:1, and a phrase that is conversational in English may not be in Hindi (e.g. 'ji'). Add or remove entries freely; the loader re-builds the regex on first import.",
+  "locales": {
+    "en": {
+      "conversationalPhrases": [
+        "hi", "hello", "hey", "howdy", "sup",
+        "good morning", "good afternoon", "good evening", "good night",
+        "thanks", "thank you", "thank you so much", "thanks a lot",
+        "ok", "okay", "great", "cool", "got it", "sure", "alright", "sounds good",
+        "perfect", "nice", "awesome", "understood", "noted",
+        "what's up", "how are you", "how's it going",
+        "yo", "cheers", "sounds great", "that's great", "that's correct",
+        "yes please", "no thanks", "not yet", "maybe later", "later",
+        "no worries", "np", "nah", "yep", "yup", "yeah", "nope",
+        "absolutely", "definitely", "exactly", "right", "correct", "agreed",
+        "lol", "haha", "hmm", "interesting", "wow", "oh", "ah", "good", "fine",
+        "well done", "congrats", "congratulations", "nice work", "good job",
+        "you're welcome", "no problem", "my pleasure",
+        "take care", "bye", "goodbye", "see you", "talk later", "ttyl"
+      ],
+      "taskKeywords": [
+        "create", "generate", "find", "search", "send", "publish", "run", "launch",
+        "build", "write", "design", "scrape",
+        "leads", "lead",
+        "email", "sms", "campaign", "outreach",
+        "ads", "ad", "content", "post", "image", "video", "template",
+        "icp", "workflow", "schedule", "analytics", "metrics", "budget"
+      ]
+    },
+    "hi": {
+      "_comment": "Hindi / Hinglish conversational openers. The set is intentionally smaller than English — add more as needed. 'Ji' is a common respectful conversational opener in Hindi.",
+      "conversationalPhrases": [
+        "hi", "hello", "hey", "namaste", "namaskar",
+        "shubh prabhat", "shubh sandhya", "shubh ratri",
+        "dhanyavaad", "shukriya", "thanks", "thank you",
+        "theek hai", "thik hai", "ok", "okay", "acha", "accha",
+        "samajh gaya", "samajh gayi", "got it", "understood",
+        "haan", "han", "yes", "ji", "nahi", "na",
+        "kaise ho", "kaisi ho", "kya haal", "what's up",
+        "alvida", "bye", "phir milenge", "take care"
+      ],
+      "taskKeywords": [
+        "banao", "bana", "create", "generate", "khoj", "search",
+        "bhejo", "send", "chalao", "run", "launch",
+        "leads", "lead", "email", "sms", "campaign",
+        "post", "content", "ad", "ads", "image", "video"
+      ]
+    }
+  },
+  "defaults": {
+    "maxShortMessageLength": 120
+  }
+}

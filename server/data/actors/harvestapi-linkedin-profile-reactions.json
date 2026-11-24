@@ -1,0 +1,75 @@
+{
+  "actorId": "harvestapi/linkedin-profile-reactions",
+  "title": "LinkedIn Profile Reactions Scraper (No Cookies)",
+  "description": "Extract reactions (likes, appreciations, etc.) made by LinkedIn profiles. Discover what content a person engages with. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "Engagement Analysis"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Reaction", "description": "Reaction result item", "priceUsd": 0.002 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "profiles": {
+      "type": "array",
+      "title": "Profile URLs",
+      "description": "List of LinkedIn profile URLs to scrape reactions from.",
+      "required": true,
+      "example": ["https://www.linkedin.com/in/satyanadella/", "https://www.linkedin.com/in/billgates/"]
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum reactions per profile",
+      "description": "Maximum number of reactions to scrape per each profile.",
+      "default": 20,
+      "required": false
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit",
+      "description": "Fetch reactions no older than X time.",
+      "enum": ["any", "24h", "week", "month", "3months", "6months", "year"],
+      "default": "month",
+      "required": false
+    }
+  },
+  "output": {
+    "reactionType": { "type": "string", "description": "Type of reaction (LIKE, PRAISE, etc.)" },
+    "postContent": { "type": "string", "description": "Content of the reacted post" },
+    "postUrl": { "type": "string", "description": "URL of the reacted post" },
+    "postAuthor": {
+      "type": "object",
+      "description": "Author of the reacted post",
+      "properties": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "headline": "string"
+      }
+    },
+    "postedAt": {
+      "type": "object",
+      "description": "When the post was originally created",
+      "properties": {
+        "timestamp": "number",
+        "date": "string"
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Post engagement metrics",
+      "properties": {
+        "likes": "number",
+        "comments": "number",
+        "shares": "number"
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "profile": "string"
+      }
+    }
+  }
+}

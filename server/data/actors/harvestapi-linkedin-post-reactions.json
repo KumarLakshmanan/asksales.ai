@@ -1,0 +1,73 @@
+{
+  "actorId": "harvestapi/linkedin-post-reactions",
+  "title": "LinkedIn Post Reactions Scraper (No Cookies)",
+  "description": "Extract LinkedIn post social activities and reactions such as likes, appreciations, etc. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post reaction result", "description": "Post reaction item", "priceUsd": 0.002 },
+      { "title": "Main profile details", "description": "Enrich reaction with main profile details", "priceUsd": 0.002 },
+      { "title": "Full profile details", "description": "Enrich reaction with full profile details", "priceUsd": 0.004 },
+      { "title": "Full profile details + email search", "description": "Enrich with full profile + email search", "priceUsd": 0.01 }
+    ]
+  },
+  "input": {
+    "posts": {
+      "type": "array",
+      "title": "Post URLs",
+      "description": "List of LinkedIn post URLs to scrape reactions from.",
+      "required": true,
+      "example": [
+        "https://www.linkedin.com/posts/microsoft-events_microsoft-build-has-arrived-in-seattle-and-ugcPost-7329991434395160578-GnK7",
+        "https://www.linkedin.com/feed/update/urn:li:activity:7320867199693246465/"
+      ]
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum reactions per post",
+      "description": "Maximum number of reactions to scrape per each post.",
+      "default": 20,
+      "required": false
+    },
+    "reactionTypes": {
+      "type": "array",
+      "title": "Reaction Types Filter",
+      "description": "Filter reactions by type.",
+      "enum": ["LIKE", "PRAISE", "APPRECIATION", "EMPATHY", "INTEREST", "ENTERTAINMENT", "MAYBE"],
+      "required": false
+    },
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Mode for enriching reactor profiles.",
+      "enum": ["short", "main", "full", "full + email search"],
+      "default": "short"
+    }
+  },
+  "output": {
+    "reactionType": { "type": "string", "description": "Type of reaction (LIKE, PRAISE, etc.)" },
+    "id": { "type": "string", "description": "Reaction record ID" },
+    "postId": { "type": "string", "description": "Parent post ID" },
+    "actor": {
+      "type": "object",
+      "description": "Reactor details",
+      "properties": {
+        "id": "string",
+        "name": "string",
+        "linkedinUrl": "string",
+        "pictureUrl": "string",
+        "position": "string",
+        "type": "string",
+        "publicIdentifier": "string"
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "post": "string"
+      }
+    }
+  }
+}

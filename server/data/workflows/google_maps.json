@@ -1,0 +1,418 @@
+{
+  "workflow_id": "google_maps_b2b",
+  "platform": "google_maps",
+  "title": "Google Maps Business Search",
+  "description": "Discover local businesses through Google Maps geographic search and business listings. Best for B2B local lead generation \u2014 find businesses by type and location (e.g., 'dentists in Chicago' or 'restaurants in Mumbai'). Captures business name, address, phone number, website, ratings, reviews, and hours. Use when targeting brick-and-mortar businesses or service providers in specific geographic areas.",
+  "version": "2.0",
+  "tips": "- searchStringsArray items should be \"<business category> in <city/region>\" format for best results.\n- locationQuery should match the target city/region from the ICP.\n- Keep maxCrawledPlacesPerSearch between 10-50 for reasonable results.\n- MULTIPLE SEARCHES: When the ICP targets 3 or more distinct business categories, generate MULTIPLE search inputs wrapped in a \"searches\" array. Split by business category so each search is focused and produces clean results.\n- For 1-2 categories, return a single flat JSON object without the \"searches\" wrapper.",
+  "nodes": [
+    {
+      "id": "google_maps_search",
+      "type": "actor",
+      "position": {
+        "x": -368.24375,
+        "y": 474.5
+      },
+      "data": {
+        "label": "Google Maps Places Search",
+        "actorId": "compass/crawler-google-places",
+        "actorName": "Google Maps Scraper",
+        "description": "Scrape business data from Google Maps",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "startUrls": "{{startUrls}}",
+          "maxCrawledPlacesPerSearch": "{{maxCrawledPlacesPerSearch}}"
+        },
+        "output_key": "google_maps_businesses",
+        "finalValues": {
+          "language": "en",
+          "skipClosedPlaces": false,
+          "placeMinimumStars": "",
+          "scrapePlaceDetailPage": false,
+          "maxReviews": 0,
+          "maxImages": 0,
+          "scrapeContacts": false,
+          "scrapeSocialMediaProfiles": {
+            "facebooks": false,
+            "instagrams": false,
+            "youtubes": false,
+            "tiktoks": false,
+            "twitters": false
+          },
+          "searchMatching": "all",
+          "website": "allPlaces",
+          "maximumLeadsEnrichmentRecords": 0,
+          "leadsEnrichmentDepartments": []
+        }
+      },
+      "width": 847,
+      "height": 132,
+      "selected": true,
+      "positionAbsolute": {
+        "x": -368.24375,
+        "y": 474.5
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1763640406564",
+      "type": "saveToLeads",
+      "position": {
+        "x": 587.3563915567516,
+        "y": 517.2812802633325
+      },
+      "data": {
+        "label": "Save Google Maps Businesses",
+        "description": "Save Google Maps business data to leads table",
+        "iterate_over": "google_maps_businesses",
+        "field_mapping": {
+          "platform": "'google_maps'",
+          "source": "'google_maps'",
+          "leadType": "'local_business'",
+          "platformType": "'google_maps'",
+          "engagementType": "'search'",
+          "fullName": "name",
+          "companyName": "name",
+          "company": "name",
+          "phone": "phone",
+          "email": "email",
+          "website": "website",
+          "address": "address",
+          "bio": "description",
+          "about": "description",
+          "profileUrl": "url",
+          "photo": "imageUrl",
+          "placeId": "placeId",
+          "rating": "rating",
+          "reviewCount": "reviewCount",
+          "categories": "categories",
+          "industry": "categoryName",
+          "latitude": "location.lat",
+          "longitude": "location.lng",
+          "permanentlyClosed": "permanentlyClosed",
+          "temporarilyClosed": "temporarilyClosed",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "status": "idle",
+        "nodeId": "save-to-leads"
+      },
+      "width": 200,
+      "height": 116,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 587.3563915567516,
+        "y": 517.2812802633325
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "google_maps_search",
+      "sourceHandle": null,
+      "target": "node-1763640406564",
+      "targetHandle": null,
+      "id": "reactflow__edge-google_maps_search-node-1763640406564",
+      "selected": false
+    }
+  ],
+  "mappings": [
+    {
+      "sourceNodeId": "google_maps_search",
+      "targetNodeId": "node-1763640406564",
+      "fieldMappings": [
+        {
+          "id": "mapping_google_maps_platform",
+          "sourceFieldPath": "'google_maps'",
+          "targetFieldPath": "platform",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_google_maps_source",
+          "sourceFieldPath": "'google_maps'",
+          "targetFieldPath": "source",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_local_business_lead_type",
+          "sourceFieldPath": "'local_business'",
+          "targetFieldPath": "lead_type",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_name",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "name",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_company",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "company",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_phone_phone",
+          "sourceFieldPath": "phone",
+          "targetFieldPath": "phone",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_email_email",
+          "sourceFieldPath": "email",
+          "targetFieldPath": "email",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_website_website",
+          "sourceFieldPath": "website",
+          "targetFieldPath": "website",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_address_address",
+          "sourceFieldPath": "address",
+          "targetFieldPath": "address",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_description_bio",
+          "sourceFieldPath": "description",
+          "targetFieldPath": "bio",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_url_profile_url",
+          "sourceFieldPath": "url",
+          "targetFieldPath": "profile_url",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_placeId_placeId",
+          "sourceFieldPath": "placeId",
+          "targetFieldPath": "placeId",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_rating_rating",
+          "sourceFieldPath": "rating",
+          "targetFieldPath": "rating",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_reviewCount_reviewCount",
+          "sourceFieldPath": "reviewCount",
+          "targetFieldPath": "reviewCount",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_category_categories",
+          "sourceFieldPath": "category",
+          "targetFieldPath": "categories",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_location_lat_latitude",
+          "sourceFieldPath": "location.lat",
+          "targetFieldPath": "latitude",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_location_lng_longitude",
+          "sourceFieldPath": "location.lng",
+          "targetFieldPath": "longitude",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_url_googleUrl",
+          "sourceFieldPath": "url",
+          "targetFieldPath": "googleUrl",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_imageUrl_imageUrl",
+          "sourceFieldPath": "imageUrl",
+          "targetFieldPath": "imageUrl",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_plusCode_plusCode",
+          "sourceFieldPath": "plusCode",
+          "targetFieldPath": "plusCode",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_permanentlyClosed_permanentlyClosed",
+          "sourceFieldPath": "permanentlyClosed",
+          "targetFieldPath": "permanentlyClosed",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_temporarilyClosed_temporarilyClosed",
+          "sourceFieldPath": "temporarilyClosed",
+          "targetFieldPath": "temporarilyClosed",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_uncontacted_status",
+          "sourceFieldPath": "'uncontacted'",
+          "targetFieldPath": "status",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_0_score",
+          "sourceFieldPath": "0",
+          "targetFieldPath": "score",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_local_business_leadType",
+          "sourceFieldPath": "'local_business'",
+          "targetFieldPath": "leadType",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_google_maps_platformType",
+          "sourceFieldPath": "'google_maps'",
+          "targetFieldPath": "platformType",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_fullName",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "fullName",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_name_companyName",
+          "sourceFieldPath": "name",
+          "targetFieldPath": "companyName",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_url_profileUrl",
+          "sourceFieldPath": "url",
+          "targetFieldPath": "profileUrl",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_imageUrl_photo",
+          "sourceFieldPath": "imageUrl",
+          "targetFieldPath": "photo",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        },
+        {
+          "id": "mapping_description_about",
+          "sourceFieldPath": "description",
+          "targetFieldPath": "about",
+          "transformationType": "direct",
+          "transformationLogic": null,
+          "errorStrategy": "skip",
+          "defaultValue": null
+        }
+      ],
+      "arrayIterationConfig": {
+        "sourceArrayPath": "$.google_maps_businesses",
+        "iterationMode": "sequential",
+        "batchSize": null,
+        "itemReferenceVariable": "_current_item"
+      }
+    }
+  ],
+  "updatedAt": "2025-11-21T04:06:06.477Z"
+}

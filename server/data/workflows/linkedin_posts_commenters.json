@@ -1,0 +1,205 @@
+{
+  "workflow_id": "linkedin_posts_commenters",
+  "platform": "linkedin_posts_commenters",
+  "title": "LinkedIn Post Commenters by Profile",
+  "description": "Search LinkedIn profiles, scrape their recent posts, then extract people who commented on those posts. Best for finding engaged professionals in a specific community through conversation analysis. Use when you want highly qualified leads \u2014 people who take time to comment on LinkedIn posts demonstrate genuine interest and expertise in the topic.",
+  "version": "1.0",
+  "tips": "- Commenters show strong engagement intent \u2014 they took the time to write.\n- Use specific job titles and locations for targeted profiles.\n- Set maxPosts to 3-5 to balance depth with API usage.\n- Great for finding people actively discussing topics in your niche.",
+  "nodes": [
+    {
+      "id": "linkedin_profile_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "LinkedIn Profile Search",
+        "actorId": "harvestapi/linkedin-profile-search",
+        "actorName": "LinkedIn Profile Search",
+        "description": "Search LinkedIn profiles by keywords, job titles, and locations",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchQuery": "{{searchQuery}}",
+          "maxItems": "{{maxItems}}",
+          "locations": "{{locations}}",
+          "currentJobTitles": "{{currentJobTitles}}"
+        },
+        "output_key": "linkedin_profiles",
+        "finalValues": {
+          "startPage": 1,
+          "autoQuerySegmentation": false,
+          "profileDeduplicationMode": "off",
+          "recentlyChangedJobs": false
+        }
+      }
+    },
+    {
+      "id": "linkedin_profile_posts",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Profile Posts",
+        "actorId": "harvestapi/linkedin-profile-posts",
+        "actorName": "LinkedIn Profile Posts",
+        "description": "Extract recent posts from LinkedIn profiles",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "targetUrls": [
+            "{_current_item.linkedinUrl}"
+          ],
+          "maxPosts": 5,
+          "postedLimit": "month"
+        },
+        "iterate_over": "linkedin_profiles",
+        "output_key": "linkedin_posts",
+        "field_mapping": {
+          "targetUrls": "linkedinUrl"
+        }
+      }
+    },
+    {
+      "id": "linkedin_post_comments",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Post Comments",
+        "actorId": "harvestapi/linkedin-post-comments",
+        "actorName": "LinkedIn Post Comments",
+        "description": "Extract commenters from LinkedIn posts",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "posts": [
+            "{_current_item.linkedinUrl}"
+          ],
+          "maxItems": 20,
+          "profileScraperMode": "main"
+        },
+        "iterate_over": "linkedin_posts",
+        "output_key": "linkedin_post_comments",
+        "field_mapping": {
+          "posts": "linkedinUrl"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save LinkedIn Posts",
+        "description": "Save LinkedIn posts to posts table",
+        "iterate_over": "linkedin_posts",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "post_id": "entityId",
+          "postId": "entityId",
+          "content": "content",
+          "text": "content",
+          "url": "linkedinUrl",
+          "postUrl": "linkedinUrl",
+          "author_handle": "author.universalName",
+          "authorName": "author.name",
+          "authorUsername": "author.universalName",
+          "authorProfileUrl": "author.linkedinUrl",
+          "likes_count": "engagement.likes",
+          "likesCount": "engagement.likes",
+          "comments_count": "engagement.comments",
+          "shares_count": "engagement.shares",
+          "posted_at": "postedAt.date",
+          "createdAt": "postedAt.date",
+          "source": "'linkedin'",
+          "mediaUrls": "postImages"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_commenters",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Commenters",
+        "description": "Save LinkedIn post commenters to leads table",
+        "iterate_over": "linkedin_post_comments",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'commenter'",
+          "fullName": "actor.name",
+          "name": "actor.name",
+          "linkedinUrl": "actor.linkedinUrl",
+          "profileUrl": "actor.linkedinUrl",
+          "headline": "actor.position",
+          "title": "actor.position",
+          "photo": "actor.pictureUrl",
+          "profilePicture": "actor.pictureUrl",
+          "profileId": "actor.id",
+          "publicId": "actor.publicIdentifier",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_posts",
+      "source": "linkedin_profile_search",
+      "target": "linkedin_profile_posts",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_comments",
+      "source": "linkedin_profile_posts",
+      "target": "linkedin_post_comments",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_save",
+      "source": "linkedin_profile_posts",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_comments_to_save",
+      "source": "linkedin_post_comments",
+      "target": "db_save_commenters",
+      "animated": true
+    },
+    {
+      "id": "e_saved_posts_to_commenters",
+      "source": "db_save_posts",
+      "target": "db_save_commenters",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

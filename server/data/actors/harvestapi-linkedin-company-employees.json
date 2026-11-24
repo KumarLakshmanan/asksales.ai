@@ -1,0 +1,174 @@
+{
+  "actorId": "harvestapi/linkedin-company-employees",
+  "title": "LinkedIn Company Employees Scraper (No Cookies)",
+  "description": "Extract employees from LinkedIn company pages with filters for job titles, seniority, locations, and more. Supports short, full, and full + email search modes. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "B2B"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Short profile", "description": "Short employee profile result", "priceUsd": 0.004 },
+      { "title": "Full profile", "description": "Full employee profile result", "priceUsd": 0.008 },
+      { "title": "Full + email search", "description": "Full profile with email search", "priceUsd": 0.012 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "companies": {
+      "type": "array",
+      "title": "Company LinkedIn URLs",
+      "description": "List of LinkedIn company URLs to extract employees from.",
+      "required": true,
+      "example": ["https://www.linkedin.com/company/google", "https://www.linkedin.com/company/microsoft"]
+    },
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Choose the mode for scraping employee profiles.",
+      "enum": ["Short ($4 per 1k)", "Full ($8 per 1k)", "Full + email search ($12 per 1k)"],
+      "default": "Short ($4 per 1k)"
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum employees to scrape",
+      "description": "Maximum number of employees to scrape total.",
+      "default": 25,
+      "required": false
+    },
+    "maxItemsPerCompany": {
+      "type": "integer",
+      "title": "Maximum employees per company",
+      "description": "Maximum number of employees to scrape per each company.",
+      "required": false
+    },
+    "searchQuery": {
+      "type": "string",
+      "title": "Search query (fuzzy search)",
+      "description": "Query to search within company employees (e.g., 'Marketing Manager', 'Engineer').",
+      "required": false
+    },
+    "locations": {
+      "type": "array",
+      "title": "Locations Filter",
+      "description": "Filter employees by LinkedIn locations.",
+      "required": false,
+      "example": ["San Francisco", "United Kingdom"]
+    },
+    "jobTitles": {
+      "type": "array",
+      "title": "Current Job Titles Filter",
+      "description": "Filter employees by current job titles.",
+      "required": false,
+      "example": ["Software Engineer", "Product Manager"]
+    },
+    "pastJobTitles": {
+      "type": "array",
+      "title": "Past Job Titles Filter",
+      "description": "Filter employees by past job titles.",
+      "required": false
+    },
+    "seniorityLevelIds": {
+      "type": "array",
+      "title": "Seniority Level Filter",
+      "description": "Filter by seniority level IDs. 100=In Training, 110=Entry Level, 120=Senior, 130=Strategic, 200=Entry Level Manager, 210=Experienced Manager, 220=Director, 300=Vice President, 310=CXO, 320=Owner/Partner.",
+      "required": false,
+      "example": ["220", "300", "310"]
+    },
+    "industryIds": {
+      "type": "array",
+      "title": "Industry IDs Filter",
+      "description": "Filter employees by LinkedIn industry IDs.",
+      "required": false
+    },
+    "functionIds": {
+      "type": "array",
+      "title": "Function Filter",
+      "description": "Filter by job function IDs.",
+      "required": false
+    },
+    "yearsOfExperienceIds": {
+      "type": "array",
+      "title": "Years of Experience Filter",
+      "description": "Filter by years of experience. 1=<1yr, 2=1-2yr, 3=3-5yr, 4=6-10yr, 5=10+yr.",
+      "required": false
+    },
+    "yearsAtCurrentCompanyIds": {
+      "type": "array",
+      "title": "Years at Current Company Filter",
+      "description": "Filter by years at current company. 1=<1yr, 2=1-2yr, 3=3-5yr, 4=6-10yr, 5=10+yr.",
+      "required": false
+    },
+    "companyHeadcount": {
+      "type": "array",
+      "title": "Company Headcount Filter",
+      "description": "Filter by company size. B=1-10, C=11-50, D=51-200, E=201-500, F=501-1000, G=1001-5000, H=5001-10000, I=10001+.",
+      "required": false
+    },
+    "startPage": {
+      "type": "integer",
+      "title": "Start Page",
+      "description": "Page number to start scraping from.",
+      "default": 1
+    },
+    "takePages": {
+      "type": "integer",
+      "title": "Pages to scrape",
+      "description": "Number of search pages to scrape (25 employees per page).",
+      "required": false
+    }
+  },
+  "output": {
+    "firstName": { "type": "string", "description": "Employee first name" },
+    "lastName": { "type": "string", "description": "Employee last name" },
+    "linkedinUrl": { "type": "string", "description": "Employee LinkedIn profile URL" },
+    "publicIdentifier": { "type": "string", "description": "LinkedIn public identifier" },
+    "headline": { "type": "string", "description": "Profile headline" },
+    "location": {
+      "type": "object",
+      "description": "Employee location",
+      "properties": {
+        "linkedinText": "string",
+        "parsed": {
+          "text": "string",
+          "city": "string",
+          "state": "string",
+          "country": "string",
+          "countryFull": "string"
+        }
+      }
+    },
+    "email": { "type": "string|null", "description": "Employee email (if Full + email search mode)" },
+    "about": { "type": "string", "description": "Profile about section" },
+    "experience": {
+      "type": "array",
+      "description": "Work experience",
+      "items": {
+        "position": "string",
+        "companyName": "string",
+        "companyLinkedinUrl": "string",
+        "startDate": "string",
+        "endDate": "string|null"
+      }
+    },
+    "education": {
+      "type": "array",
+      "description": "Education history",
+      "items": {
+        "school": "string",
+        "degree": "string",
+        "fieldOfStudy": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Listed skills",
+      "items": "string"
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "company": "string"
+      }
+    }
+  }
+}

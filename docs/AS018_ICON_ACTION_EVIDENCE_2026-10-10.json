@@ -1,0 +1,198 @@
+{
+  "baseSha": "ab4d082821f9007bc24c94137471413fff389a46",
+  "branch": "codex/asksales-as018-20261010",
+  "scope": "Local standalone production build; all API and application WebSocket traffic mocked; synthetic records only",
+  "chromium": "151.0.7922.173",
+  "viewports": {
+    "desktop-chromium": {
+      "width": 1440,
+      "height": 900
+    },
+    "mobile-chromium": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "stats": {
+    "startTime": "2026-10-10T07:55:23.658Z",
+    "duration": 73749.041,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "AS018 campaign grid: contextual names, keyboard safeguards, cancellation and synthetic confirmation",
+      "project": "desktop-chromium",
+      "status": "passed",
+      "durationMs": 7257,
+      "requestCheckpoints": [
+        {
+          "name": "campaign-grid-cancelled-fixture-requests",
+          "requests": {
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "campaign-grid-mock-confirmed-fixture-requests",
+          "requests": {
+            "deleted": [
+              911
+            ],
+            "saved": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": [
+        "- alertdialog \"Delete Campaign\":\n  - heading \"Delete Campaign\" [level=2]\n  - paragraph: Are you sure you want to delete Synthetic campaign with a very long full title that must survive visual truncation and remain available to assistive technology (ID 901)? This action cannot be undone.\n  - button \"Cancel\"\n  - button \"Delete\""
+      ]
+    },
+    {
+      "title": "AS018 campaign list: contextual names, keyboard safeguards, cancellation and synthetic confirmation",
+      "project": "desktop-chromium",
+      "status": "passed",
+      "durationMs": 5637,
+      "requestCheckpoints": [
+        {
+          "name": "campaign-list-cancelled-fixture-requests",
+          "requests": {
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "campaign-list-mock-confirmed-fixture-requests",
+          "requests": {
+            "deleted": [
+              911
+            ],
+            "saved": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": [
+        "- alertdialog \"Delete Campaign\":\n  - heading \"Delete Campaign\" [level=2]\n  - paragraph: Are you sure you want to delete Synthetic campaign with a very long full title that must survive visual truncation and remain available to assistive technology (ID 901)? This action cannot be undone.\n  - button \"Cancel\"\n  - button \"Delete\""
+      ]
+    },
+    {
+      "title": "AS018 hotel: all states named, keyboard cancellation/focus, filter/tab reset and mocked validated Save",
+      "project": "desktop-chromium",
+      "status": "passed",
+      "durationMs": 31144,
+      "requestCheckpoints": [
+        {
+          "name": "room-cancelled-fixture-requests",
+          "requests": {
+            "saved": [],
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "room-mock-saved-fixture-requests",
+          "requests": {
+            "saved": [
+              {
+                "id": 803,
+                "name": "Saved synthetic room"
+              }
+            ],
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": []
+    },
+    {
+      "title": "AS018 campaign grid: contextual names, keyboard safeguards, cancellation and synthetic confirmation",
+      "project": "mobile-chromium",
+      "status": "passed",
+      "durationMs": 5350,
+      "requestCheckpoints": [
+        {
+          "name": "campaign-grid-cancelled-fixture-requests",
+          "requests": {
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "campaign-grid-mock-confirmed-fixture-requests",
+          "requests": {
+            "deleted": [
+              911
+            ],
+            "saved": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": [
+        "- alertdialog \"Delete Campaign\":\n  - heading \"Delete Campaign\" [level=2]\n  - paragraph: Are you sure you want to delete Synthetic campaign with a very long full title that must survive visual truncation and remain available to assistive technology (ID 901)? This action cannot be undone.\n  - button \"Cancel\"\n  - button \"Delete\""
+      ]
+    },
+    {
+      "title": "AS018 campaign list: contextual names, keyboard safeguards, cancellation and synthetic confirmation",
+      "project": "mobile-chromium",
+      "status": "passed",
+      "durationMs": 4643,
+      "requestCheckpoints": [
+        {
+          "name": "campaign-list-cancelled-fixture-requests",
+          "requests": {
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "campaign-list-mock-confirmed-fixture-requests",
+          "requests": {
+            "deleted": [
+              911
+            ],
+            "saved": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": [
+        "- alertdialog \"Delete Campaign\":\n  - heading \"Delete Campaign\" [level=2]\n  - paragraph: Are you sure you want to delete Synthetic campaign with a very long full title that must survive visual truncation and remain available to assistive technology (ID 901)? This action cannot be undone.\n  - button \"Cancel\"\n  - button \"Delete\""
+      ]
+    },
+    {
+      "title": "AS018 hotel: all states named, keyboard cancellation/focus, filter/tab reset and mocked validated Save",
+      "project": "mobile-chromium",
+      "status": "passed",
+      "durationMs": 16202,
+      "requestCheckpoints": [
+        {
+          "name": "room-cancelled-fixture-requests",
+          "requests": {
+            "saved": [],
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        },
+        {
+          "name": "room-mock-saved-fixture-requests",
+          "requests": {
+            "saved": [
+              {
+                "id": 803,
+                "name": "Saved synthetic room"
+              }
+            ],
+            "deleted": [],
+            "unexpectedWrites": []
+          }
+        }
+      ],
+      "dialogSnapshots": []
+    }
+  ]
+}

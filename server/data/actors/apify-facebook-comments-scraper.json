@@ -1,0 +1,232 @@
+{
+  "id": "apify/facebook-comments-scraper",
+  "name": "Facebook Comments Scraper",
+  "description": "Extract data from hundreds of Facebook comments from one or multiple Facebook posts. Get comment text, timestamp, likes count and basic commenter info. Download the data in JSON, CSV, Excel and use it in apps, spreadsheets, and reports.",
+  "inputSchema": {
+    "title": "Input schema for the empty project actor.",
+    "description": "This scraper will get comments from a Facebook post of your choice. To try it out, just paste one or multiple Facebook post URLs and click ▷ Start. If you need any guidance, just <a href='https://blog.apify.com/scrape-facebook-comments-data/' target='_blank' rel='noopener'>follow this tutorial</a>.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "startUrls": {
+        "title": "Facebook URLs",
+        "type": "array",
+        "description": "Valid facebook URL",
+        "editor": "requestListSources",
+        "prefill": [
+          {
+            "url": "https://www.facebook.com/humansofnewyork/posts/pfbid0BbKbkisExKGSKuhee9a7i86RwRuMKFC8NSkKStB7CsM3uXJuAAfZLrkcJMXxhH4Yl"
+          }
+        ]
+      },
+      "resultsLimit": {
+        "title": "Results amount",
+        "type": "integer",
+        "description": "If this limit is not set as many results as possible are returned",
+        "editor": "number",
+        "prefill": 50,
+        "minimum": 1
+      },
+      "includeNestedComments": {
+        "title": "Include comment replies",
+        "description": "If checked, the actor will return up to 3 levels of comments/replies for each post. Note that each reply/comment will be returned as a separate result.",
+        "default": false,
+        "type": "boolean",
+        "editor": "checkbox"
+      },
+      "viewOption": {
+        "title": "Comments mode",
+        "description": "Choose the way the comments are sorted",
+        "type": "string",
+        "default": "RANKED_UNFILTERED",
+        "editor": "select",
+        "enum": [
+          "RANKED_THREADED",
+          "RECENT_ACTIVITY",
+          "RANKED_UNFILTERED"
+        ],
+        "enumTitles": [
+          "Most relevant",
+          "Newest",
+          "All"
+        ]
+      },
+      "onlyCommentsNewerThan": {
+        "title": "📅 Extract comments that are newer than",
+        "type": "string",
+        "description": "Limit how far back to the history the scraper should go. The date should be in YYYY-MM-DD or full ISO absolute format or in relative format e.g. 1 year, 2 months, 3 days, 4 hours, or 5 minutes. All time values are taken in UTC timezone. This <a href='https://apify.com/apify/facebook-comments-scraper/pricing' target='_blank' rel='noopener'>add-on feature</a> is billed separately.",
+        "dateType": "absoluteOrRelative",
+        "editor": "datepicker",
+        "sectionCaption": "Time frame",
+        "sectionDescription": "Use this if you only want to scrape comments from a specific period of time.",
+        "pattern": "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])(T[0-2]\\d:[0-5]\\d(:[0-5]\\d)?(\\.\\d+)?Z?)?$|^(\\d+)\\s*(minute|hour|day|week|month|year)s?$"
+      }
+    },
+    "required": [
+      "startUrls"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "attachments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action_links": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "is_playable": {
+              "type": "boolean"
+            }
+          }
+        },
+        "description": "Attachments"
+      },
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "is_playable": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "commentsCount": {
+              "type": "number"
+            },
+            "threadingDepth": {
+              "type": "number"
+            },
+            "commentUrl": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "feedbackId": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "likesCount": {
+              "type": "string"
+            },
+            "profileId": {
+              "type": "string"
+            },
+            "profileName": {
+              "type": "string"
+            },
+            "profilePicture": {
+              "type": "string"
+            },
+            "profileUrl": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Comments"
+      },
+      "commentsCount": {
+        "type": "number",
+        "description": "Comments count"
+      },
+      "threadingDepth": {
+        "type": "number",
+        "description": "Threading depth"
+      },
+      "commentUrl": {
+        "type": "string",
+        "description": "Comment url"
+      },
+      "date": {
+        "type": "string",
+        "description": "Date"
+      },
+      "facebookId": {
+        "type": "string",
+        "description": "Facebook id"
+      },
+      "facebookUrl": {
+        "type": "string",
+        "description": "Facebook url"
+      },
+      "feedbackId": {
+        "type": "string",
+        "description": "Feedback id"
+      },
+      "groupTitle": {
+        "type": "string",
+        "description": "Group title"
+      },
+      "id": {
+        "type": "string",
+        "description": "Id"
+      },
+      "inputUrl": {
+        "type": "string",
+        "description": "Input url"
+      },
+      "likesCount": {
+        "type": "string",
+        "description": "Likes count"
+      },
+      "postTitle": {
+        "type": "string",
+        "description": "Post title"
+      },
+      "profileId": {
+        "type": "string",
+        "description": "Profile id"
+      },
+      "profileName": {
+        "type": "string",
+        "description": "Profile name"
+      },
+      "profilePicture": {
+        "type": "string",
+        "description": "Profile picture"
+      },
+      "profileUrl": {
+        "type": "string",
+        "description": "Profile url"
+      },
+      "replyToCommentId": {
+        "type": "string",
+        "description": "Reply to comment id"
+      },
+      "text": {
+        "type": "string",
+        "description": "Text"
+      },
+      "commentId": {
+        "type": "string",
+        "description": "Comment id"
+      }
+    }
+  },
+  "iterate_over": null,
+  "skip_if_empty": [
+    "startUrls"
+  ],
+  "required_inputs": [
+    "startUrls"
+  ],
+  "validation_rules": {}
+}

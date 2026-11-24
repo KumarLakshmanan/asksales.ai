@@ -1,0 +1,45 @@
+.scrollRegion {
+  overflow-x: auto;
+  scroll-padding-left: 304px;
+  scroll-padding-right: 108px;
+}
+
+.table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.selection,
+.identity,
+.actions {
+  position: sticky;
+  z-index: 1;
+  background: hsl(var(--card));
+}
+
+.table thead .selection,
+.table thead .identity,
+.table thead .actions {
+  background: hsl(var(--muted));
+  z-index: 2;
+}
+
+.selection { left: 0; }
+.identity { left: 44px; box-shadow: 1px 0 hsl(var(--border)); }
+.actions { right: 0; box-shadow: -1px 0 hsl(var(--border)); }
+
+.table tr[data-selected="true"] > .selection,
+.table tr[data-selected="true"] > .identity,
+.table tr[data-selected="true"] > .actions,
+.table tr:hover > .selection,
+.table tr:hover > .identity,
+.table tr:hover > .actions {
+  background: color-mix(in srgb, hsl(var(--primary)) 5%, hsl(var(--card)));
+}

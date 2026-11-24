@@ -1,0 +1,108 @@
+{
+  "purpose": "Organic BC-S02 durable writer acceptance; same original audit chat",
+  "published_parent": "e2da0a0f627e19356ed5c6c51e3e78a0761aa3a2",
+  "audited_v8": "ba13fd0ea174a0e3f299e7b65f6ddc7c14f0c12c",
+  "dependencies": {
+    "storage": "7aaf181c0a9f0103bb76f3f5a943b667899bf993",
+    "content_projector": "f37793400b50d6ebf4d1121876d56739800ba772",
+    "content_writers": "e2da0a0f627e19356ed5c6c51e3e78a0761aa3a2",
+    "migration": "480_storage_managed_references.js (canonical; disposable fixtures only)"
+  },
+  "scope": [
+    "OrganicPublishLifecycleService root/ancestor billing prelock, complete post-domain reference batch, guarded editable update and exact asset-owner deletion",
+    "OrganicPublishingService stored reviewed-payload plus full returned asset projection, real caller transaction, deferred batch collection",
+    "Canonical object-key comparison for reviewed nested JSONB; values and array order remain significant",
+    "Actual mounted multipart upload success and canonical registration-fault rollback followed by file-ID-bound compensation"
+  ],
+  "canonical_api": "Actual Storage implementation and Content projector; no canonical API replacement or second ledger/cleanup engine",
+  "cleanup": "cleanupReleased defaults false; no attempt release on cancel/replacement/failure/success/remote_deleted; surviving FK SET NULL attempt retains holder",
+  "before": {
+    "reference_cases_failed": 7,
+    "unresolved_public_control_passed": 1,
+    "jsonb_persistence_case": "real PostgreSQL rejected first creation due nested JSON key order; original fake-persistence assertion moved intact to real SQL, then passed after narrow fingerprint correction",
+    "multipart_cases_failed": 2
+  },
+  "after": {
+    "organic_passed": 212,
+    "organic_suites": 18,
+    "content_composition_passed": 33,
+    "content_suites": 2,
+    "optional_interactive_browser_unrun": 2,
+    "types": "scoped pass",
+    "lint": "0 errors,66 warning-level fixture/any diagnostics retained",
+    "builds": "API and worker esbuild pass",
+    "combined_passed": 245,
+    "combined_suites": 20
+  },
+  "reproduce": "bash server/scripts/qa-organic-managed-references.sh; node server/node_modules/typescript/bin/tsc --noEmit -p server/tests/tsconfig.organic-managed-references.json",
+  "actual": [
+    "Disposable PostgreSQL, canonical480 SQL/FK/RLS and scoped runtime role",
+    "Actual Drizzle/canonical reference/cleanup methods and Content projector",
+    "Mounted content API and registered Organic worker/Redis",
+    "Actual local temporary object backend in additional Content-owner33 cases",
+    "Canonical Storage uploader and current capacity SQL from migrations302/304/340/341, including reservation release and exact quota/organization counts; SQL search_path adapted only to isolated fixture namespace"
+  ],
+  "mocked": [
+    "Organic external provider/object effects",
+    "Existing Organic fixture brand/compliance evaluation, HTTP identity/module/credit shell"
+  ],
+  "unrun": [
+    "Full app migration chain and full canonical Storage26-case DB suite in this composition",
+    "Full authentication/admin/Trash/browser/live-provider/deployed acceptance",
+    "No new frontend/browser/responsive acceptance; frontend source unchanged",
+    "Video transcode uploads and Content/AI generation workers are outside this Organic acceptance; only registered Organic worker is accepted"
+  ],
+  "holds": {
+    "excluded_commits": [
+      "8395a20c7c3bdb11f791c4f04b50859a8ad9e943",
+      "ffd52f224d253fd3c5791a6105077863b21778b5"
+    ],
+    "ancestry_checked_absent": true,
+    "supplemental_proxy403": "No retry, republish, alternate delivery or held source import",
+    "expired_bulk_intent": "Retained unknown-outcome hold; no status-as-success inference, resend or retention extension"
+  },
+  "effects": "No CI/CD, real providers, production DSN/data/migration, credential/security changes or direct v8 write",
+  "files": [
+    {
+      "path": "server/services/social/OrganicPublishLifecycleService.ts",
+      "bytes": 25316,
+      "sha256": "c45a7b5891135d8e288609fc8240756ce0a1f01e77c33756a4e0c6586c097d97"
+    },
+    {
+      "path": "server/services/social/OrganicPublishingService.ts",
+      "bytes": 53189,
+      "sha256": "1a7dfb3dd93b0ae0e5bb51fa6442d19250e0944abec129c5e7961aeecc4c2690"
+    },
+    {
+      "path": "server/tests/linkedInOrganicWorkerPostgres.test.ts",
+      "bytes": 61167,
+      "sha256": "e4cefb5b8c11cf9290d5f3130e4c6ad7a62433ed1b5775a1a744d0fe1227f616"
+    },
+    {
+      "path": "server/tests/organicPublishLifecyclePostgres.test.ts",
+      "bytes": 48256,
+      "sha256": "80a36c50041ad72261e9dbba8ea5aebe63224a30d7e87cc8d4ca752bfacf323a"
+    },
+    {
+      "path": "server/tests/youtubeOrganicPublishing.test.ts",
+      "bytes": 12232,
+      "sha256": "420ee7ef2053f3b8dd5fdef6afec6deaed4c0f3d1d8b079f3c6528c85d969179"
+    },
+    {
+      "path": "server/tests/helpers/organicManagedStoragePostgres.ts",
+      "bytes": 7065,
+      "sha256": "58121b430dda1d7cb8055c9956f77ccf5cc25d6d6dbd3ec392c69186cfdd65b1"
+    },
+    {
+      "path": "server/scripts/qa-organic-managed-references.sh",
+      "bytes": 2182,
+      "sha256": "eec74affd9609e027480bc98ddb388de1519805a8f32a4895bf0976a17b8c034"
+    },
+    {
+      "path": "server/tests/tsconfig.organic-managed-references.json",
+      "bytes": 612,
+      "sha256": "b8e47962bdde46ec0b1cceaa7fe3d45e0ba05ffac07741086966c653b6e4680a"
+    }
+  ],
+  "primary_code_commit": "54b065b02f93c46de25ec871b54bada6699175b5"
+}

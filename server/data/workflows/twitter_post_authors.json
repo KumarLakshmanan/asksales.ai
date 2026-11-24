@@ -1,0 +1,179 @@
+{
+  "workflow_id": "twitter_post_authors",
+  "platform": "twitter_post_authors",
+  "title": "Twitter Post Author Profiles",
+  "description": "Search Twitter/X posts by keyword and extract detailed author profiles as leads. Best for finding active Twitter/X voices in your niche \u2014 people who tweet about topics relevant to your product or service. Use when you want to identify thought leaders, potential partners, or prospects who publicly discuss your target topics. A lightweight 2-step strategy.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords or hashtags for searchQuery.\n- This workflow enriches tweet authors with full profile data (bio, followers, location).\n- Keep maxTweets between 20-50.\n- Great for finding active voices in your industry.",
+  "nodes": [
+    {
+      "id": "twitter_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Twitter Search",
+        "actorId": "powerai/twitter-search-scraper",
+        "actorName": "Twitter Search Scraper",
+        "description": "Search for tweets by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{searchQuery}}",
+          "maxResults": "{{maxTweets}}",
+          "searchType": "Top"
+        },
+        "output_key": "twitter_tweets",
+        "finalValues": {
+          "searchType": "Top"
+        }
+      }
+    },
+    {
+      "id": "twitter_author_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Author Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Get detailed profiles for tweet authors",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "twitterHandles": [
+            "{_current_item.screen_name}"
+          ],
+          "maxItems": 1,
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        },
+        "iterate_over": "twitter_tweets",
+        "output_key": "twitter_author_profiles",
+        "field_mapping": {
+          "twitterHandles": "screen_name"
+        }
+      }
+    },
+    {
+      "id": "db_save_tweets",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Tweets",
+        "description": "Save tweets to posts table",
+        "iterate_over": "twitter_tweets",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "post_id": "tweet_id",
+          "postId": "tweet_id",
+          "content": "text",
+          "text": "text",
+          "url": "'https://twitter.com/' + screen_name + '/status/' + tweet_id",
+          "postUrl": "'https://twitter.com/' + screen_name + '/status/' + tweet_id",
+          "author_handle": "screen_name",
+          "authorName": "user_info.name",
+          "authorUsername": "screen_name",
+          "authorProfileUrl": "'https://twitter.com/' + screen_name",
+          "likes_count": "favorites",
+          "likesCount": "favorites",
+          "comments_count": "replies",
+          "shares_count": "retweets",
+          "retweetCount": "retweets",
+          "replyCount": "replies",
+          "quoteCount": "quotes",
+          "viewCount": "views",
+          "bookmarkCount": "bookmarks",
+          "posted_at": "created_at",
+          "createdAt": "created_at",
+          "source": "'twitter'",
+          "hashtags": "entities.hashtags",
+          "mentions": "entities.mentions",
+          "mediaUrls": "media",
+          "lang": "lang",
+          "sourceApp": "source"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_authors",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Author Profiles",
+        "description": "Save Twitter author profiles to leads table",
+        "iterate_over": "twitter_author_profiles",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "name": "name",
+          "bio": "description",
+          "verified": "isVerified",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "profileId": "id",
+          "fullName": "name",
+          "twitterUsername": "userName",
+          "twitterHandle": "userName",
+          "twitterUrl": "twitterUrl",
+          "profileUrl": "twitterUrl",
+          "website": "url",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "about": "description",
+          "location": "location",
+          "followersCount": "followers",
+          "twitterFollowers": "followers",
+          "followingCount": "following",
+          "registeredAt": "createdAt",
+          "engagementType": "'author'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_authors",
+      "source": "twitter_search",
+      "target": "twitter_author_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_tweets",
+      "source": "twitter_search",
+      "target": "db_save_tweets",
+      "animated": true
+    },
+    {
+      "id": "e_authors_to_db",
+      "source": "twitter_author_profiles",
+      "target": "db_save_authors",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

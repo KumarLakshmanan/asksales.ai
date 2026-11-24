@@ -1,0 +1,30 @@
+import {fireEvent,render,screen,waitFor,within} from '@testing-library/react';
+import {beforeEach,expect,it,vi} from 'vitest';
+const api=vi.hoisted(()=>({get:vi.fn(),post:vi.fn(),patch:vi.fn(),delete:vi.fn()}));
+vi.mock('@/lib/api',()=>({api}));
+import {SocialReportsPanel} from '@/components/social-insights/SocialReportsPanel';
+import {isOptionalFiveFieldCron} from '@/lib/socialAnalyticsValidation';
+const report={id:'11111111-1111-4111-8111-111111111111',name:'UTC report',filters:{platform:'instagram',accountIdentifier:'account-a',relativeDays:7,timezone:'UTC'},schedule_cron:'0 9 * * 1'};
+const props={platform:'instagram',accountIdentifier:'account-a',accountName:'Account A',startDate:'2026-10-01',endDate:'2026-10-22',timezone:'America/New_York',revision:0};
+beforeEach(()=>{vi.clearAllMocks();api.get.mockResolvedValue([report]);api.patch.mockResolvedValue({});});
+it('shows applicable UTC-cron controls and preserves the exact cron/filter timezone when saved',async()=>{
+ render(<SocialReportsPanel {...props}/>);fireEvent.click(await screen.findByRole('button',{name:'Edit'}));
+ const dialog=within(screen.getByRole('dialog'));
+ expect(dialog.getByLabelText('Five-field UTC cron')).toHaveValue('0 9 * * 1');
+ expect(dialog.queryByLabelText('Local time')).not.toBeInTheDocument();expect(dialog.queryByLabelText('Timezone')).not.toBeInTheDocument();
+ fireEvent.change(dialog.getByLabelText('Frequency'),{target:{value:'weekly'}});
+ fireEvent.change(dialog.getByLabelText(/Timezone/),{target:{value:'invalid-zone'}});
+ fireEvent.change(dialog.getByLabelText('Local time'),{target:{value:''}});
+ fireEvent.change(dialog.getByLabelText('Frequency'),{target:{value:'custom_cron'}});
+ expect(dialog.getByRole('button',{name:'Save report'})).toBeEnabled();
+ fireEvent.change(dialog.getByLabelText('Five-field UTC cron'),{target:{value:'bad bad bad bad bad'}});
+ expect(dialog.getByRole('alert')).toHaveTextContent('valid five-field UTC cron');
+ expect(dialog.getByRole('button',{name:'Save report'})).toBeDisabled();
+ fireEvent.change(dialog.getByLabelText('Five-field UTC cron'),{target:{value:'30 10 * * 1'}});
+ fireEvent.click(dialog.getByRole('button',{name:'Save report'}));
+ await waitFor(()=>expect(api.patch).toHaveBeenCalledWith(`/api/social-analytics/reports/${report.id}`,expect.objectContaining({schedule:null,scheduleCron:'30 10 * * 1',filters:expect.objectContaining({relativeDays:7,timezone:'UTC'})})));
+});
+it('rejects invalid field values rather than only counting five words',()=>{
+ for(const value of ['bad bad bad bad bad','60 9 * * *','0 24 * * *','0 9 * 13 *','0 9 * * 7','0,,15 9 * * *','0- 9 * * *','1e1 9 * * *'])expect(isOptionalFiveFieldCron(value)).toBe(false);
+ for(const value of ['', '0 9 * * 1','*/15 9-17 * * 1-5'])expect(isOptionalFiveFieldCron(value)).toBe(true);
+});

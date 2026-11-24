@@ -1,0 +1,589 @@
+{
+  "id": "apify/instagram-profile-scraper",
+  "name": "Instagram Profile Scraper",
+  "description": "Scrape all Instagram profile info. Just add Instagram usernames, IDs or URLs and extract name, join date, number of followers, location, bio, website, related profiles, video&post count, latest posts. Export scraped data, schedule scraper via API, and integrate with other tools or AI workflows.",
+  "inputSchema": {
+    "title": "Input schema for Instagram Profile scraper",
+    "type": "object",
+    "description": "Get data from Instagram profiles.",
+    "schemaVersion": 1,
+    "properties": {
+      "usernames": {
+        "title": "Instagram username(s)",
+        "type": "array",
+        "description": "Provide one or several Instagram user names you want to scrape the posts from. The actor will also handle user name IDs.",
+        "editor": "stringList",
+        "prefill": [
+          "humansofny"
+        ]
+      },
+      "includeAboutSection": {
+        "title": "$ Extract about account information",
+        "type": "boolean",
+        "description": "This feature is for paying users only. If enabled, the scraper will extract information about the account, including date joined, country of origin, and the profile's channel information. Please beware that the country is there ONLY if the user filled in this information.",
+        "default": false
+      }
+    },
+    "required": [
+      "usernames"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "externalUrls": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "link_type": {
+              "type": "string"
+            },
+            "lynx_url": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "External urls"
+      },
+      "latestIgtvVideos": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "childPosts": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "latestComments": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "commentsDisabled": {
+              "type": "boolean"
+            },
+            "isCommentsDisabled": {
+              "type": "boolean"
+            },
+            "alt": {
+              "type": "null"
+            },
+            "commentsCount": {
+              "type": "number"
+            },
+            "dimensionsHeight": {
+              "type": "number"
+            },
+            "dimensionsWidth": {
+              "type": "number"
+            },
+            "likesCount": {
+              "type": "number"
+            },
+            "videoDuration": {
+              "type": "number"
+            },
+            "videoViewCount": {
+              "type": "number"
+            },
+            "caption": {
+              "type": "string"
+            },
+            "displayUrl": {
+              "type": "string"
+            },
+            "firstComment": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "ownerId": {
+              "type": "string"
+            },
+            "ownerUsername": {
+              "type": "string"
+            },
+            "productType": {
+              "type": "string"
+            },
+            "shortCode": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "videoUrl": {
+              "type": "string"
+            },
+            "taggedUsers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "is_verified": {
+                    "type": "boolean"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "profile_pic_url": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "locationId": {
+              "type": "string"
+            },
+            "locationName": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Latest igtv videos"
+      },
+      "latestPosts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "childPosts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "childPosts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "hashtags": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "latestComments": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "mentions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "taggedUsers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "is_verified": {
+                          "type": "object"
+                        },
+                        "full_name": {
+                          "type": "object"
+                        },
+                        "id": {
+                          "type": "object"
+                        },
+                        "profile_pic_url": {
+                          "type": "object"
+                        },
+                        "username": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  },
+                  "likesCount": {
+                    "type": "null"
+                  },
+                  "timestamp": {
+                    "type": "null"
+                  },
+                  "commentsCount": {
+                    "type": "number"
+                  },
+                  "dimensionsHeight": {
+                    "type": "number"
+                  },
+                  "dimensionsWidth": {
+                    "type": "number"
+                  },
+                  "alt": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "caption": {
+                    "type": "string"
+                  },
+                  "displayUrl": {
+                    "type": "string"
+                  },
+                  "firstComment": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "ownerId": {
+                    "type": "string"
+                  },
+                  "ownerUsername": {
+                    "type": "string"
+                  },
+                  "shortCode": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "videoViewCount": {
+                    "type": "number"
+                  },
+                  "videoUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "taggedUsers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "is_verified": {
+                    "type": "boolean"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "profile_pic_url": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "isCommentsDisabled": {
+              "type": "boolean"
+            },
+            "alt": {
+              "type": "string",
+              "nullable": true
+            },
+            "commentsCount": {
+              "type": "number"
+            },
+            "dimensionsHeight": {
+              "type": "number"
+            },
+            "dimensionsWidth": {
+              "type": "number"
+            },
+            "likesCount": {
+              "type": "number"
+            },
+            "videoViewCount": {
+              "type": "number"
+            },
+            "caption": {
+              "type": "string"
+            },
+            "displayUrl": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "locationId": {
+              "type": "string"
+            },
+            "locationName": {
+              "type": "string"
+            },
+            "ownerId": {
+              "type": "string"
+            },
+            "ownerUsername": {
+              "type": "string"
+            },
+            "productType": {
+              "type": "string"
+            },
+            "shortCode": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "videoUrl": {
+              "type": "string"
+            },
+            "isPinned": {
+              "type": "boolean"
+            },
+            "musicInfo": {
+              "type": "object",
+              "properties": {
+                "should_mute_audio": {
+                  "type": "boolean"
+                },
+                "uses_original_audio": {
+                  "type": "boolean"
+                },
+                "artist_name": {
+                  "type": "string"
+                },
+                "audio_id": {
+                  "type": "string"
+                },
+                "should_mute_audio_reason": {
+                  "type": "string"
+                },
+                "song_name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "description": "Latest posts"
+      },
+      "relatedProfiles": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "is_private": {
+              "type": "boolean"
+            },
+            "is_verified": {
+              "type": "boolean"
+            },
+            "full_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "profile_pic_url": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Related profiles"
+      },
+      "hasChannel": {
+        "type": "boolean",
+        "description": "Has channel"
+      },
+      "isBusinessAccount": {
+        "type": "boolean",
+        "description": "Is business account"
+      },
+      "joinedRecently": {
+        "type": "boolean",
+        "description": "Joined recently"
+      },
+      "private": {
+        "type": "boolean",
+        "description": "Private"
+      },
+      "verified": {
+        "type": "boolean",
+        "description": "Verified"
+      },
+      "followersCount": {
+        "type": "number",
+        "description": "Followers count"
+      },
+      "followsCount": {
+        "type": "number",
+        "description": "Follows count"
+      },
+      "highlightReelCount": {
+        "type": "number",
+        "description": "Highlight reel count"
+      },
+      "igtvVideoCount": {
+        "type": "number",
+        "description": "Igtv video count"
+      },
+      "postsCount": {
+        "type": "number",
+        "description": "Posts count"
+      },
+      "businessAddress": {
+        "type": "object",
+        "properties": {
+          "city_id": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "city_name": {
+            "type": "string"
+          },
+          "street_address": {
+            "type": "string",
+            "nullable": true
+          },
+          "zip_code": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "description": "Business address"
+      },
+      "biography": {
+        "type": "string",
+        "description": "Biography"
+      },
+      "businessCategoryName": {
+        "type": "string",
+        "nullable": true,
+        "description": "Business category name"
+      },
+      "externalUrl": {
+        "type": "string",
+        "description": "External url"
+      },
+      "externalUrlShimmed": {
+        "type": "string",
+        "description": "External url shimmed"
+      },
+      "fbid": {
+        "type": "string",
+        "description": "Fbid"
+      },
+      "fullName": {
+        "type": "string",
+        "description": "Full name"
+      },
+      "id": {
+        "type": "string",
+        "description": "Id"
+      },
+      "inputUrl": {
+        "type": "string",
+        "description": "Input url"
+      },
+      "profilePicUrl": {
+        "type": "string",
+        "description": "Profile pic url"
+      },
+      "profilePicUrlHD": {
+        "type": "string",
+        "description": "Profile pic url h d"
+      },
+      "url": {
+        "type": "string",
+        "description": "Url"
+      },
+      "username": {
+        "type": "string",
+        "description": "Username"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "usernames"
+  ],
+  "validation_rules": []
+}

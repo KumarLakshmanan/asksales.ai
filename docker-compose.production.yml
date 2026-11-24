@@ -1,0 +1,196 @@
+# ───────────────────────────────────────────────────────────────────────────────
+# Production Docker Compose — asksales.ai
+# Replaces PM2 with Docker containers
+# PostgreSQL and Redis run natively on host (not containerized)
+# ───────────────────────────────────────────────────────────────────────────────
+
+x-runtime-logging: &runtime-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  upload-init:
+    image: alpine:3.20
+    user: "0:0"
+    command: ["/bin/sh", "-c", "mkdir -p /uploads && chown -R 1001:1001 /uploads && chmod -R u+rwX,g+rwX /uploads"]
+    volumes:
+      - sm-uploads:/uploads
+
+  # ─── API Gateway (Express Server) ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: sm-api
+    # Permit Chromium's own user-namespace sandbox while retaining seccomp.
+    security_opt:
+      - seccomp=./docker/chromium-seccomp.json
+    ports:
+      - '127.0.0.1:8080:8080'
+    env_file:
+      - server/.env
+    environment:
+      TZ: Asia/Kolkata
+      NODE_ENV: production
+      FILE_LOGGING_ENABLED: "false"
+      PORT: 8080
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_USER: ${DB_RUNTIME_USER:?DB_RUNTIME_USER is required}
+      DB_PASSWORD: ${DB_RUNTIME_PASSWORD:?DB_RUNTIME_PASSWORD is required}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@host.docker.internal:6379
+      LOCAL_STORAGE_PATH: /app/server/uploads
+      LOCAL_STORAGE_URL: /uploads
+      AI_VISIBILITY_BROWSER_FALLBACK: "true"
+      APP_URL: https://asksales.ai
+      CLIENT_URL: https://asksales.ai
+      GOOGLE_SIGN_IN_CLIENT_ID: 1032811885339-84mnqvfgcffq3qh1ptbh15vpg1a182k0.apps.googleusercontent.com
+      SUPPORT_NOTIFICATION_DELIVERY_MODE: live
+      SUPPORT_CONVERSATION_TURN_CHANNELS: "${SUPPORT_CONVERSATION_TURN_CHANNELS:-whatsapp,instagram,facebook,web}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+    volumes:
+      - sm-uploads:/app/server/uploads
+      - sm-exports:/app/exports
+    logging: *runtime-logging
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ─── Worker 1 (BullMQ) ──────────────────────────────────────────────────
+  worker-1:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.worker
+    container_name: sm-worker-1
+    env_file:
+      - server/.env
+    environment:
+      TZ: Asia/Kolkata
+      NODE_ENV: production
+      WORKER_HEALTH_PORT: 9090
+      FILE_LOGGING_ENABLED: "false"
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_USER: ${DB_RUNTIME_USER:?DB_RUNTIME_USER is required}
+      DB_PASSWORD: ${DB_RUNTIME_PASSWORD:?DB_RUNTIME_PASSWORD is required}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@host.docker.internal:6379
+      LOCAL_STORAGE_PATH: /app/server/uploads
+      LOCAL_STORAGE_URL: /uploads
+      AI_VISIBILITY_BROWSER_FALLBACK: "true"
+      APP_URL: https://asksales.ai
+      CLIENT_URL: https://asksales.ai
+      SUPPORT_NOTIFICATION_DELIVERY_MODE: live
+      SUPPORT_CONVERSATION_TURN_CHANNELS: "${SUPPORT_CONVERSATION_TURN_CHANNELS:-whatsapp,instagram,facebook,web}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+    volumes:
+      - sm-uploads:/app/server/uploads
+    logging: *runtime-logging
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:9090/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ─── Worker 2 (BullMQ) ──────────────────────────────────────────────────
+  worker-2:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.worker
+    container_name: sm-worker-2
+    env_file:
+      - server/.env
+    environment:
+      TZ: Asia/Kolkata
+      NODE_ENV: production
+      WORKER_HEALTH_PORT: 9090
+      FILE_LOGGING_ENABLED: "false"
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_USER: ${DB_RUNTIME_USER:?DB_RUNTIME_USER is required}
+      DB_PASSWORD: ${DB_RUNTIME_PASSWORD:?DB_RUNTIME_PASSWORD is required}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@host.docker.internal:6379
+      LOCAL_STORAGE_PATH: /app/server/uploads
+      LOCAL_STORAGE_URL: /uploads
+      AI_VISIBILITY_BROWSER_FALLBACK: "true"
+      APP_URL: https://asksales.ai
+      CLIENT_URL: https://asksales.ai
+      SUPPORT_NOTIFICATION_DELIVERY_MODE: live
+      SUPPORT_CONVERSATION_TURN_CHANNELS: "${SUPPORT_CONVERSATION_TURN_CHANNELS:-whatsapp,instagram,facebook,web}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      upload-init:
+        condition: service_completed_successfully
+    volumes:
+      - sm-uploads:/app/server/uploads
+    logging: *runtime-logging
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:9090/ready']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ─── Client (Next.js) ─────────────────────────────────────────────────────
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ''
+        NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: 1032811885339-84mnqvfgcffq3qh1ptbh15vpg1a182k0.apps.googleusercontent.com
+        BACKEND_URL: http://api:8080
+    container_name: sm-client
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      TZ: Asia/Kolkata
+      NEXT_PUBLIC_API_URL: ''
+      NEXT_PUBLIC_GOOGLE_SIGN_IN_CLIENT_ID: 1032811885339-84mnqvfgcffq3qh1ptbh15vpg1a182k0.apps.googleusercontent.com
+      BACKEND_URL: http://api:8080
+    logging: *runtime-logging
+    stop_grace_period: 150s
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  sm-uploads:
+    external: true
+    name: salesmarketing_sm-uploads
+  sm-exports:
+    external: true
+    name: salesmarketing_sm-exports

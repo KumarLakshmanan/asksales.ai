@@ -1,0 +1,99 @@
+{
+  "actorId": "harvestapi/linkedin-post-comments",
+  "title": "LinkedIn Post Comments Scraper (No Cookies)",
+  "description": "Extract LinkedIn post comments and comment replies in bulk, as well as comment social activities such as likes and reactions. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post comment result", "description": "Post comment item", "priceUsd": 0.002 },
+      { "title": "Main profile details", "description": "Enrich comment authors with main profile details", "priceUsd": 0.002 },
+      { "title": "Full profile details", "description": "Enrich comment authors with full profile details", "priceUsd": 0.004 },
+      { "title": "Full profile details + email search", "description": "Enrich with full profile + email search", "priceUsd": 0.01 }
+    ]
+  },
+  "input": {
+    "posts": {
+      "type": "array",
+      "title": "Post URLs",
+      "description": "List of LinkedIn post URLs to scrape comments from.",
+      "required": true,
+      "example": [
+        "https://www.linkedin.com/posts/microsoft-events_microsoft-build-has-arrived-in-seattle-and-ugcPost-7329991434395160578-GnK7",
+        "https://www.linkedin.com/feed/update/urn:li:activity:7320867199693246465/"
+      ]
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum comments per post",
+      "description": "Maximum number of comments to scrape per each post.",
+      "default": 10,
+      "required": false
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit (filter)",
+      "description": "Fetch comments no older than X time.",
+      "enum": ["any", "24h", "week", "month", "3months", "6months", "year"],
+      "required": false
+    },
+    "scrapeReplies": {
+      "type": "boolean",
+      "title": "Scrape Replies",
+      "description": "Whether to scrape replies to comments.",
+      "default": false
+    },
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Mode for enriching comment author profiles.",
+      "enum": ["short", "main"],
+      "default": "short"
+    }
+  },
+  "output": {
+    "commentary": { "type": "string", "description": "Comment text" },
+    "id": { "type": "string", "description": "Comment ID" },
+    "linkedinUrl": { "type": "string", "description": "Comment URL on LinkedIn" },
+    "postId": { "type": "string", "description": "Parent post ID" },
+    "createdAt": { "type": "string", "description": "Comment creation date" },
+    "createdAtTimestamp": { "type": "number", "description": "Comment creation timestamp" },
+    "contributed": { "type": "boolean", "description": "Whether the commenter contributed" },
+    "edited": { "type": "boolean", "description": "Whether comment was edited" },
+    "pinned": { "type": "boolean", "description": "Whether comment is pinned" },
+    "actor": {
+      "type": "object",
+      "description": "Comment author details",
+      "properties": {
+        "id": "string|null",
+        "name": "string",
+        "linkedinUrl": "string",
+        "pictureUrl": "string",
+        "position": "string",
+        "type": "string",
+        "author": "boolean"
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "description": "Comment engagement metrics",
+      "properties": {
+        "likes": "number",
+        "comments": "number",
+        "shares": "number",
+        "reactions": [{ "type": "string", "count": "number" }]
+      }
+    },
+    "replies": {
+      "type": "array",
+      "description": "Replies to the comment"
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "post": "string"
+      }
+    }
+  }
+}

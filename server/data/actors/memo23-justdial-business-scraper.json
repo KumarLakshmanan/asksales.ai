@@ -1,0 +1,98 @@
+{
+  "id": "memo23/justdial-business-scraper",
+  "name": "JustDial Business Scraper",
+  "description": "Scrape public JustDial business listings by Indian city and category with built-in India anti-blocking, bounded retries, and one normalized business record per result.",
+  "inputSchema": {
+    "title": "JustDial Business Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "city": {
+        "title": "City",
+        "type": "string",
+        "description": "Indian city to search in",
+        "editor": "textfield",
+        "prefill": "Bengaluru"
+      },
+      "search": {
+        "title": "Category / keyword",
+        "type": "string",
+        "description": "Business category or keyword",
+        "editor": "textfield",
+        "prefill": "Boutique Hotels"
+      },
+      "startUrls": {
+        "title": "Verified JustDial URLs",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Optional verified JustDial category listing or business URLs. Use only URLs supplied by the requester; do not invent category IDs. For a URL-only search, omit city and search to avoid additional listing searches.",
+        "editor": "stringList"
+      },
+      "maxItems": {
+        "title": "Max businesses",
+        "type": "integer",
+        "description": "Hard cap on emitted business records",
+        "minimum": 1,
+        "default": 25,
+        "editor": "number",
+        "prefill": 25
+      },
+      "scrapeDetails": {
+        "title": "Scrape business details",
+        "type": "boolean",
+        "default": true
+      },
+      "enrichEmails": {
+        "title": "Enrich emails",
+        "type": "boolean",
+        "description": "Optional separately billed email enrichment",
+        "default": false
+      },
+      "useMobileApi": {
+        "title": "Fast contact lookup",
+        "type": "boolean",
+        "default": true
+      },
+      "maxConcurrency": {
+        "title": "Max parallel requests",
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 8,
+        "default": 4
+      },
+      "maxRequestRetries": {
+        "title": "Max request retries",
+        "type": "integer",
+        "minimum": 0,
+        "default": 12
+      }
+    },
+    "required": [
+      "maxItems"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "phone": { "type": "string" },
+      "whatsapp": { "type": "string" },
+      "email": { "type": "string" },
+      "website": { "type": "string" },
+      "address": { "type": "string" },
+      "city": { "type": "string" },
+      "state": { "type": "string" },
+      "category": { "type": "string" },
+      "categories": { "type": "array", "items": { "type": "string" } },
+      "businessUrl": { "type": "string" },
+      "rating": { "type": "number" },
+      "ratingCount": { "type": "integer" },
+      "verified": { "type": "boolean" },
+      "latitude": { "type": "number" },
+      "longitude": { "type": "number" },
+      "images": { "type": "array", "items": { "type": "string" } },
+      "scrapedAt": { "type": "string" }
+    }
+  }
+}

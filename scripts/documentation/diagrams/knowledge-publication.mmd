@@ -1,0 +1,13 @@
+flowchart TD
+  accTitle: Knowledge publication and retrieval readiness
+  accDescr: Review content and privacy before publication, then index the current version and select it for an assistant. Retrieval checks business and surface access.
+  U[Add source] --> R{Content and privacy reviewed?}
+  R -->|No| D[Keep draft and resolve review]
+  R -->|Yes| P[Publish approved version]
+  P --> I{Current version indexed?}
+  I -->|No| T[Inspect failed or stale index and retry]
+  T --> I
+  I -->|Yes| S[Select permitted resource in assistant]
+  S --> G{Business and surface access allowed?}
+  G -->|Yes| A[Eligible grounded retrieval]
+  G -->|No| X[Resource unavailable for this use]

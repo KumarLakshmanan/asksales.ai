@@ -1,0 +1,128 @@
+{
+  "actorId": "harvestapi/linkedin-profile-search-by-name",
+  "title": "LinkedIn People Search by Name Scraper (No Cookies)",
+  "description": "Search for LinkedIn profiles by first and last name with filters for companies, schools, job titles, industries, and locations. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Short profile", "description": "Short profile result", "priceUsd": 0.002 },
+      { "title": "Full profile", "description": "Full profile result", "priceUsd": 0.004 },
+      { "title": "Full + email search", "description": "Full profile with email search", "priceUsd": 0.01 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "firstName": {
+      "type": "string",
+      "title": "First Name",
+      "description": "First name of the person to search for.",
+      "required": true,
+      "example": "Satya"
+    },
+    "lastName": {
+      "type": "string",
+      "title": "Last Name",
+      "description": "Last name of the person to search for.",
+      "required": true,
+      "example": "Nadella"
+    },
+    "profileScraperMode": {
+      "type": "string",
+      "title": "Profile Scraper Mode",
+      "description": "Choose the mode for scraping found profiles.",
+      "enum": ["Short", "Full", "Full + email search"],
+      "default": "Short"
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum profiles to scrape",
+      "description": "Maximum number of profiles to return.",
+      "default": 10,
+      "required": false
+    },
+    "maxPages": {
+      "type": "integer",
+      "title": "Maximum pages to scrape",
+      "description": "Maximum number of search result pages to scrape.",
+      "required": false
+    },
+    "locations": {
+      "type": "array",
+      "title": "Locations Filter",
+      "description": "Filter by LinkedIn locations.",
+      "required": false,
+      "example": ["San Francisco", "United Kingdom"]
+    },
+    "currentCompanies": {
+      "type": "array",
+      "title": "Current Company Filter",
+      "description": "Filter by current company names or LinkedIn URLs.",
+      "required": false
+    },
+    "schools": {
+      "type": "array",
+      "title": "Schools Filter",
+      "description": "Filter by school names.",
+      "required": false,
+      "example": ["Stanford University"]
+    },
+    "currentJobTitles": {
+      "type": "array",
+      "title": "Current Job Titles Filter",
+      "description": "Filter by current job titles.",
+      "required": false,
+      "example": ["CEO", "Founder"]
+    },
+    "industryIds": {
+      "type": "array",
+      "title": "Industry IDs Filter",
+      "description": "Filter by LinkedIn industry IDs.",
+      "required": false
+    },
+    "strictSearch": {
+      "type": "boolean",
+      "title": "Strict Search",
+      "description": "Enable strict name matching to reduce false positives.",
+      "default": false
+    }
+  },
+  "output": {
+    "firstName": { "type": "string", "description": "Profile first name" },
+    "lastName": { "type": "string", "description": "Profile last name" },
+    "linkedinUrl": { "type": "string", "description": "Profile LinkedIn URL" },
+    "publicIdentifier": { "type": "string", "description": "LinkedIn public identifier" },
+    "headline": { "type": "string", "description": "Profile headline" },
+    "location": {
+      "type": "object",
+      "description": "Profile location",
+      "properties": {
+        "linkedinText": "string",
+        "parsed": {
+          "text": "string",
+          "city": "string",
+          "country": "string"
+        }
+      }
+    },
+    "email": { "type": "string|null", "description": "Email (if Full + email search mode)" },
+    "about": { "type": "string", "description": "Profile about section" },
+    "experience": {
+      "type": "array",
+      "description": "Work experience",
+      "items": {
+        "position": "string",
+        "companyName": "string",
+        "companyLinkedinUrl": "string"
+      }
+    },
+    "education": {
+      "type": "array",
+      "description": "Education history"
+    },
+    "skills": {
+      "type": "array",
+      "description": "Listed skills"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+sequenceDiagram
+  accTitle: Supported credit reservation and settlement
+  accDescr: A durable task reserves maximum cost against the original organization wallet. Settlement records actual usage and refunds unused credits once to the original organization. Eligible full refunds reference the original deduction.
+  participant T as Supported task
+  participant W as Original organization wallet
+  participant L as Transaction ledger
+  T->>W: Create durable resource and reserve maximum cost
+  W->>L: Record original deduction and reference
+  alt Actual usage finalized
+    T->>W: Settle against original deduction
+    W->>L: Record refund of unused difference once
+  else Eligible full refund
+    T->>W: Refund original deduction
+    W->>L: Record original-linked refund once
+  end
+  L-->>T: Recorded financial outcome

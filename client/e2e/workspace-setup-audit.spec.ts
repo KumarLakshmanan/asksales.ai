@@ -1,0 +1,201 @@
+import { expect, expectNoHorizontalOverflow, test } from './fixtures/app';
+import { onboardingFixture } from './fixtures/workspace-setup';
+import { setupScreenshot } from './fixtures/setup-screenshots';
+import type { Page } from '@playwright/test';
+
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII=', 'base64');
+const next = (page: Page) => page.getByRole('button', { name: 'Continue', exact: true }).click();
+async function tag(page: Page, label: string, value: string) {
+  await page.getByLabel(label, { exact: true }).fill(value);
+  await page.getByLabel(label, { exact: true }).press('Enter');
+}
+
+test('first account validates manual setup, uploads assets, saves guidance and reaches account review', async ({ page, audit }, info) => {
+  const { requests, toolkits } = await onboardingFixture(page, { initialAccount: true });
+  let completionAttempts = 0;
+  await page.route('**/api/auth/mark-setup-complete', async route => {
+    if (++completionAttempts === 1) return route.fulfill({ status: 503, json: { error: 'Account status could not be updated. Please retry.' } });
+    return route.fallback();
+  });
+  await page.goto('/setup/business-profile');
+  await expect(page.getByRole('heading', { name: 'Start with your website' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View your invitations' })).toBeVisible();
+  await page.getByLabel('Website URL').fill('javascript:alert(1)');
+  await page.getByRole('button', { name: 'Analyze website', exact: true }).click();
+  await expect(page.locator('.ws-error')).toContainText('Enter a valid website');
+  await page.getByLabel('Website URL').fill('');
+  await page.getByRole('button', { name: 'Enter details manually' }).click();
+  await next(page);
+  await expect(page.locator('.ws-error')).toBeVisible();
+  await page.getByRole('button', { name: 'Individual', exact: true }).click();
+  await page.getByLabel('Workspace name *').fill('My reading room');
+  await page.getByLabel('Country', { exact: true }).selectOption('India');
+  await page.getByLabel('Time zone', { exact: true }).selectOption('Asia/Kolkata');
+  await next(page);
+  await next(page);
+  await expect(page.locator('.ws-error')).toBeVisible();
+  await page.getByLabel('Short description *').fill('A place to plan my reading, writing, and learning.');
+  await page.getByLabel('Contact email (optional)').fill('bad-email');
+  await next(page);
+  await expect(page.locator('.ws-error')).toContainText('email');
+  await page.getByLabel('Contact email (optional)').fill('reader@example.test');
+  await next(page);
+  await next(page);
+  await expect(page.locator('.ws-error')).toBeVisible();
+  await page.getByRole('button', { name: 'Personal productivity', exact: true }).click();
+  await page.getByLabel('First goal (optional)').fill('Write one useful note each day');
+  await next(page);
+  await page.getByRole('button', { name: 'Skip for now', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/brand-toolkit\/41$/);
+  await expect(page.getByLabel('Your name or project name *')).toHaveValue('My reading room');
+  await page.getByLabel('Tagline', { exact: true }).fill('Read. Think. Share.');
+  await page.getByText('Purpose and mission', { exact: false }).click();
+  await page.getByLabel('Mission statement').fill('Make learning a daily practice.');
+  await next(page);
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Friendly', exact: true }).click();
+  await page.getByRole('button', { name: 'Other', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeDisabled();
+  await page.getByLabel('Your brand value').fill('Curiosity');
+  await page.getByText('Detailed voice guidance', { exact: false }).click();
+  await tag(page, 'Voice do’s', 'Use practical examples');
+  await tag(page, 'Voice don’ts', 'Use unexplained jargon');
+  await page.getByLabel('Tone guidelines').fill('Be warm and clear.');
+  await next(page);
+  await page.getByLabel('Primary color *', { exact: true }).fill('#123');
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeDisabled();
+  await page.getByLabel('Primary color *', { exact: true }).fill('#0f766e');
+  await page.getByLabel('Brand logo', { exact: true }).setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
+  await expect(page.getByRole('img', { name: 'Your brand logo' })).toBeVisible();
+  await next(page);
+  await expect(page.getByText('No website images found.', { exact: false })).toBeVisible();
+  await page.getByLabel('Upload brand images').setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('fixture') });
+  await expect(page.getByRole('alert').filter({ hasText: 'Choose PNG, JPG, or WebP' })).toBeVisible();
+  expect(requests.filter(item => item.path.endsWith('/upload-image'))).toHaveLength(0);
+  await page.getByLabel('Upload brand images').setInputFiles({ name: 'notebook.png', mimeType: 'image/png', buffer: png });
+  await expect(page.getByRole('button', { name: 'Keep brand image 1' })).toHaveAttribute('aria-pressed', 'true');
+  await expectNoHorizontalOverflow(page);
+  await setupScreenshot(page, info, '21-manual-brand-uploads');
+  await next(page);
+  await tag(page, 'Content pillars', 'Learning notes');
+  await tag(page, 'Default hashtags', 'DailyLearning');
+  await tag(page, 'Calls to action', 'Share your idea');
+  await page.getByLabel('Content guidelines').fill('Keep each note short and useful.');
+  await next(page);
+  await expect(page.getByText('A place to plan my reading, writing, and learning.', { exact: true })).toBeVisible();
+  await page.getByText('Audience guidance', { exact: false }).click();
+  await tag(page, 'Audience goals', 'Build a learning habit');
+  await next(page);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Review your toolkit', exact: true })).toBeVisible();
+  await expect(page.getByText('#DailyLearning', { exact: true })).toBeVisible();
+  await setupScreenshot(page, info, '22-initial-account-review-toolkit');
+  await page.getByRole('button', { name: 'Finish setup', exact: true }).click();
+  await expect(page.getByText('Account status could not be updated. Please retry.', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/setup\/brand-toolkit\/41$/);
+  await setupScreenshot(page, info, '35-setup-completion-retry');
+  await page.getByRole('button', { name: 'Finish setup', exact: true }).click();
+  await expect(page).toHaveURL(/\/setup\/account-verification\?justFinished=1$/);
+  await expect(page.getByRole('heading', { name: 'Your account is under review' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await setupScreenshot(page, info, '23-account-review');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Your account is under review' })).toBeVisible();
+  expect(requests.filter(item => item.path === '/api/auth/mark-setup-complete')).toHaveLength(1);
+  expect(toolkits).toHaveLength(1);
+  expect(completionAttempts).toBe(2);
+  expect(requests.filter(item => item.path === '/api/content/brand-toolkits' && item.method === 'POST')).toHaveLength(1);
+  expect(requests.filter(item => item.path === '/api/content/brand-toolkits/55' && item.method === 'PUT')).toHaveLength(1);
+  expect(toolkits[0]).toMatchObject({ businessProfileId: 41, brandValues: ['Curiosity'], voiceDos: ['Use practical examples'], voiceDonts: ['Use unexplained jargon'], contentPillars: ['Learning notes'], defaultHashtags: ['#DailyLearning'], audienceGoals: ['Build a learning habit'], imageAssets: [expect.objectContaining({ url: '/uploads/41/uploaded-1.png' })], logoUrl: '/uploads/41/uploaded-logo.png' });
+  expect(requests.find(item => item.path === '/api/settings/business-profiles')?.body).toMatchObject({ workspaceType: 'individual', applicationUses: ['personal_productivity'], preferredChannels: [] });
+  expect(requests.filter(item => item.path.includes('/upload-')).every(item => item.business === '41')).toBe(true);
+  expect(audit.consoleErrors.filter(message => !message.includes('503 (Service Unavailable)'))).toEqual([]);
+});
+
+test('analysis failure can be retried without creating duplicate workspaces and saved analysis survives a new draft', async ({ page }, info) => {
+  const { requests, profiles } = await onboardingFixture(page);
+  let attempts = 0;
+  await page.route('**/api/setup/website-analysis/jobs', async route => {
+    attempts++;
+    if (attempts === 1) return route.fulfill({ status: 503, json: { error: 'Website temporarily unavailable. Please retry.' } });
+    return route.fallback();
+  });
+  await page.goto('/setup/business-profile/new');
+  await page.getByLabel('Website URL').fill('creator.example');
+  await page.getByRole('button', { name: 'Analyze website', exact: true }).click();
+  await expect(page.locator('.ws-error')).toContainText('Website temporarily unavailable');
+  await setupScreenshot(page, info, '24-analysis-retry');
+  await page.getByRole('button', { name: 'Retry analysis', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your website results' })).toBeVisible();
+  expect(profiles).toHaveLength(2);
+  expect(requests.filter(item => item.path === '/api/settings/business-profiles' && item.method === 'POST')).toHaveLength(1);
+  await page.evaluate(() => {
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith('setup:workspace-creation:') || key.startsWith('_askSalesCrawlData:')) sessionStorage.removeItem(key);
+    }
+  });
+  // Server analysis is available even when the local draft is empty.
+  await page.goto('/setup/brand-toolkit/41');
+  await expect(page.getByLabel('Brand name *')).toHaveValue('creator.example');
+  for (let step = 1; step < 4; step++) await next(page);
+  await expect(page.getByRole('button', { name: 'Keep brand image 1' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('checkbox', { name: 'Keep website screenshot' })).toBeChecked();
+});
+
+test('edit failures keep entered details for retry and member profiles cannot be edited', async ({ page }, info) => {
+  const { requests, profiles } = await onboardingFixture(page);
+  let failures = 0;
+  await page.route('**/api/settings/business-profiles/26', async route => {
+    if (route.request().method() === 'PUT' && failures++ === 0) return route.fulfill({ status: 503, json: { error: 'Try saving again.' } });
+    return route.fallback();
+  });
+  await page.goto('/dashboard/business-profiles/26');
+  await page.getByLabel('Workspace name *').fill('Northstar Revised');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Your edits have been kept.' })).toBeVisible();
+  await expect(page.getByLabel('Workspace name *')).toHaveValue('Northstar Revised');
+  await setupScreenshot(page, info, '25-edit-save-retry');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard\/home$/);
+  expect(requests.find(item => item.method === 'PUT')?.business).toBe('26');
+  profiles[0].role = 'member';
+  await page.goto('/dashboard/business-profiles/26');
+  await expect(page.getByText('Only the business owner can edit this profile.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save changes' })).toHaveCount(0);
+  await setupScreenshot(page, info, '26-edit-owner-access');
+});
+
+test('sidebar visibility and header controls work in both themes and profile editing fits the viewport', async ({ page, audit }, info) => {
+  await onboardingFixture(page);
+  let theme = 'light';
+  await page.route('**/api/settings/preferences', route => {
+    if (route.request().method() === 'PUT') theme = route.request().postDataJSON().theme;
+    return route.fulfill({ json: { theme, language: 'en', timezone: 'UTC' } });
+  });
+  await page.goto('/dashboard/home');
+  const header = page.locator('header');
+  const sidebar = page.locator('aside[data-sidebar-state]');
+  await expect(header.getByRole('button', { name: 'Account menu' })).toBeVisible();
+  await expect(header.getByRole('link', { name: 'Available credits: 10,000' })).toBeVisible();
+  if ((page.viewportSize()?.width ?? 1440) < 1024) await header.getByRole('button', { name: 'Show sidebar' }).click();
+  await expect(sidebar.getByRole('button', { name: 'Hide sidebar' })).toBeVisible();
+  await setupScreenshot(page, info, '31-dashboard-sidebar-open');
+  await sidebar.getByRole('button', { name: 'Hide sidebar' }).click();
+  await expect(header.getByRole('button', { name: 'Show sidebar' })).toBeVisible();
+  await expect.poll(() => header.evaluate(element => element.getBoundingClientRect().left)).toBe(0);
+  await expectNoHorizontalOverflow(page);
+  await setupScreenshot(page, info, '32-dashboard-sidebar-hidden');
+  await header.getByRole('button', { name: 'Switch to dark mode' }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(header.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+  await setupScreenshot(page, info, '33-dashboard-dark');
+  await page.goto('/dashboard/business-profiles/26');
+  await expect(page.getByLabel('Workspace name *')).toHaveValue('Northstar Studio');
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expectNoHorizontalOverflow(page);
+  await setupScreenshot(page, info, '34-edit-profile-dark');
+  await header.getByRole('button', { name: 'Account menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /Profile/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  expect(audit.consoleErrors).toEqual([]);
+});

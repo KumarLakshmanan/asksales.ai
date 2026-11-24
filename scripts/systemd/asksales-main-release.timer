@@ -1,0 +1,10 @@
+[Unit]
+Description=Check GitHub for a verified AskSales main commit
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+Unit=asksales-main-release.service
+
+[Install]
+WantedBy=timers.target

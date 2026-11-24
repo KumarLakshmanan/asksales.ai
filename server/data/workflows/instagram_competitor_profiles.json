@@ -1,0 +1,83 @@
+{
+  "workflow_id": "instagram_competitor_profiles",
+  "platform": "instagram_competitor_profiles",
+  "title": "Instagram Competitor Profiles",
+  "description": "Scrape specific competitor Instagram profiles to analyze their audience size, engagement metrics, and bio details. Best for competitive intelligence and benchmarking on Instagram. Use when you know competitor usernames and want to gather data about their accounts \u2014 follower counts, post frequency, bio links, and profile details. A lightweight strategy for quick competitor analysis.",
+  "version": "1.0",
+  "tips": "- \"usernames\" must be an array of competitor Instagram handles WITHOUT the @ symbol (e.g., [\"hubspot\", \"salesforce\"]).\n- Provide 3-10 competitor handles whose audience closely matches your ICP.\n- This scrapes full profile data (bio, followers count, contact info) useful for competitor intelligence.",
+  "nodes": [
+    {
+      "id": "instagram_profile_actor",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Scrape Instagram Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Scrape Instagram competitor profiles",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": "{{usernames}}"
+        },
+        "output_key": "instagram_profiles",
+        "finalValues": {
+          "includeAboutSection": true
+        }
+      }
+    },
+    {
+      "id": "db_save_profiles",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Competitor Profiles as Leads",
+        "description": "Save competitor Instagram profiles as leads for outreach",
+        "iterate_over": "instagram_profiles",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "source": "'instagram'",
+          "leadType": "'profile'",
+          "platformType": "'instagram'",
+          "engagementType": "'competitor_profile'",
+          "fullName": "fullName",
+          "name": "fullName",
+          "instagramHandle": "username",
+          "instagramUrl": "'https://instagram.com/' + username",
+          "profileUrl": "'https://instagram.com/' + username",
+          "bio": "biography",
+          "about": "biography",
+          "profilePicture": "profilePicUrl",
+          "photo": "profilePicUrl",
+          "followersCount": "followersCount",
+          "followingCount": "followsCount",
+          "postsCount": "postsCount",
+          "website": "externalUrl",
+          "categories": "businessCategoryName",
+          "verified": "verified",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_profiles_to_leads",
+      "source": "instagram_profile_actor",
+      "target": "db_save_profiles",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

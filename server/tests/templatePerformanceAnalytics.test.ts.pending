@@ -1,0 +1,47 @@
+import {
+  calculateTemplatePerformance,
+  compareTemplatePerformance,
+  parseTemplatePerformanceRange,
+  templatePerformanceStart,
+} from '../utils/templatePerformanceAnalytics';
+
+describe('template performance analytics', () => {
+  it('calculates rates and the reply-weighted engagement score', () => {
+    expect(calculateTemplatePerformance({
+      sent: 200,
+      delivered: 190,
+      opened: 100,
+      clicked: 40,
+      replied: 20,
+    })).toEqual({
+      sent: 200,
+      delivered: 190,
+      opened: 100,
+      clicked: 40,
+      replied: 20,
+      deliveryRate: 95,
+      openRate: 50,
+      clickRate: 20,
+      replyRate: 10,
+      engagementScore: 21,
+    });
+  });
+
+  it('returns zero rates when a template has not been sent', () => {
+    expect(calculateTemplatePerformance({ sent: 0, delivered: 0, opened: 0, clicked: 0, replied: 0 }))
+      .toMatchObject({ deliveryRate: 0, openRate: 0, clickRate: 0, replyRate: 0, engagementScore: 0 });
+  });
+
+  it('ranks the stronger engagement score first', () => {
+    const low = calculateTemplatePerformance({ sent: 100, delivered: 100, opened: 40, clicked: 5, replied: 2 });
+    const high = calculateTemplatePerformance({ sent: 100, delivered: 100, opened: 35, clicked: 8, replied: 9 });
+    expect([low, high].sort(compareTemplatePerformance)[0]).toBe(high);
+  });
+
+  it('defaults invalid date ranges to 30 days', () => {
+    expect(parseTemplatePerformanceRange('90d')).toBe('90d');
+    expect(parseTemplatePerformanceRange('yesterday')).toBe('30d');
+    expect(templatePerformanceStart('7d', new Date('2026-08-19T00:00:00.000Z')).toISOString())
+      .toBe('2026-08-12T00:00:00.000Z');
+  });
+});

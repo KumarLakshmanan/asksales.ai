@@ -1,0 +1,34 @@
+import { describe, expect, it } from '@jest/globals';
+import { encodeMimeHeader, normalizeEmailSubject, repairMojibake } from '../utils/textEncoding.js';
+
+describe('email subject encoding', () => {
+  it('repairs repeatedly misdecoded UTF-8 punctuation', () => {
+    expect(repairMojibake('A companyÃ¢Â€Â™s update')).toBe('A company’s update');
+    expect(repairMojibake('A companyÃ¢â‚¬â„¢s update')).toBe('A company’s update');
+  });
+
+  it('leaves valid Unicode unchanged', () => {
+    expect(repairMojibake('Café — नमस्ते')).toBe('Café — नमस्ते');
+  });
+
+  it('normalizes whitespace and strips header injection characters', () => {
+    expect(normalizeEmailSubject('  Hello\r\nBcc: hidden@example.com  ')).toBe(
+      'Hello Bcc: hidden@example.com',
+    );
+  });
+
+  it('keeps ASCII headers readable', () => {
+    expect(encodeMimeHeader('Hello Acme')).toBe('Hello Acme');
+  });
+
+  it('RFC 2047-encodes Unicode subjects', () => {
+    const encoded = encodeMimeHeader('Update for OroCircle’s team');
+    expect(encoded).toMatch(/^=\?UTF-8\?B\?.+\?=$/);
+
+    const decoded = encoded
+      .split(/\r\n /)
+      .map((word) => Buffer.from(word.slice(10, -2), 'base64').toString('utf8'))
+      .join('');
+    expect(decoded).toBe('Update for OroCircle’s team');
+  });
+});

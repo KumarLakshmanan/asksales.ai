@@ -1,0 +1,124 @@
+{
+  "actorId": "apidojo/tweet-scraper",
+  "title": "Tweet Scraper V2 - X / Twitter Scraper",
+  "description": "Lightning-fast search, URL, list, and profile scraping, with customizable filters. At $0.40 per 1000 tweets. Get comprehensive insights from Twitter (X).",
+  "categories": ["Social Media", "Lead Generation"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "tweet", "description": "Single tweet in the default dataset.", "priceUsd": 0.0004 }
+    ]
+  },
+  "input": {
+    "startUrls": {
+      "type": "array",
+      "title": "Start URLs",
+      "description": "Twitter (X) URLs. Tweet, Profile, Search, or List URLs are supported.",
+      "required": false,
+      "example": ["https://twitter.com/apify"]
+    },
+    "twitterHandles": {
+      "type": "array",
+      "title": "Twitter handles",
+      "description": "Twitter handles that you want to search on Twitter (X).",
+      "required": false,
+      "example": ["elonmusk", "taylorswift13"]
+    },
+    "searchTerms": {
+      "type": "array",
+      "title": "Search Terms",
+      "description": "Search terms you want to search from Twitter (X).",
+      "required": false
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum number of items on output",
+      "description": "Maximum number of items that you want as output.",
+      "required": false,
+      "default": 10
+    },
+    "sort": {
+      "type": "string",
+      "title": "Sort By",
+      "description": "Sorts search results.",
+      "enum": ["Top", "Latest", "Latest + Top"],
+      "default": "Latest"
+    },
+    "tweetLanguage": {
+      "type": "string",
+      "title": "Tweet language",
+      "description": "Restricts tweets to the given language, given by an ISO 639-1 code.",
+      "required": false
+    },
+    "onlyVerifiedUsers": {
+      "type": "boolean",
+      "title": "Only Verified User Tweets",
+      "default": false
+    },
+    "onlyImage": {
+      "type": "boolean",
+      "title": "Only tweets with images",
+      "default": false
+    },
+    "onlyVideo": {
+      "type": "boolean",
+      "title": "Only tweets with videos",
+      "default": false
+    }
+  },
+  "output": {
+    "type": { "type": "string", "description": "Type of result (e.g. tweet)" },
+    "id": { "type": "string", "description": "Tweet ID" },
+    "url": { "type": "string", "description": "Tweet URL" },
+    "text": { "type": "string", "description": "Full tweet text content" },
+    "retweetCount": { "type": "number", "description": "Number of retweets" },
+    "replyCount": { "type": "number", "description": "Number of replies" },
+    "likeCount": { "type": "number", "description": "Number of likes" },
+    "quoteCount": { "type": "number", "description": "Number of quote tweets" },
+    "viewCount": { "type": "number", "description": "Number of views" },
+    "bookmarkCount": { "type": "number", "description": "Number of bookmarks" },
+    "createdAt": { "type": "string", "description": "Tweet creation timestamp" },
+    "lang": { "type": "string", "description": "Tweet language" },
+    "isReply": { "type": "boolean", "description": "Whether tweet is a reply" },
+    "isRetweet": { "type": "boolean", "description": "Whether tweet is a retweet" },
+    "isQuote": { "type": "boolean", "description": "Whether tweet is a quote tweet" },
+    "entities": {
+      "type": "object",
+      "description": "Tweet entities (URLs, mentions, hashtags)",
+      "properties": {
+        "urls": [{ "expanded_url": "string", "display_url": "string" }],
+        "user_mentions": [{ "screen_name": "string", "name": "string" }],
+        "hashtags": [{ "text": "string" }],
+        "media": [{ "media_url_https": "string", "type": "string" }]
+      }
+    },
+    "author": {
+      "type": "object",
+      "description": "Tweet author info",
+      "properties": {
+        "userName": "string",
+        "id": "string",
+        "name": "string",
+        "isVerified": "boolean",
+        "isBlueVerified": "boolean",
+        "profilePicture": "string",
+        "followers": "number",
+        "following": "number",
+        "description": "string",
+        "location": "string"
+      }
+    },
+    "extendedEntities": {
+      "type": "object",
+      "description": "Extended entities (media details)"
+    },
+    "card": {
+      "type": "object|null",
+      "description": "Twitter card (link preview)"
+    },
+    "place": {
+      "type": "object|null",
+      "description": "Location data for the tweet"
+    }
+  }
+}

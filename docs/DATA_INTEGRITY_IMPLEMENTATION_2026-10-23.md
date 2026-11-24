@@ -1,0 +1,40 @@
+# Data integrity implementation handoff
+
+Base: `35d6107b50aaabf238a2fc1fa39ff172bdf6b8f7` (v8, detached). Original audit and evidence were preserved before edits in a checksummed copy outside this checkout. The scoped implementation is prepared for a local integration commit; remote publication and deployment remain separately coordinated. No production access or Page edits were performed.
+
+## Issue status and contracts
+
+- **DI01 / DI02 / DI11:** Hotel imports validate the entire workbook, then commit one transaction. A per-owner advisory transaction lock includes first-property/room provisioning; exact hotel/name uniqueness is additionally enforced by migration `331_hotel_room_import_identity.js`. Conflicting duplicate input rows are rejected. Impossible dates are rejected using calendar component checks, including Excel 1900/1904 modes. Existing duplicate room identities are rejected for review, never merged. Multiple hotels require an explicit `hotelId`. Legacy RAG cleanup runs only after commit. Reconciliation of existing booking reservations against newly uploaded availability remains the booking owner's contract; this patch does not invent that policy.
+- **DI03:** Migration `330_crm_import_recovery.js` adds a content/mapping/mode fingerprint and processed-row counter, plus unique row receipts. Import parent identity is reused for identical resubmission in the same business. A row's contact/lead, receipt and progress update commit together. No finalization-only write remains. Connection failures return HTTP 503 with the import ID and resubmission instruction. Capacity-blocked rows remain resumable and are not counted as completed. GET status reconstructs progress from receipts, including old parents with stale counters. Incomplete historical imports without a fingerprint cannot be safely matched to an original complete input; they require review/resubmission. Automatic background resumption would require an approved pending-input storage/retention policy; this patch intentionally does not add another raw file copy.
+- **DI04:** Logical deletion and replacement commit `pendingCleanupKeys` before attempting provider deletion. Worker acknowledgement removes only the completed key atomically, preserving concurrently appended work and unrelated metadata. Provider/acknowledgement failures retain durable intent and retries. Logical success remains distinct from eventual physical deletion. No real objects were deleted during verification.
+- **DI05:** Maintenance visits every active business even when an earlier business fails, then reports failed profile IDs to the job retry path. Repeated sweeps remain at-least-once; maintenance callbacks must stay idempotent. Archived-business eligibility is unchanged pending the retention/hold decision below.
+- **DI06 / OPS09:** `up`, `down`, `mark-applied`, and first-time tracking-table creation share advisory lock 8623. Busy operations exit 2 after releasing their connection, before any ledger/schema write.
+- **DI08 / DI09 and MC04/05 core:** Privacy export is prepared completely in a private mode-0600 temporary file before response headers. A read failure returns an error without a successful download. A repeatable-read snapshot, keyset pages, row/byte limits, exact Content-Length, cancellation, cleanup and terminal checksum/count manifest bound and verify the declared export. Account ownership predicates are explicit, including parent-owned child rows; field projections never include new model fields automatically. Authentication/reset/verification/webhook secrets and restricted privacy originals are excluded. No subscription/route exemption is changed here.
+- **DI07 mitigated, full inventory pending:** Export now includes reviewed fields in 14 account/business sections, rather than just users. The version-2 manifest explicitly says `inventoryComplete: false`, lists sections/columns/counts and declares exclusions. It must not be described as a full account backup or all-data-rights export. Owner approval is needed for the complete table/field inventory, restricted-original reveal policy, binaries, arbitrary metadata, legal holds and data authored in businesses owned by another account. The patch does not expand reveal authorization to close the checklist.
+- **DI10:** Import rows resolve keys/labels through the selected profile's saved CRM configuration under the configuration share lock, before the contact-resolution lock. Pipeline keys and lifecycle states are mapped separately. Unknown values retain the previous warn/fallback policy, using the configured entry stage. The CRM audit owns unmapped-field preservation and the duplicate-update/lifecycle block; review that integration before treating update-existing lifecycle acceptance as complete.
+- **DI12:** Lead CSV uses the existing CRM cell neutralizer. JSON export and historical/deleted-record selection semantics are unchanged.
+
+Multipart parsers can resume from stream events created outside the authenticated AsyncLocalStorage context. The two import routes use `preserveAsyncContext` to bind their parser continuation to the already validated context, rather than reconstructing owner identity from an untrusted selector.
+
+## Integration ownership
+
+CRMService changes are limited to imports: import creation/resumption; configured-stage resolution; receipt/progress calls; final response; and import status reconstruction. `CrmImportLedger.ts` owns persistence helpers. The duplicate-update field-assignment block is otherwise left to the CRM audit owner. Integrate its unmapped-field preservation changes without replacing this ledger or stage resolution. No unrelated CRUD, history, activity, or lifecycle method is modified. The route changes wrap only import uploads.
+
+Release owner should apply the DI06/OPS09 migration-runner patch once. Coverage owner owns privacy subscription-route exemptions; those are not included. Parent remains the sole AskSales.AI Page writer.
+
+## Decisions and remaining gaps
+
+1. Approve the full privacy table/field inventory and restricted-original/binary export policy. Until then DI07 is mitigated rather than fully closed; exclusions are machine-readable.
+2. Review historical duplicate hotel/name identities and import row receipts before migrations 331/330. Both migrations abort on duplicates without deleting/merging records. No production preflight/migration was run.
+3. Decide archived/deleted-business retention, legal holds and raw import-payload expiry. No destructive retention policy is introduced by this patch.
+4. Define pending-input storage, expiry and deliberate re-import semantics if automatic background resumption or a new run of byte-identical input is required. Current identical resubmission is idempotent recovery.
+5. Infrastructure owner still needs coordinated database/object/key/queue backups, off-host retention, RPO/RTO and isolated full restore drills. Existing synthetic archive evidence is not production recovery assurance.
+6. Migration checksums, large-export/load testing and calendar concurrency remain separate static/improvement work; they were not silently reclassified as fixed bugs.
+
+## Verification
+
+Only disposable local PostgreSQL (`implementation_synthetic`) and mocked providers were used. Tests are serial, pools at most three connections, concurrent import probes two requests. API/worker bundles are written outside the application checkout. No credentials, live role grants, provider calls or external sends are used.
+
+`DATA_INTEGRITY_LOCAL_QA=1` enables `dataIntegrityPostgres.test.ts` and `dataIntegrityMigrationsPostgres.test.ts`; both are opt-in and fixed to the disposable local fixture endpoint. The original observer tests remain preserved outside the checkout. New tests assert acceptance behavior, not the old defects.
+
+Full repository typechecking has two pre-existing errors at `tests/settings.test.ts:201` and `:222`; the exact-base baseline is retained separately. Do not weaken those unrelated fixtures to claim a green typecheck. Final test/check results, changed-file hashes and patch are supplied in the implementation evidence handoff.

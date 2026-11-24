@@ -1,0 +1,1011 @@
+"use client";
+
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CheckCheck,
+  Facebook,
+  Inbox,
+  Instagram,
+  LockKeyhole,
+  Mail,
+  MessageCircle,
+  MessageSquare,
+  Plus,
+  RefreshCw,
+  Search,
+  Send,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from '@/components/ui/textarea';
+import { AssistantDeliveryNotice } from '../AssistantDeliveryNotice';
+import { Skeleton } from "@/components/ui/skeleton";
+import { useWebSocket } from "@/contexts/WebSocketContext";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import {
+  INBOX_CHANNELS,
+  INBOX_LABELS,
+  type InboxChannel,
+  type InboxItem,
+  type InboxPage,
+} from "@/lib/outreach-inbox";
+import { OutreachMessageTimeline } from "../OutreachMessageTimeline";
+import { ConversationEventTimeline } from "@/components/support/ConversationEventTimeline";
+import { OutreachComposeArea } from "../OutreachComposeArea";
+import { readLibraryDraft } from "@/lib/libraryDraft";
+import { EmailSenderPicker } from "../EmailSenderPicker";
+import { TemplateSelector } from "../TemplateSelector";
+import { getChannelCapabilities } from "../channel-capabilities";
+import { useInboxConversation, type InboxDraft } from "./useInboxConversation";
+import {
+  InboxWhatsAppTemplate,
+  type InboxTemplatePayload,
+} from "./InboxWhatsAppTemplate";
+
+const ICONS = {
+  email: Mail,
+  whatsapp: MessageCircle,
+  instagram: Instagram,
+  facebook: Facebook,
+  sms: MessageSquare,
+};
+const emptyCounts = () =>
+  Object.fromEntries(
+    [...INBOX_CHANNELS, "all"].map((channel) => [channel, 0]),
+  ) as InboxPage["unreadThreads"];
+const order = (a: InboxItem, b: InboxItem) =>
+  b.activityAt.localeCompare(a.activityAt) ||
+  b.kind.localeCompare(a.kind) ||
+  b.id - a.id;
+
+function ChannelIcon({
+  channel,
+  className,
+}: {
+  channel: InboxChannel;
+  className?: string;
+}) {
+  const Icon = ICONS[channel];
+  return (
+    <Icon aria-hidden="true" className={cn("h-4 w-4 shrink-0", className)} />
+  );
+}
+
+function InboxThread({
+  initial,
+  refreshToken,
+  drafts,
+  onRead,
+  onChanged,
+  onBack,
+}: {
+  initial: InboxItem;
+  refreshToken: number;
+  drafts: Map<string, InboxDraft>;
+  onRead: (item: InboxItem) => void;
+  onChanged: () => void;
+  onBack: () => void;
+}) {
+  const thread = useInboxConversation(
+    initial,
+    refreshToken,
+    drafts,
+    onRead,
+    onChanged,
+  );
+  const { item } = thread;
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [showWhatsAppTemplate, setShowWhatsAppTemplate] = useState(false);
+  const [templatePayload, setTemplatePayload] =
+    useState<InboxTemplatePayload | null>(null);
+  const templateMode =
+    item.channel === "whatsapp" &&
+    (item.reply.requiresTemplate || showWhatsAppTemplate);
+  const timeline = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
+  const previousLastId = useRef<number | undefined>(undefined);
+  const capability = getChannelCapabilities(item.channel);
+  const onTemplateChange = useCallback(
+    (value: InboxTemplatePayload | null) => setTemplatePayload(value),
+    [],
+  );
+  useEffect(() => {
+    const lastId = thread.messages.at(-1)?.id;
+    if (
+      lastId !== previousLastId.current &&
+      atBottom.current &&
+      timeline.current
+    )
+      timeline.current.scrollTop = timeline.current.scrollHeight;
+    previousLastId.current = lastId;
+  }, [thread.messages]);
+  const sendTemplate = async () => {
+    if (!templatePayload) return;
+    thread.setDraft({ content: templatePayload.content, attachments: [] });
+    if (
+      await thread.send({
+        templateName: templatePayload.templateName,
+        templateLanguage: templatePayload.templateLanguage,
+        templateComponents: templatePayload.templateComponents,
+      })
+    )
+      setShowWhatsAppTemplate(false);
+  };
+  return (
+    <section
+      className="workspace-conversation flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card"
+      aria-label="Selected conversation"
+    >
+      <header className="shrink-0 border-b bg-card px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 shrink-0 md:hidden"
+            onClick={onBack}
+            aria-label="Back to inbox"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted/40 font-medium">
+            {item.leadName.slice(0, 1).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-base font-semibold">
+              {item.leadName}
+            </h2>
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ChannelIcon channel={item.channel} className="h-3.5 w-3.5" />
+              <span>{INBOX_LABELS[item.channel]}</span>
+              <span aria-hidden="true">·</span>
+              <span className="truncate">
+                {item.recipient ||
+                  item.leadCompany ||
+                  "Contact details unavailable"}
+              </span>
+            </div>
+          </div>
+          <Link
+            href={`/dashboard/leads/view/${item.leadId}`}
+            className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="View contact"
+          >
+            <span className="hidden lg:inline">View contact</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
+          <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+          {item.channel === "email" &&
+          item.reply.accountLabel &&
+          ["gmail", "resend"].includes(item.integrationProvider || "") ? (
+            <EmailSenderPicker
+              lockedSender={{
+                email: item.reply.accountLabel,
+                type: item.integrationProvider as "gmail" | "resend",
+              }}
+              value={item.reply.senderId}
+              onChange={() => {}}
+              compact
+            />
+          ) : item.channel === "email" && !item.reply.accountLabel ? (
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
+              Sender account unavailable
+            </span>
+          ) : (
+            <span>
+              From{" "}
+              <span className="font-medium text-foreground">
+                {item.reply.accountLabel || "Original account unavailable"}
+              </span>
+            </span>
+          )}
+          <span className="sr-only">Original sending account</span>
+          {item.subject && (
+            <span className="min-w-0 truncate">Subject: {item.subject}</span>
+          )}
+        </div>
+      </header>
+      {/* The history keeps at least 40% of the panel. On a short laptop screen the header,
+          assistant line and composer used to squeeze it to an unreadable strip. */}
+      <div
+        ref={timeline}
+        onScroll={() => {
+          const el = timeline.current;
+          if (el)
+            atBottom.current =
+              el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+        }}
+        className="min-h-[40%] flex-1 overflow-y-auto overscroll-contain bg-muted/15 px-4 py-5 sm:px-6"
+      >
+        {item.kind === "conversation" && ["email", "whatsapp", "instagram", "facebook"].includes(item.channel) && (
+          <ConversationEventTimeline conversationId={item.id} refreshToken={refreshToken} className="mx-auto mb-5 max-w-3xl" />
+        )}
+        {thread.loading ? (
+          <div className="mx-auto max-w-3xl space-y-5">
+            {[0, 1, 2].map((i) => (
+              <Skeleton
+                key={i}
+                className={cn("h-20 w-3/4 rounded-xl", i === 1 && "ml-auto")}
+              />
+            ))}
+          </div>
+        ) : thread.error && thread.messages.length === 0 ? (
+          <div role="alert" className="mx-auto max-w-md py-12 text-center">
+            <p className="text-sm text-destructive">{thread.error}</p>
+            <Button
+              className="mt-3"
+              variant="outline"
+              onClick={() => void thread.refresh()}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-3xl">
+            {thread.error && <div role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p>{thread.error} Your loaded messages and draft are still available.</p>
+              <Button className="mt-2" variant="outline" size="sm" onClick={() => void thread.refresh()}>Retry conversation</Button>
+            </div>}
+            {thread.hasOlder && (
+              <div className="mb-5 text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={thread.loadingOlder}
+                  onClick={() => void thread.loadOlder()}
+                >
+                  {thread.loadingOlder ? "Loading…" : "Load older messages"}
+                </Button>
+              </div>
+            )}
+            {thread.messages.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                No messages in this conversation yet.
+              </p>
+            ) : (
+              <OutreachMessageTimeline
+                channel={item.channel}
+                messages={thread.messages}
+                conversation={thread.conversation}
+                onEditDraft={
+                  item.reply.canReply
+                    ? (message) =>
+                        thread.setDraft({
+                          content: message.content,
+                          htmlContent: message.htmlContent || "",
+                          subject: message.subject || thread.draft.subject,
+                          existingDraftMessageId: message.id,
+                        })
+                    : undefined
+                }
+                onSendDraft={
+                  item.reply.canReply && !templateMode
+                    ? (message) => void thread.send({}, message)
+                    : undefined
+                }
+                onDiscardDraft={
+                  item.reply.canReply
+                    ? (message) => void thread.discard(message)
+                    : undefined
+                }
+              />
+            )}
+          </div>
+        )}
+      </div>
+      {thread.actionError && (
+        <div
+          role="alert"
+          className="shrink-0 border-t bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
+          {thread.actionError}
+        </div>
+      )}
+      {/* A blocked assistant is explained once, in the reply panel below, with its setup link. */}
+      {!thread.loading && item.reply.assistant?.ready && <div className="shrink-0 border-t px-4 py-2 sm:px-6"><AssistantDeliveryNotice readiness={item.reply.assistant} compact /></div>}
+      {!thread.loading && (!item.reply.canReply || item.reply.assistant?.ready === false) ? (
+        <div className="flex min-h-0 max-h-[50%] shrink items-start gap-2 overflow-y-auto border-t bg-card px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
+          <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+          <p role={item.reply.assistant?.ready === false ? "alert" : undefined}>
+            {item.reply.reason || (item.reply.assistant?.ready === false ? item.reply.assistant.error : null)}
+            {item.kind === "conversation" && (
+              <Link
+                href={item.reply.assistant?.setupUrl || (item.channel === "sms" ? "/dashboard/integrations/msg91" : "/dashboard/integrations")}
+                className="ml-1 inline-flex items-center gap-0.5 font-medium text-primary hover:underline"
+              >
+                {item.reply.assistant && !item.reply.assistant.ready ? 'Set up required assistant' : 'Manage connections'}
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+              </Link>
+            )}
+          </p>
+          {item.reply.assistant?.ready === false && <div className="mt-3 space-y-2"><Textarea aria-label="Reply draft" value={thread.draft.content} onChange={event => thread.setDraft({ content: event.target.value })} rows={3} maxLength={50000} /><p>Draft kept in this tab. Setting up an assistant will not send it automatically.</p></div>}
+          </div>
+        </div>
+      ) : (
+        !thread.loading && (
+          <div className="min-h-0 max-h-[50%] shrink overflow-y-auto border-t bg-card">
+            {templateMode ? (
+              <>
+                <div className="flex items-center justify-between gap-2 px-4 pt-3 text-xs text-muted-foreground">
+                  <p>
+                    {item.reply.requiresTemplate
+                      ? "An approved template is required to restart this WhatsApp conversation."
+                      : "Send an approved template."}
+                  </p>
+                  {!item.reply.requiresTemplate && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowWhatsAppTemplate(false)}
+                    >
+                      Write reply
+                    </Button>
+                  )}
+                </div>
+                <InboxWhatsAppTemplate onChange={onTemplateChange} providerAccountId={item.reply.providerAccountId} />
+                <div className="flex justify-end px-4 pb-4">
+                  <Button
+                    loading={thread.sending}
+                    disabled={
+                      !templatePayload ||
+                      Boolean(thread.error)
+                    }
+                    onClick={() => void sendTemplate()}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send template
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <OutreachComposeArea
+                channel={item.channel}
+                appearance="neutral"
+                message={thread.draft.content}
+                onMessageChange={(content) => thread.setDraft({ content })}
+                emailDesignId={thread.draft.emailDesignId}
+                onEmailDesignChange={emailDesignId => thread.setDraft({ emailDesignId })}
+                htmlContent={thread.draft.htmlContent}
+                onHtmlContentChange={item.channel === "email" ? (htmlContent) => thread.setDraft({ htmlContent }) : undefined}
+                onSend={() => void thread.send()}
+                sending={thread.sending}
+                disabled={Boolean(thread.error) || thread.uploading}
+                showSubject={item.channel === "email"}
+                subject={thread.draft.subject}
+                onSubjectChange={(subject) => thread.setDraft({ subject })}
+                attachments={thread.draft.attachments}
+                uploadingAttachments={thread.uploading}
+                fileAccept={
+                  item.channel === "instagram"
+                    ? ".png,.jpg,.jpeg,.mp3,.ogg,.m4a"
+                    : item.channel === "facebook"
+                      ? ".png,.jpg,.jpeg,.gif,.mp3,.ogg,.m4a"
+                      : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.mp3,.ogg,.m4a,.aac"
+                }
+                onFilesSelected={capability.supportsAttachments ? (files) => void thread.upload(files) : undefined}
+                onRemoveAttachment={(id) =>
+                  thread.setDraft({
+                    attachments: thread.draft.attachments.filter(
+                      (a) => a.id !== id,
+                    ),
+                  })
+                }
+                showTemplate
+                onTemplateClick={() =>
+                  item.channel === "whatsapp"
+                    ? setShowWhatsAppTemplate(true)
+                    : setTemplatesOpen(true)
+                }
+                showAIGenerate
+                onAIGenerateClick={() => void thread.generate()}
+                aiGenerating={thread.generating}
+              />
+            )}
+          </div>
+        )
+      )}
+      <TemplateSelector
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
+        channel={item.channel}
+        leadId={item.leadId}
+        onSelect={(template) => {
+          const message = readLibraryDraft(template.content);
+          thread.setDraft({
+            content: message.body,
+            htmlContent: template.htmlContent || message.html || "",
+            subject: template.subject || message.subject || thread.draft.subject,
+            existingDraftMessageId: undefined,
+            sourceTemplateId: template.sourceTemplateId,
+            sourceTemplateVersion: template.sourceTemplateVersion,
+            templateRenderContext: template.templateRenderContext,
+          });
+          setTemplatesOpen(false);
+        }}
+      />
+    </section>
+  );
+}
+
+export default function OutreachInbox() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const { subscribe } = useWebSocket();
+  const requestedChannel = params.get("channel");
+  const initialChannel = INBOX_CHANNELS.includes(requestedChannel as InboxChannel) ? requestedChannel as InboxChannel : "all";
+  const [channel, setChannel] = useState<InboxChannel | "all">(initialChannel);
+  const leadId = params.get("leadId");
+  useEffect(() => { setChannel(initialChannel); }, [initialChannel]);
+  const [unread, setUnread] = useState(false);
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  const [items, setItems] = useState<InboxItem[]>([]);
+  const [counts, setCounts] = useState(emptyCounts);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [selected, setSelected] = useState<InboxItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [drafts] = useState(() => new Map<string, InboxDraft>());
+  const generation = useRef(0);
+  const listRequest = useRef<AbortController | null>(null);
+  const loadingPage = useRef(false);
+  const cursorRef = useRef<string | null>(null);
+  const loadedKeys = useRef(new Set<string>());
+  const selectedRef = useRef(selected);
+  const conversationList = useRef<HTMLDivElement>(null);
+  const viewportAnchor = useRef<{ key: string; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const list = conversationList.current;
+    const anchor = viewportAnchor.current;
+    viewportAnchor.current = null;
+    if (!list || !anchor) return;
+    const row = Array.from(list.querySelectorAll<HTMLElement>("[data-inbox-key]")).find(element => element.dataset.inboxKey === anchor.key);
+    if (row) list.scrollTop += row.getBoundingClientRect().top - list.getBoundingClientRect().top - anchor.top;
+  }, [items]);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
+  const threadKey = params.get("thread");
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const load = useCallback(
+    async (mode: "reset" | "refresh" | "more") => {
+      if (mode === 'refresh' && loadingPage.current) return;
+      if (mode === "more" && (loadingPage.current || !cursorRef.current))
+        return;
+      listRequest.current?.abort();
+      const controller = new AbortController();
+      listRequest.current = controller;
+      let timedOut = false;
+      const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 20_000);
+      if (mode !== "more") generation.current++;
+      const requestGeneration = generation.current;
+      loadingPage.current = true;
+      setError(null);
+      if (mode === "more") setLoadingMore(true);
+      else if (mode === "reset") setLoading(true);
+      else setRefreshing(true);
+      const queryParams = new URLSearchParams({
+        channel,
+        unread: String(unread),
+        search: query,
+        limit: "50",
+      });
+      if (leadId) queryParams.set("leadId", leadId);
+      if (mode === "more" && cursorRef.current)
+        queryParams.set("cursor", cursorRef.current);
+      try {
+        const page = await api.get<InboxPage>(
+          `/api/outreach-conversations/inbox?${queryParams}`,
+          { signal: controller.signal },
+        );
+        if (requestGeneration !== generation.current) return;
+        // A burst of activity can replace the entire first page. Start a new
+        // contiguous window so the old cursor cannot skip the unseen gap.
+        const restartWindow =
+          mode === "refresh" &&
+          loadedKeys.current.size > 0 &&
+          page.items.length > 0 &&
+          !page.items.some((item) => loadedKeys.current.has(item.key));
+        if (
+          mode === "reset" ||
+          restartWindow ||
+          (mode === "refresh" && !page.nextCursor)
+        ) {
+          loadedKeys.current.clear();
+        }
+        page.items.forEach((item) => loadedKeys.current.add(item.key));
+        // Preserve the visible thread when incoming activity reorders the list.
+        // Appended pages retain their natural scroll position.
+        const list = conversationList.current;
+        if (mode === "refresh" && list?.clientHeight) {
+          const top = list.getBoundingClientRect().top;
+          const firstVisible = Array.from(list.querySelectorAll<HTMLElement>("[data-inbox-key]")).find(row => row.getBoundingClientRect().bottom > top);
+          viewportAnchor.current = firstVisible ? { key: firstVisible.dataset.inboxKey!, top: firstVisible.getBoundingClientRect().top - top } : null;
+        }
+        setItems((previous) => {
+          if (mode === "reset" || restartWindow) return page.items;
+          const boundary = page.items.at(-1);
+          const retained =
+            mode === "more"
+              ? previous
+              : page.nextCursor && boundary
+                ? previous.filter((item) => order(item, boundary) > 0)
+                : [];
+          return [
+            ...new Map(
+              [...retained, ...page.items].map((item) => [item.key, item]),
+            ).values(),
+          ].sort(order);
+        });
+        if (
+          mode !== "refresh" ||
+          restartWindow ||
+          !page.nextCursor ||
+          !cursorRef.current
+        ) {
+          cursorRef.current = page.nextCursor;
+          setCursor(page.nextCursor);
+        }
+        setCounts(page.unreadThreads);
+        setError(null);
+      } catch (e) {
+        if (requestGeneration === generation.current)
+          setError(
+            timedOut
+              ? query
+                ? 'The search did not finish within 20 seconds, so results may be incomplete. Try again, or clear the search to see all conversations.'
+                : 'Your conversations did not load within 20 seconds. Try again.'
+              : e instanceof Error ? e.message : "The inbox could not be loaded.",
+          );
+      } finally {
+        clearTimeout(timeout);
+        if (requestGeneration === generation.current) {
+          loadingPage.current = false;
+          setLoading(false);
+          setRefreshing(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    [channel, unread, query, leadId],
+  );
+  useEffect(() => {
+    viewportAnchor.current = null;
+    if (conversationList.current) conversationList.current.scrollTop = 0;
+    cursorRef.current = null;
+    setCursor(null);
+    setItems([]);
+    void load("reset");
+    const requestVersion = generation;
+    const activeRequest = listRequest;
+    return () => { requestVersion.current++; activeRequest.current?.abort(); };
+  }, [load]);
+  const refresh = useCallback(() => {
+    void load("refresh");
+    setRefreshToken((value) => value + 1);
+  }, [load]);
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
+  useEffect(() => {
+    const update = () => {
+      if (document.visibilityState === "visible") refreshRef.current();
+    };
+    let eventTimer: ReturnType<typeof setTimeout> | undefined;
+    const onEvent = () => {
+      clearTimeout(eventTimer);
+      eventTimer = setTimeout(update, 200);
+    };
+    const unsubscribe = [
+      "new_inbound_message",
+      "outreach_message_updated",
+      "outreach_sent",
+      "message_status_updated",
+      "websocket_connected",
+    ].map((event) => subscribe(event, onEvent));
+    const interval = setInterval(update, 30_000);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(eventTimer);
+      unsubscribe.forEach((fn) => fn());
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, [subscribe]);
+  useEffect(() => {
+    if (!threadKey) {
+      setSelected(null);
+      setSelectionError(null);
+      return;
+    }
+    if (selectedRef.current?.key === threadKey) return;
+    setSelected(null);
+    setSelectionError(null);
+    if (!/^(conversation|legacy):[1-9]\d*$/.test(threadKey)) {
+      setSelectionError("This conversation link is invalid.");
+      return;
+    }
+    let active = true;
+    const [kind, id] = threadKey.split(":");
+    api
+      .get<{ item: InboxItem }>(
+        `/api/outreach-conversations/inbox/${kind}/${id}`,
+      )
+      .then((response) => {
+        if (active) {
+          setSelected(response.item);
+          setSelectionError(null);
+        }
+      })
+      .catch((e) => {
+        if (active)
+          setSelectionError(
+            e instanceof Error
+              ? e.message
+              : "This conversation is unavailable.",
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [threadKey]);
+  const inboxUrl = (thread?: string, nextChannel = channel) => {
+    const next = new URLSearchParams(params.toString());
+    if (nextChannel !== 'all') next.set('channel', nextChannel);
+    else next.delete('channel');
+    if (leadId) next.set('leadId', leadId);
+    if (thread) next.set('thread', thread);
+    else next.delete('thread');
+    const hash = typeof window === 'undefined' ? '' : window.location.hash;
+    return `/dashboard/outreach/inbox${next.size ? `?${next}` : ''}${hash}`;
+  };
+  const changeChannel = (value: InboxChannel | 'all') => {
+    const keepSelection = selected && (value === 'all' || selected.channel === value);
+    setChannel(value);
+    if (!keepSelection) setSelected(null);
+    setSelectionError(null);
+    router.replace(inboxUrl(keepSelection ? selected.key : undefined, value), { scroll: false });
+  };
+  const select = (item: InboxItem) => {
+    setSelected(item);
+    setSelectionError(null);
+    router.replace(inboxUrl(item.key), { scroll: false });
+  };
+  const close = () => {
+    setSelected(null);
+    router.replace(inboxUrl(), { scroll: false });
+  };
+  const onRead = useCallback((item: InboxItem) => {
+    setItems((previous) =>
+      previous.map((row) =>
+        row.key === item.key ? { ...item, unreadCount: 0 } : row,
+      ),
+    );
+    setSelected((previous) =>
+      previous?.key === item.key ? { ...item, unreadCount: 0 } : previous,
+    );
+    if (item.unreadCount > 0) void refreshRef.current();
+  }, []);
+  const onChanged = useCallback(() => refreshRef.current(), []);
+  const visibleItems = items.filter(
+    (item) => !unread || item.unreadCount > 0 || item.key === selected?.key,
+  );
+  if (
+    unread &&
+    selected &&
+    selected.kind === "conversation" &&
+    (channel === "all" || selected.channel === channel) &&
+    (!leadId || selected.leadId === Number(leadId)) &&
+    !visibleItems.some((item) => item.key === selected.key)
+  )
+    visibleItems.unshift(selected);
+  return (
+    <div
+      className="outreach-workspace outreach-inbox flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden bg-background p-3 sm:p-5 lg:p-6"
+      data-testid="outreach-inbox"
+    >
+      <header className="flex shrink-0 flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-2xl font-semibold tracking-tight">Inbox</h1><p className="mt-1 text-sm text-muted-foreground">Customer conversations across channels</p></div>
+        <div className="flex max-w-full flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" asChild><Link href="/dashboard/outreach/follow-ups">Follow-ups</Link></Button>
+          <Button variant="outline" size="sm" asChild><Link href="/dashboard/outreach/activity">Activity</Link></Button>
+          <Button variant="outline" size="icon" aria-label="Refresh inbox" loading={refreshing} disabled={loading || loadingMore} onClick={refresh}><RefreshCw className="h-4 w-4" /></Button>
+          <Button size="sm" asChild><Link href={`/dashboard/outreach/create${channel === 'all' ? '' : `?channel=${channel}`}`}><Plus className="mr-2 h-4 w-4" />New outreach</Link></Button>
+        </div>
+      </header>
+      {leadId && <div className="flex items-center justify-between border-b px-4 py-2 text-sm">
+        <span>Conversations for the selected contact</span>
+        <Button variant="ghost" size="sm" onClick={() => router.replace(`/dashboard/outreach/inbox${channel === 'all' ? '' : `?channel=${channel}`}`, { scroll: false })}>Show all contacts</Button>
+      </div>}
+      <div
+        className="workspace-channels flex w-full shrink-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain pb-1"
+        role="group"
+        aria-label="Filter by channel"
+      >
+        <button
+          type="button"
+          aria-pressed={channel === "all"}
+          onClick={() => changeChannel("all")}
+          className={cn(
+            "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium",
+            channel === "all"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border text-muted-foreground hover:bg-muted",
+          )}
+        >
+          <Inbox className="h-3.5 w-3.5" />
+          All
+        </button>
+        {INBOX_CHANNELS.map((value) => (
+          <button
+            type="button"
+            key={value}
+            aria-pressed={channel === value}
+            onClick={() => changeChannel(value)}
+            className={cn(
+              "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium",
+              channel === value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <ChannelIcon channel={value} className="h-3.5 w-3.5" />
+            {INBOX_LABELS[value]}
+            {counts[value] > 0 && (
+              <span className="font-mono text-[11px]">{counts[value]}</span>
+            )}
+          </button>
+        ))}
+      </div>
+      <div className="flex min-h-0 min-w-0 w-full flex-1 gap-3">
+      <aside
+        className={cn(
+          "flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-lg border bg-card md:w-[310px] xl:w-[350px]",
+          selected && "hidden md:flex",
+        )}
+        aria-label="Inbox conversations"
+      >
+        <div className="shrink-0 space-y-3 border-b p-3">
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+            />
+            <Input
+              aria-label="Search inbox"
+              placeholder="Search contacts or messages"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-10 rounded-lg bg-card pl-9"
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">Searches all conversations</p>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              aria-pressed={unread}
+              onClick={() => setUnread((value) => !value)}
+              className={cn(
+                "flex min-h-11 md:min-h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-medium",
+                unread
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              <CheckCheck className="h-4 w-4" />
+              Unread threads<span className="rounded bg-primary/10 px-1.5 tabular-nums text-primary">{counts[channel]}</span>
+            </button>
+            <span className="text-[11px] text-muted-foreground">
+              Latest activity first
+            </span>
+          </div>
+        </div>
+        <div ref={conversationList} className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          onScroll={event => {
+            const list = event.currentTarget;
+            if (!error && !loading && list.scrollHeight - list.scrollTop - list.clientHeight < 240) void load("more");
+          }}>
+          {selectionError && (
+            <p
+              role="alert"
+              className="border-b p-4 text-sm text-destructive md:hidden"
+            >
+              {selectionError}
+            </p>
+          )}
+          {error && (
+            <div role="alert" className="border-b p-4 text-sm text-destructive">
+              {error}
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => void load(items.length ? "refresh" : "reset")}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+          {(loading || refreshing) && <p role="status" className="px-4 py-3 text-xs text-muted-foreground">{loading ? 'Loading conversations…' : 'Refreshing conversations…'}</p>}
+          {loading ? (
+            <div className="space-y-4 p-4">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 rounded-lg" />
+              ))}
+            </div>
+          ) : visibleItems.length === 0 && !error ? (
+            <div className="px-6 py-16 text-center">
+              <Inbox className="mx-auto mb-4 h-8 w-8 text-muted-foreground/60" />
+              <p className="text-sm font-medium">
+                {query
+                  ? "No matching conversations"
+                  : unread
+                    ? "No unread conversations"
+                    : "No conversations yet"}
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                {query
+                  ? "Try another name, company, or phrase."
+                  : unread
+                    ? "New replies will appear here."
+                    : "Your sent outreach and incoming replies will appear here."}
+              </p>
+              {query || unread || channel !== "all" ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => {
+                    setSearch("");
+                    setQuery("");
+                    setUnread(false);
+                    changeChannel("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <div>
+              {visibleItems.map((item) => (
+                <button
+                  type="button"
+                  key={item.key}
+                  data-inbox-key={item.key}
+                  style={{ contentVisibility: "auto", containIntrinsicSize: "auto 136px" }}
+                  onClick={() => select(item)}
+                  aria-current={selected?.key === item.key ? "true" : undefined}
+                  aria-label={`Open ${item.leadName} on ${INBOX_LABELS[item.channel]}${item.kind === "legacy" ? " historical send" : ""}`}
+                  className={cn(
+                    "relative flex w-full items-start gap-3 border-b px-4 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                    selected?.key === item.key &&
+                      "bg-primary/5 before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary",
+                  )}
+                >
+                  <div className="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted/30 text-sm font-medium">
+                    {item.leadName.slice(0, 1).toUpperCase()}
+                    <span className="absolute -bottom-1 -right-1 rounded-full border bg-card p-1">
+                      <ChannelIcon channel={item.channel} className="h-3 w-3" />
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p
+                        className={cn(
+                          "truncate text-sm",
+                          item.unreadCount ? "font-semibold" : "font-medium",
+                        )}
+                      >
+                        {item.leadName}
+                      </p>
+                      <time
+                        dateTime={item.activityAt}
+                        className="shrink-0 font-mono text-[11px] text-muted-foreground"
+                      >
+                        {new Date(item.activityAt).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric" },
+                        )}
+                      </time>
+                    </div>
+                    {item.subject && item.channel === "email" && (
+                      <p className="mt-0.5 truncate text-xs text-foreground/75">
+                        {item.subject}
+                      </p>
+                    )}
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                      {item.preview || "Attachment or message"}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {item.kind === "legacy"
+                          ? "Historical send · read only"
+                          : item.reply.accountLabel ||
+                            INBOX_LABELS[item.channel]}
+                      </span>
+                      {item.unreadCount > 0 && (
+                        <span className="min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center font-mono text-[11px] text-primary-foreground">
+                          {item.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {cursor && !loading && (
+            <div className="p-4 text-center">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={loadingMore}
+                onClick={() => void load("more")}
+              >
+                {loadingMore ? "Loading…" : "Load more conversations"}
+              </Button>
+            </div>
+          )}
+        </div>
+      </aside>
+      {selected ? (
+        <InboxThread
+          key={selected.key}
+          initial={selected}
+          refreshToken={refreshToken}
+          drafts={drafts}
+          onRead={onRead}
+          onChanged={onChanged}
+          onBack={close}
+        />
+      ) : (
+        <div className="hidden min-w-0 flex-1 items-center justify-center bg-muted/15 p-8 md:flex">
+          <div className="max-w-sm text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border bg-card">
+              <Inbox className="h-9 w-9 text-primary" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Your outreach, together
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Choose a conversation to read the full history and reply from its
+              original account.
+            </p>
+            <div
+              className="mt-6 flex justify-center gap-4 text-muted-foreground/70"
+              aria-hidden="true"
+            >
+              {INBOX_CHANNELS.map((value) => (
+                <ChannelIcon channel={value} key={value} />
+              ))}
+            </div>
+            {selectionError && (
+              <p role="alert" className="mt-5 text-sm text-destructive">
+                {selectionError}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}

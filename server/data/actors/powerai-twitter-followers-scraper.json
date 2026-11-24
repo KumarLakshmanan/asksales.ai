@@ -1,0 +1,116 @@
+{
+  "id": "powerai/twitter-followers-scraper",
+  "name": "Twitter Followers Scraper",
+  "description": "Fetch the list of followers for any Twitter account, with auto-pagination and detailed user info. Supports up to your specified maxResults.",
+  "inputSchema": {
+    "type": "object",
+    "schemaVersion": 1,
+    "title": "Twitter Followers Input",
+    "properties": {
+      "screenname": {
+        "title": "Twitter Username",
+        "type": "string",
+        "description": "The Twitter username whose followers list you want to fetch.",
+        "editor": "textfield",
+        "default": "elonmusk"
+      },
+      "maxResults": {
+        "title": "Max Results",
+        "type": "integer",
+        "description": "Maximum number of followers to fetch.",
+        "default": 60,
+        "minimum": 60,
+        "maximum": 100000,
+        "editor": "number"
+      }
+    },
+    "required": [
+      "screenname"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "affiliates": {
+        "type": "unknown[]",
+        "nullable": false,
+        "description": "Affiliates"
+      },
+      "blue_verified": {
+        "type": "boolean",
+        "description": "Blue verified"
+      },
+      "can_dm": {
+        "type": "boolean",
+        "description": "Can dm"
+      },
+      "verified": {
+        "type": "boolean",
+        "description": "Verified"
+      },
+      "business_account": {
+        "type": "null",
+        "description": "Business account"
+      },
+      "website": {
+        "type": "string",
+        "nullable": true,
+        "description": "Website"
+      },
+      "followers_count": {
+        "type": "number",
+        "description": "Followers count"
+      },
+      "friends_count": {
+        "type": "number",
+        "description": "Friends count"
+      },
+      "media_count": {
+        "type": "number",
+        "description": "Media count"
+      },
+      "statuses_count": {
+        "type": "number",
+        "description": "Statuses count"
+      },
+      "created_at": {
+        "type": "string",
+        "description": "Created at"
+      },
+      "description": {
+        "type": "string",
+        "description": "Description"
+      },
+      "location": {
+        "type": "string",
+        "description": "Location"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name"
+      },
+      "profile_image": {
+        "type": "string",
+        "description": "Profile image"
+      },
+      "scrapedAt": {
+        "type": "string",
+        "description": "Scraped at"
+      },
+      "screen_name": {
+        "type": "string",
+        "description": "Screen name"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "User id"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "screenname"
+  ],
+  "validation_rules": []
+}

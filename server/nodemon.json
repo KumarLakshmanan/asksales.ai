@@ -1,0 +1,22 @@
+{
+    "watch": [
+        ".",
+        ".env",
+        ".env.development",
+        ".env.production"
+    ],
+    "ext": "ts,py,env,development,production",
+    "ignore": [
+        "uploads/*",
+        "python/*",
+        "logs/*",
+        "node_modules/*",
+        ".venv-scrapling/*",
+        "dist/*",
+        ".git/*",
+        "coverage/*",
+        "*.test.ts",
+        "tests/*"
+    ],
+    "exec": "tsx"
+}

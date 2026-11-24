@@ -1,0 +1,174 @@
+{
+  "id": "apify/website-content-crawler",
+  "name": "Website Content Crawler",
+  "description": "Crawl websites and extract text content from web pages. Supports crawling of JavaScript-heavy sites using headless Chrome/Firefox browser. Extracts text, markdown, or HTML from each page.",
+  "inputSchema": {
+    "title": "Website Content Crawler",
+    "type": "object",
+    "description": "Crawl websites and extract text content from web pages.",
+    "schemaVersion": 1,
+    "properties": {
+      "startUrls": {
+        "title": "Start URLs",
+        "type": "array",
+        "description": "One or more URLs where the crawler will start. Each URL must be a valid HTTP or HTTPS URL.",
+        "editor": "requestListSources",
+        "prefill": [
+          {
+            "url": "https://docs.apify.com/academy/web-scraping-for-beginners"
+          }
+        ]
+      },
+      "crawlerType": {
+        "title": "Crawler type",
+        "type": "string",
+        "description": "Select the crawling engine. 'playwright:firefox' is the default. 'cheerio' is the fastest but can't handle JavaScript-rendered content. 'playwright:adaptive' automatically switches between Cheerio and Playwright based on page complexity.",
+        "enum": [
+          "playwright:adaptive",
+          "playwright:firefox",
+          "playwright:chrome",
+          "playwright:webkit",
+          "cheerio"
+        ],
+        "enumTitles": [
+          "Adaptive (auto-detect rendering needs)",
+          "Headless web browser (Firefox/Playwright)",
+          "Headless web browser (Chrome/Playwright)",
+          "Headless web browser (WebKit/Playwright)",
+          "Raw HTTP client (Cheerio) — fastest"
+        ],
+        "default": "playwright:firefox"
+      },
+      "maxCrawlDepth": {
+        "title": "Max crawling depth",
+        "type": "integer",
+        "description": "Specifies how many links away from the startUrls the crawler will descend. '0' means only start URLs, '1' means start URLs and their direct links, etc.",
+        "default": 1,
+        "minimum": 0
+      },
+      "maxCrawlPages": {
+        "title": "Max pages",
+        "type": "integer",
+        "description": "Maximum number of pages that the crawler will open. 0 means unlimited. The crawl will stop when this limit is reached.",
+        "default": 9999999,
+        "minimum": 0
+      },
+      "maxResults": {
+        "title": "Max results",
+        "type": "integer",
+        "description": "Maximum number of results (pages) that will be saved to the dataset. The crawl will stop when this limit is reached. 0 means unlimited.",
+        "default": 9999999,
+        "minimum": 0
+      },
+      "includeUrlGlobs": {
+        "title": "Include URLs (Glob patterns)",
+        "type": "array",
+        "description": "Glob patterns to match links in the page that will be enqueued. Combine with 'Exclude URLs' to fine-tune the crawling scope.",
+        "editor": "globs"
+      },
+      "excludeUrlGlobs": {
+        "title": "Exclude URLs (Glob patterns)",
+        "type": "array",
+        "description": "Glob patterns to match links in the page that will NOT be enqueued.",
+        "editor": "globs",
+        "default": [
+          "/**/*.{png,jpg,jpeg,pdf}"
+        ]
+      },
+      "initialCookies": {
+        "title": "Initial cookies",
+        "type": "array",
+        "description": "JSON array of cookie objects to be set before the first page is loaded.",
+        "editor": "json"
+      },
+      "proxyConfiguration": {
+        "title": "Proxy configuration",
+        "type": "object",
+        "description": "Specifies proxy servers that will be used by the crawler.",
+        "editor": "proxy"
+      },
+      "removeElementsCssSelector": {
+        "title": "Remove HTML elements (CSS selector)",
+        "type": "string",
+        "description": "CSS selector matching HTML elements that should be removed from the page before extracting text content. Use commas to separate multiple selectors.",
+        "default": "nav, footer, script, style, noscript, svg, img[src^='data:']"
+      },
+      "htmlTransformer": {
+        "title": "HTML Transformer",
+        "type": "string",
+        "description": "Determines how HTML is transformed to text output.",
+        "enum": [
+          "readableText",
+          "extractus",
+          "none"
+        ],
+        "enumTitles": [
+          "Readable text (default)",
+          "Extractus (@nicferrier/readability)",
+          "None (raw HTML)"
+        ],
+        "default": "readableText"
+      }
+    },
+    "required": [
+      "startUrls"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "The URL of the crawled page"
+      },
+      "crawl": {
+        "type": "object",
+        "description": "Crawl metadata",
+        "properties": {
+          "depth": {
+            "type": "integer",
+            "description": "Depth of the page from the start URL"
+          },
+          "httpStatusCode": {
+            "type": "integer",
+            "description": "HTTP status code of the response"
+          },
+          "loadedUrl": {
+            "type": "string",
+            "description": "Final URL after redirects"
+          }
+        }
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Page metadata",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Page title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Meta description"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author"
+          },
+          "languageCode": {
+            "type": "string",
+            "description": "Detected page language code"
+          }
+        }
+      },
+      "text": {
+        "type": "string",
+        "description": "Extracted text content from the page"
+      },
+      "markdown": {
+        "type": "string",
+        "description": "Markdown representation of the page content"
+      }
+    }
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "workflow_id": "facebook_post_authors_followers",
+  "platform": "facebook_post_authors_followers",
+  "title": "Facebook Post Author Followers",
+  "description": "Search Facebook posts by keyword, then save public followers of the author pages as profile leads. Best for building a lookalike audience from people already following relevant Facebook pages. Use when you want to go one level deeper than just post authors — targeting the audience of active content creators in your niche.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords for the search query.\n- This workflow finds public followers of active Facebook Pages in your niche.\n- The author page's Followers section must be publicly visible without Facebook login.\n- maxResults has a provider minimum of 10; the reviewed global lead cap still limits saved followers.",
+  "nodes": [
+    {
+      "id": "facebook_post_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Facebook Post Search",
+        "actorId": "powerai/facebook-post-search-scraper",
+        "actorName": "Facebook Post Search Scraper",
+        "description": "Search for Facebook posts by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{query}}",
+          "maxResults": "{{maxResults}}"
+        },
+        "output_key": "facebook_posts",
+        "finalValues": {
+          "recent_posts": true
+        }
+      }
+    },
+    {
+      "id": "facebook_followers",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Followers",
+        "actorId": "apify/facebook-followers-following-scraper",
+        "actorName": "Facebook Followers Scraper",
+        "description": "Get followers of author pages",
+        "config": {
+          "timeout": 900,
+          "memory": 6144
+        },
+        "inputMapping": {
+          "startUrls": [
+            {
+              "url": "{_current_item.author.url}"
+            }
+          ],
+          "resultsLimit": 20,
+          "followType": "follower"
+        },
+        "iterate_over": "facebook_posts",
+        "output_key": "facebook_followers"
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Source Posts",
+        "description": "Save Facebook posts before their derived follower leads",
+        "iterate_over": "facebook_posts",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "post_id": "post_id",
+          "postId": "post_id",
+          "content": "message",
+          "text": "message",
+          "url": "url",
+          "postUrl": "url",
+          "authorName": "author.name",
+          "authorId": "author.id",
+          "authorProfileUrl": "author.url",
+          "likes_count": "reactions_count",
+          "likesCount": "reactions.like",
+          "comments_count": "comments_count",
+          "sharesCount": "reshare_count",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'facebook'",
+          "postType": "type"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_followers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 850
+      },
+      "data": {
+        "label": "Save Follower Profiles",
+        "description": "Save Facebook follower profiles to leads table",
+        "iterate_over": "facebook_followers",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "source": "'facebook'",
+          "leadType": "'profile'",
+          "platformType": "'facebook'",
+          "engagementType": "'follower'",
+          "profileId": "id",
+          "fullName": "title",
+          "name": "title",
+          "bio": "subtitle_text",
+          "about": "subtitle_text",
+          "facebookUrl": "url",
+          "profileUrl": "url",
+          "profilePicture": "image",
+          "photo": "image",
+          "postUrl": "postUrl",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_followers",
+      "source": "facebook_post_search",
+      "target": "facebook_followers",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "facebook_post_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_followers_to_db",
+      "source": "facebook_followers",
+      "target": "db_save_followers",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_followers",
+      "source": "db_save_posts",
+      "target": "db_save_followers",
+      "animated": false
+    }
+  ],
+  "mappings": []
+}

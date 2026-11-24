@@ -1,0 +1,124 @@
+{
+  "actorId": "dev_fusion/Linkedin-Profile-Scraper",
+  "title": "Mass LinkedIn Profile Scraper with Email (No Cookies)",
+  "description": "Extract full LinkedIn profile insights: verified email, phone number, work history, education, and more. No cookies or account required.",
+  "categories": ["Lead Generation"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "result", "priceUsd": 0.01 }
+    ]
+  },
+  "input": {
+    "profileUrls": {
+      "type": "array",
+      "title": "LinkedIn Profile URLs",
+      "description": "Enter the LinkedIn URLs of the people you want to enrich data.",
+      "required": true,
+      "example": ["https://www.linkedin.com/in/williamhgates", "https://www.linkedin.com/in/jeannie-wyrick-b4760710a"]
+    }
+  },
+  "output": {
+    "firstName": { "type": "string", "description": "First name of the person" },
+    "lastName": { "type": "string", "description": "Last name of the person" },
+    "fullName": { "type": "string", "description": "Full name of the person" },
+    "headline": { "type": "string", "description": "LinkedIn headline" },
+    "about": { "type": "string|null", "description": "About section text" },
+    "email": { "type": "string|null", "description": "Verified email address" },
+    "mobileNumber": { "type": "string|null", "description": "Mobile phone number" },
+    "linkedinUrl": { "type": "string", "description": "LinkedIn profile URL" },
+    "linkedinPublicUrl": { "type": "string", "description": "LinkedIn public profile URL" },
+    "publicIdentifier": { "type": "string", "description": "LinkedIn public identifier" },
+    "jobTitle": { "type": "string", "description": "Current job title" },
+    "companyName": { "type": "string", "description": "Current company name" },
+    "companyIndustry": { "type": "string|null", "description": "Company industry" },
+    "companySize": { "type": "string|null", "description": "Company size range" },
+    "companyWebsite": { "type": "string", "description": "Company website URL" },
+    "companyLinkedin": { "type": "string", "description": "Company LinkedIn URL" },
+    "addressWithCountry": { "type": "string", "description": "Full address with country" },
+    "addressCountryOnly": { "type": "string", "description": "Country only" },
+    "jobLocation": { "type": "string|null", "description": "Current job location" },
+    "connections": { "type": "number", "description": "Number of connections" },
+    "followers": { "type": "number", "description": "Number of followers" },
+    "totalExperienceYears": { "type": "number", "description": "Total years of experience" },
+    "isVerified": { "type": "boolean", "description": "Whether profile is verified" },
+    "isPremium": { "type": "boolean|null", "description": "Premium account status" },
+    "isJobSeeker": { "type": "boolean|null", "description": "Open to work status" },
+    "isCreator": { "type": "boolean|null", "description": "LinkedIn creator mode" },
+    "experiences": {
+      "type": "array",
+      "description": "Work experience history",
+      "items": {
+        "title": "string",
+        "companyName": "string|null",
+        "companyWebsite": "string|null",
+        "companyIndustry": "string|null",
+        "companySize": "string|null",
+        "companyLinkedin": "string|null (as companyLink1)",
+        "employmentType": "string|null",
+        "jobLocation": "string|null",
+        "jobLocationCountry": "string|null",
+        "jobStartedOn": "string|null",
+        "jobEndedOn": "string|null",
+        "jobStillWorking": "boolean",
+        "jobDescription": "string|null"
+      }
+    },
+    "educations": {
+      "type": "array",
+      "description": "Education history",
+      "items": {
+        "title": "string",
+        "subtitle": "string|null",
+        "description": "string|null",
+        "grade": "string|null"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skills list",
+      "items": {
+        "title": "string"
+      }
+    },
+    "languages": {
+      "type": "array",
+      "description": "Languages spoken",
+      "items": {
+        "name": "string",
+        "proficiency": "string"
+      }
+    },
+    "creatorWebsite": {
+      "type": "array",
+      "description": "Personal websites from creator profile",
+      "items": {
+        "category": "string",
+        "url": "string"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Recommendations given"
+    },
+    "updates": {
+      "type": "array",
+      "description": "Recent posts/updates",
+      "items": {
+        "postLink": "string",
+        "postText": "string|null",
+        "type": "string"
+      }
+    },
+    "peopleAlsoViewed": {
+      "type": "array",
+      "description": "Similar profiles",
+      "items": {
+        "first_name": "string",
+        "last_name": "string",
+        "headline": "string",
+        "url": "string"
+      }
+    }
+  }
+}

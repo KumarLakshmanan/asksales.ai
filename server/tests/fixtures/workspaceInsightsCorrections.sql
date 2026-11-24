@@ -1,0 +1,18 @@
+      CREATE TABLE company_settings(id integer,user_id integer,timezone text);
+      INSERT INTO company_settings VALUES(11,7,'UTC'),(12,7,'UTC');
+      CREATE TABLE workspace_insights_runtime(id integer,enabled boolean,pricing_guard_enabled boolean,instrumentation_started_at timestamptz);
+      INSERT INTO workspace_insights_runtime VALUES(1,true,true,now());
+      CREATE TABLE ai_usage_events(id integer,business_profile_id integer,kind text,process text,provider text,model text,channel text,conversation_kind text,conversation_id integer,contact_id integer,status text,input_tokens integer,output_tokens integer,total_tokens integer,cached_tokens integer,reasoning_tokens integer,duration_ms integer,units numeric,occurred_at timestamptz);
+      CREATE TABLE outreach_conversations(id integer,business_profile_id integer,crm_contact_id integer,channel text,user_id integer);
+      CREATE TABLE outreach_messages(id integer,business_profile_id integer,conversation_id integer,direction text,status text,message_kind text,message_type text,sent_at timestamp,created_at timestamp,provider_message_id text,external_message_id text);
+      CREATE TABLE support_chat_sessions(id integer,business_profile_id integer);
+      CREATE TABLE support_chat_messages(id integer,business_profile_id integer,session_id integer,role text,processing_status text,metadata jsonb,created_at timestamp);
+      CREATE TABLE sales_outcome_events(id serial,business_profile_id integer,user_id integer,actor_user_id integer,source_key text,kind text,contact_id integer,booking_id integer,conversation_kind text,conversation_id integer,channel text,amount numeric,currency text,evidence text,payment_id text,verified boolean,occurred_at timestamptz,UNIQUE(business_profile_id,source_key));
+      CREATE TABLE crm_contacts(id integer,business_profile_id integer,merged_into_contact_id integer,first_name text,last_name text,company text,user_id integer,currency text,created_at timestamp);
+      CREATE TABLE wallet_transactions(id integer,organization_id integer,billing_business_profile_id integer,type text,amount numeric,created_at timestamp,metadata jsonb,category text,reference_type text,reference_id text);
+      CREATE TABLE tool_approvals(business_profile_id integer,status text,created_at timestamp);
+      CREATE TABLE admin_api_credentials(platform text,config jsonb,is_active boolean);
+      CREATE TABLE intent_classifier_credentials(platform text,config jsonb,is_active boolean);
+      CREATE TABLE embedding_settings(default_provider text,default_model text,updated_at timestamptz);
+      CREATE TABLE ai_settings(ai_provider text,ai_model text,image_provider text,image_model text,video_provider text,video_model text);
+      INSERT INTO ai_usage_events(id,business_profile_id,kind,process,provider,model,channel,status,total_tokens,occurred_at) VALUES(1,11,'text','customer_chat','fixture','fixture','email','success',5,now()),(2,12,'text','customer_chat','fixture','fixture','email','success',99,now()),(3,11,'text','customer_chat','fixture','fixture/model@v1','email','success',7,now());

@@ -1,0 +1,18 @@
+stateDiagram-v2
+  accTitle: Proposal offer lifecycle
+  accDescr: A draft passes required approval and delivery readiness. Sending is distinct from sent viewed accepted rejected or expired. Delivery unknown requires review. Onboarding has a separate configured outcome.
+  [*] --> Draft
+  Draft --> Reviewed: Required fields, prices and approval
+  Reviewed --> Sending: Delivery checks pass
+  Sending --> Sent: Confirmed provider outcome
+  Sending --> DeliveryUnknown: Outcome uncertain
+  DeliveryUnknown --> ReviewAttempt: Inspect before retry
+  Sent --> Viewed: Recorded view
+  Sent --> Accepted: Valid customer response
+  Viewed --> Accepted: Valid customer response
+  Viewed --> Rejected: Valid customer response
+  Sent --> Rejected: Valid customer response
+  Sent --> Expired: Validity elapsed
+  Viewed --> Expired: Validity elapsed
+  Sent --> Superseded: Replacement offer
+  Accepted --> OnboardingOutcome: If configured

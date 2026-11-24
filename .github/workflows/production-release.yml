@@ -1,0 +1,40 @@
+name: Production release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asksales-production-release
+  cancel-in-progress: true
+
+jobs:
+  operations:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/operations-safety.yml
+    with:
+      release_checks: true
+
+  regressions:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/cross-layer-regression.yml
+    with:
+      release_checks: true
+
+  support:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/support-agent-safety.yml
+    with:
+      release_checks: true
+
+  release-ready:
+    name: Ready for production
+    if: github.ref == 'refs/heads/main'
+    needs: [operations, regressions, support]
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'The production server can now deploy the checked main commit.'

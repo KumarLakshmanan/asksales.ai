@@ -1,0 +1,131 @@
+{
+  "actorId": "harvestapi/linkedin-company-search",
+  "title": "LinkedIn Company Search Scraper (No Cookies)",
+  "description": "Search for LinkedIn companies with filters and extract detailed company information. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Actor Start", "description": "Charged when the Actor starts", "priceUsd": 0.001 },
+      { "title": "Short company", "description": "Short company result", "priceUsd": 0.002 },
+      { "title": "Full company", "description": "Full company details result", "priceUsd": 0.004 }
+    ]
+  },
+  "input": {
+    "scraperMode": {
+      "type": "string",
+      "title": "Company Scraper Mode",
+      "description": "Choose the mode for scraping LinkedIn companies. Short provides basic info, Full includes full detailed data.",
+      "enum": ["short", "full"],
+      "default": "full"
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum number of companies to scrape",
+      "description": "Maximum number of companies to scrape. The actor will stop when this limit is reached.",
+      "default": 20,
+      "required": false
+    },
+    "searchQuery": {
+      "type": "string",
+      "title": "Search query",
+      "description": "Query to search LinkedIn companies (e.g., 'marketing', 'fintech startup').",
+      "required": false
+    },
+    "locations": {
+      "type": "array",
+      "title": "Locations Filter",
+      "description": "Filter Companies by these LinkedIn locations.",
+      "required": false,
+      "example": ["San Francisco", "United Kingdom"]
+    },
+    "industryIds": {
+      "type": "array",
+      "title": "Industry IDs Filter",
+      "description": "Filter Companies by LinkedIn industry IDs. Example: '4' for Software Development.",
+      "required": false
+    },
+    "companySize": {
+      "type": "array",
+      "title": "Company Size Filter",
+      "description": "Filter by company size ranges.",
+      "enum": ["1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10001+"],
+      "required": false
+    },
+    "startPage": {
+      "type": "integer",
+      "title": "Start Page",
+      "description": "Page number to start scraping from.",
+      "default": 1
+    },
+    "takePages": {
+      "type": "integer",
+      "title": "Scrape search pages",
+      "description": "Number of search pages to scrape. Each page contains 50 companies.",
+      "required": false
+    }
+  },
+  "output": {
+    "name": { "type": "string", "description": "Company name" },
+    "universalName": { "type": "string", "description": "LinkedIn universal name (slug)" },
+    "id": { "type": "string", "description": "Company ID" },
+    "linkedinUrl": { "type": "string", "description": "Company LinkedIn URL" },
+    "website": { "type": "string", "description": "Company website URL" },
+    "description": { "type": "string", "description": "Company description" },
+    "tagline": { "type": "string|null", "description": "Company tagline" },
+    "logo": { "type": "string", "description": "Company logo URL" },
+    "backgroundCover": { "type": "string", "description": "Background cover image URL" },
+    "employeeCount": { "type": "number", "description": "Exact employee count" },
+    "followerCount": { "type": "number", "description": "LinkedIn follower count" },
+    "employeeCountRange": {
+      "type": "object",
+      "description": "Employee count range",
+      "properties": {
+        "start": "number",
+        "end": "number|null"
+      }
+    },
+    "foundedOn": { "type": "object|null", "description": "Founded date" },
+    "industries": {
+      "type": "array",
+      "description": "Company industries",
+      "items": {
+        "name": "string",
+        "title": "string",
+        "id": "string"
+      }
+    },
+    "locations": {
+      "type": "array",
+      "description": "Company office locations",
+      "items": {
+        "headquarter": "boolean",
+        "city": "string|null",
+        "country": "string",
+        "line1": "string|null",
+        "postalCode": "string|null",
+        "geographicArea": "string|null",
+        "parsed": {
+          "text": "string",
+          "city": "string",
+          "country": "string",
+          "countryFull": "string",
+          "state": "string"
+        }
+      }
+    },
+    "specialities": {
+      "type": "array",
+      "description": "Company specialities"
+    },
+    "similarOrganizations": {
+      "type": "array",
+      "description": "Similar companies on LinkedIn"
+    },
+    "active": { "type": "boolean", "description": "Whether company page is active" },
+    "pageVerified": { "type": "boolean", "description": "Whether company page is verified" },
+    "callToActionUrl": { "type": "string", "description": "CTA button URL" },
+    "jobSearchUrl": { "type": "string", "description": "Jobs page URL" },
+    "pageType": { "type": "string", "description": "Page type" }
+  }
+}

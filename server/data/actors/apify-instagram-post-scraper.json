@@ -1,0 +1,112 @@
+{
+  "actorId": "apify/instagram-post-scraper",
+  "title": "Instagram Post Scraper",
+  "description": "Scrape Instagram posts. Just add one or more Instagram usernames and get your data including caption, metrics, images, mentions, coauthors, recent comments, sponsored status, video duration, views.",
+  "categories": ["Social Media"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Post", "description": "Each post written to the dataset.", "priceUsd": 0.0017 },
+      { "title": "Post details", "description": "Each post with detailed information.", "priceUsd": 0.001 }
+    ]
+  },
+  "input": {
+    "username": {
+      "type": "array",
+      "title": "Instagram username, profile URL, or post URL",
+      "description": "Insert the username or URL of any profile you want to get posts from. You can also paste post URLs.",
+      "required": true,
+      "example": ["natgeo", "https://www.instagram.com/natgeo/"]
+    },
+    "resultsLimit": {
+      "type": "integer",
+      "title": "Maximum posts per profile",
+      "description": "Maximum number of posts to scrape per profile.",
+      "required": false,
+      "default": 5
+    },
+    "skipPinnedPosts": {
+      "type": "boolean",
+      "title": "Skip pinned posts",
+      "default": false
+    },
+    "onlyPostsNewerThan": {
+      "type": "string",
+      "title": "Extract posts newer than",
+      "description": "Limit how far back in time. Format: YYYY-MM-DD or relative (e.g. '1 months').",
+      "required": false
+    },
+    "dataDetailLevel": {
+      "type": "string",
+      "title": "Data detail level",
+      "description": "Choose basicData or detailedData.",
+      "enum": ["basicData", "detailedData"],
+      "default": "basicData"
+    }
+  },
+  "output": {
+    "caption": { "type": "string", "description": "Post caption text" },
+    "url": { "type": "string", "description": "Post URL" },
+    "shortCode": { "type": "string", "description": "Post short code" },
+    "type": { "type": "string", "description": "Post type (Image, Video, Sidecar)" },
+    "ownerUsername": { "type": "string", "description": "Username of post owner" },
+    "ownerFullName": { "type": "string", "description": "Full name of post owner" },
+    "ownerId": { "type": "string", "description": "Owner user ID" },
+    "timestamp": { "type": "string", "description": "Post timestamp" },
+    "likesCount": { "type": "number", "description": "Number of likes" },
+    "commentsCount": { "type": "number", "description": "Number of comments" },
+    "videoViewCount": { "type": "number", "description": "Video view count" },
+    "videoPlayCount": { "type": "number", "description": "Video play count" },
+    "videoDuration": { "type": "number", "description": "Video duration in seconds" },
+    "displayUrl": { "type": "string", "description": "Display image URL" },
+    "videoUrl": { "type": "string", "description": "Video URL" },
+    "audioUrl": { "type": "string", "description": "Audio URL" },
+    "hashtags": {
+      "type": "array",
+      "description": "Hashtags used in post",
+      "items": "string"
+    },
+    "mentions": {
+      "type": "array",
+      "description": "Users mentioned in post",
+      "items": "string"
+    },
+    "taggedUsers": {
+      "type": "array",
+      "description": "Users tagged in post",
+      "items": {
+        "username": "string",
+        "full_name": "string",
+        "is_verified": "boolean"
+      }
+    },
+    "coauthorProducers": {
+      "type": "array",
+      "description": "Coauthor/collaborator profiles",
+      "items": {
+        "username": "string",
+        "is_verified": "boolean"
+      }
+    },
+    "latestComments": {
+      "type": "array",
+      "description": "Latest comments on the post",
+      "items": {
+        "text": "string",
+        "ownerUsername": "string",
+        "timestamp": "string"
+      }
+    },
+    "childPosts": {
+      "type": "array",
+      "description": "Child posts (for carousel/sidecar posts)"
+    },
+    "locationName": { "type": "string", "description": "Location name" },
+    "locationId": { "type": "string", "description": "Location ID" },
+    "paidPartnership": { "type": "boolean", "description": "Whether post is a paid partnership" },
+    "isPinned": { "type": "boolean", "description": "Whether post is pinned" },
+    "isCommentsDisabled": { "type": "boolean", "description": "Whether comments are disabled" },
+    "inputUrl": { "type": "string", "description": "Input URL used" },
+    "firstComment": { "type": "string", "description": "First comment text" }
+  }
+}

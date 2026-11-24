@@ -1,0 +1,5033 @@
+{
+  "evidence": "Isolated synthetic PostgreSQL only; no production data or provider delivery",
+  "benchmarkIntroducedAtBase": "1de1a4af9eaee6678fdb00e58cfa9bc33e1e2a42",
+  "metadata": {
+    "version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "jit": "on",
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "nodeVersion": "v24.22.1",
+    "serviceSourceSha256": "fe1bc0d52ca9d794f7e5185743c0093128f31de8a48ea42a918962a7c679337b"
+  },
+  "method": "One discarded warmup plus three EXPLAIN ANALYZE BUFFERS samples; median execution time",
+  "fixture": {
+    "generatedLeads": 30000,
+    "generatedReceipts": 30000,
+    "additionalLeads": 6,
+    "additionalReceipts": 6
+  },
+  "results": [
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.198,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        0.198,
+        0.17,
+        0.237
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.175,
+      "medianPlanningMs": 0.169,
+      "executionSamplesMs": [
+        0.177,
+        0.175,
+        0.175
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        0.201,
+        0.242,
+        0.2
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.138,
+      "medianPlanningMs": 0.193,
+      "executionSamplesMs": [
+        0.138,
+        0.137,
+        0.138
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.143,
+      "medianPlanningMs": 0.177,
+      "executionSamplesMs": [
+        0.143,
+        0.143,
+        0.296
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.165,
+      "medianPlanningMs": 0.18,
+      "executionSamplesMs": [
+        0.164,
+        0.165,
+        0.165
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.025,
+      "medianPlanningMs": 0.421,
+      "executionSamplesMs": [
+        1.094,
+        1.025,
+        0.941
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.588,
+      "medianPlanningMs": 0.457,
+      "executionSamplesMs": [
+        1.642,
+        1.588,
+        1.555
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 20.581,
+      "medianPlanningMs": 0.42,
+      "executionSamplesMs": [
+        20.581,
+        19.563,
+        20.649
+      ],
+      "jitMs": 18.711,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.177,
+      "medianPlanningMs": 0.247,
+      "executionSamplesMs": [
+        0.177,
+        0.17,
+        0.366
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.267,
+      "medianPlanningMs": 0.201,
+      "executionSamplesMs": [
+        0.368,
+        0.267,
+        0.22
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.21,
+      "executionSamplesMs": [
+        0.201,
+        0.199,
+        0.324
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.137,
+      "medianPlanningMs": 0.163,
+      "executionSamplesMs": [
+        0.138,
+        0.137,
+        0.137
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.149,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        0.146,
+        0.149,
+        0.232
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.21,
+      "medianPlanningMs": 0.19,
+      "executionSamplesMs": [
+        0.273,
+        0.21,
+        0.168
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.834,
+      "medianPlanningMs": 0.484,
+      "executionSamplesMs": [
+        0.834,
+        0.832,
+        0.854
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 1.688,
+      "medianPlanningMs": 0.519,
+      "executionSamplesMs": [
+        1.688,
+        1.931,
+        1.588
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 21.356,
+      "medianPlanningMs": 0.637,
+      "executionSamplesMs": [
+        21.356,
+        21.431,
+        19.151
+      ],
+      "jitMs": 17.995,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.171,
+      "medianPlanningMs": 0.203,
+      "executionSamplesMs": [
+        0.171,
+        0.169,
+        0.245
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.179,
+      "medianPlanningMs": 0.18,
+      "executionSamplesMs": [
+        0.179,
+        0.179,
+        0.178
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.23,
+      "medianPlanningMs": 0.203,
+      "executionSamplesMs": [
+        0.2,
+        0.23,
+        0.442
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.141,
+      "medianPlanningMs": 0.168,
+      "executionSamplesMs": [
+        0.14,
+        0.141,
+        0.176
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.183,
+      "medianPlanningMs": 0.168,
+      "executionSamplesMs": [
+        0.146,
+        0.183,
+        0.236
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.168,
+      "medianPlanningMs": 0.211,
+      "executionSamplesMs": [
+        0.176,
+        0.168,
+        0.164
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.892,
+      "medianPlanningMs": 0.269,
+      "executionSamplesMs": [
+        0.993,
+        0.888,
+        0.892
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.747,
+      "medianPlanningMs": 0.279,
+      "executionSamplesMs": [
+        1.747,
+        1.595,
+        1.847
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.196,
+      "medianPlanningMs": 0.328,
+      "executionSamplesMs": [
+        1.247,
+        1.133,
+        1.196
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.189,
+      "medianPlanningMs": 0.166,
+      "executionSamplesMs": [
+        0.171,
+        0.309,
+        0.189
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.178,
+      "medianPlanningMs": 0.205,
+      "executionSamplesMs": [
+        0.168,
+        0.181,
+        0.178
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.222,
+      "executionSamplesMs": [
+        0.391,
+        0.201,
+        0.201
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.139,
+      "medianPlanningMs": 0.187,
+      "executionSamplesMs": [
+        0.139,
+        0.177,
+        0.138
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.149,
+      "medianPlanningMs": 0.196,
+      "executionSamplesMs": [
+        0.252,
+        0.143,
+        0.149
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.168,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        0.167,
+        0.219,
+        0.168
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.186,
+      "medianPlanningMs": 0.328,
+      "executionSamplesMs": [
+        1.106,
+        1.186,
+        1.376
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.231,
+      "medianPlanningMs": 0.315,
+      "executionSamplesMs": [
+        1.231,
+        1.248,
+        1.098
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.232,
+      "medianPlanningMs": 0.328,
+      "executionSamplesMs": [
+        1.249,
+        1.2,
+        1.232
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.196,
+      "executionSamplesMs": [
+        0.207,
+        0.174,
+        0.201
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.179,
+      "medianPlanningMs": 0.211,
+      "executionSamplesMs": [
+        0.178,
+        0.179,
+        0.226
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.2,
+      "medianPlanningMs": 0.215,
+      "executionSamplesMs": [
+        0.198,
+        0.2,
+        0.363
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.136,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        0.139,
+        0.136,
+        0.136
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.145,
+      "medianPlanningMs": 0.174,
+      "executionSamplesMs": [
+        0.139,
+        0.197,
+        0.145
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.167,
+      "medianPlanningMs": 0.181,
+      "executionSamplesMs": [
+        0.23,
+        0.166,
+        0.167
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.904,
+      "medianPlanningMs": 0.467,
+      "executionSamplesMs": [
+        0.977,
+        0.904,
+        0.805
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.58,
+      "medianPlanningMs": 0.478,
+      "executionSamplesMs": [
+        1.509,
+        1.58,
+        1.793
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 20.927,
+      "medianPlanningMs": 0.457,
+      "executionSamplesMs": [
+        23.119,
+        20.927,
+        19.77
+      ],
+      "jitMs": 18.477,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.173,
+      "medianPlanningMs": 0.18,
+      "executionSamplesMs": [
+        0.173,
+        0.171,
+        0.205
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.18,
+      "medianPlanningMs": 0.196,
+      "executionSamplesMs": [
+        0.179,
+        0.18,
+        0.472
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.243,
+      "medianPlanningMs": 0.191,
+      "executionSamplesMs": [
+        0.201,
+        0.243,
+        0.248
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.138,
+      "medianPlanningMs": 0.175,
+      "executionSamplesMs": [
+        0.133,
+        0.138,
+        0.165
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.151,
+      "medianPlanningMs": 0.29,
+      "executionSamplesMs": [
+        0.151,
+        0.144,
+        0.275
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.166,
+      "medianPlanningMs": 0.187,
+      "executionSamplesMs": [
+        0.166,
+        0.166,
+        0.165
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 40960,
+      "medianExecutionMs": 0.919,
+      "medianPlanningMs": 0.463,
+      "executionSamplesMs": [
+        0.919,
+        0.993,
+        0.845
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 1.529,
+      "medianPlanningMs": 0.582,
+      "executionSamplesMs": [
+        1.539,
+        1.529,
+        1.512
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 20.889,
+      "medianPlanningMs": 0.585,
+      "executionSamplesMs": [
+        20.889,
+        23.362,
+        19.832
+      ],
+      "jitMs": 18.375,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.169,
+      "medianPlanningMs": 0.214,
+      "executionSamplesMs": [
+        0.172,
+        0.169,
+        0.169
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.177,
+      "medianPlanningMs": 0.19,
+      "executionSamplesMs": [
+        0.176,
+        0.178,
+        0.177
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.287,
+      "medianPlanningMs": 0.351,
+      "executionSamplesMs": [
+        0.287,
+        0.239,
+        0.36
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.137,
+      "medianPlanningMs": 0.161,
+      "executionSamplesMs": [
+        0.183,
+        0.134,
+        0.137
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.144,
+      "medianPlanningMs": 0.17,
+      "executionSamplesMs": [
+        0.145,
+        0.143,
+        0.144
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.171,
+      "medianPlanningMs": 0.216,
+      "executionSamplesMs": [
+        0.171,
+        0.166,
+        0.207
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.89,
+      "medianPlanningMs": 0.276,
+      "executionSamplesMs": [
+        0.887,
+        0.89,
+        1.125
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.637,
+      "medianPlanningMs": 0.3,
+      "executionSamplesMs": [
+        1.637,
+        1.643,
+        1.628
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.124,
+      "medianPlanningMs": 0.294,
+      "executionSamplesMs": [
+        1.085,
+        1.274,
+        1.124
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.172,
+      "medianPlanningMs": 0.17,
+      "executionSamplesMs": [
+        0.206,
+        0.172,
+        0.169
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.25,
+      "medianPlanningMs": 0.177,
+      "executionSamplesMs": [
+        0.25,
+        0.475,
+        0.185
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.191,
+      "executionSamplesMs": [
+        0.198,
+        0.201,
+        0.201
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.136,
+      "medianPlanningMs": 0.161,
+      "executionSamplesMs": [
+        0.137,
+        0.136,
+        0.136
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.144,
+      "medianPlanningMs": 0.165,
+      "executionSamplesMs": [
+        0.144,
+        0.189,
+        0.144
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.167,
+      "medianPlanningMs": 0.257,
+      "executionSamplesMs": [
+        0.166,
+        0.173,
+        0.167
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.193,
+      "medianPlanningMs": 0.344,
+      "executionSamplesMs": [
+        1.089,
+        1.193,
+        1.208
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.127,
+      "medianPlanningMs": 0.344,
+      "executionSamplesMs": [
+        1.127,
+        1.156,
+        1.102
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "sparse",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 1.239,
+      "medianPlanningMs": 0.361,
+      "executionSamplesMs": [
+        1.141,
+        1.239,
+        1.26
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.175,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        0.17,
+        0.225,
+        0.175
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.181,
+      "medianPlanningMs": 0.208,
+      "executionSamplesMs": [
+        0.178,
+        0.181,
+        0.282
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.244,
+      "medianPlanningMs": 0.219,
+      "executionSamplesMs": [
+        0.254,
+        0.197,
+        0.244
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.138,
+      "medianPlanningMs": 0.198,
+      "executionSamplesMs": [
+        0.138,
+        0.132,
+        0.293
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.145,
+      "medianPlanningMs": 0.195,
+      "executionSamplesMs": [
+        0.212,
+        0.144,
+        0.145
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.167,
+      "medianPlanningMs": 0.193,
+      "executionSamplesMs": [
+        0.167,
+        0.166,
+        0.176
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 13.394,
+      "medianPlanningMs": 0.503,
+      "executionSamplesMs": [
+        13.394,
+        13.048,
+        14.376
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 15005,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 622.599,
+      "medianPlanningMs": 0.67,
+      "executionSamplesMs": [
+        623.494,
+        622.599,
+        605.15
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 49,
+          "rows": 0,
+          "rowsRemoved": 14350,
+          "sharedHits": 164789,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 16.624,
+      "medianPlanningMs": 0.427,
+      "executionSamplesMs": [
+        17.024,
+        16.62,
+        16.624
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.203,
+      "medianPlanningMs": 0.422,
+      "executionSamplesMs": [
+        0.297,
+        0.174,
+        0.203
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.226,
+      "medianPlanningMs": 0.203,
+      "executionSamplesMs": [
+        0.226,
+        0.238,
+        0.174
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.201,
+      "medianPlanningMs": 0.222,
+      "executionSamplesMs": [
+        0.201,
+        0.202,
+        0.199
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.136,
+      "medianPlanningMs": 0.202,
+      "executionSamplesMs": [
+        0.136,
+        0.139,
+        0.136
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.146,
+      "medianPlanningMs": 0.181,
+      "executionSamplesMs": [
+        0.2,
+        0.142,
+        0.146
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.17,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        0.19,
+        0.167,
+        0.17
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 892928,
+      "medianExecutionMs": 13.928,
+      "medianPlanningMs": 0.464,
+      "executionSamplesMs": [
+        14.148,
+        13.928,
+        13.654
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 15005,
+          "sharedHits": 3460,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 892928,
+      "medianExecutionMs": 615.48,
+      "medianPlanningMs": 0.523,
+      "executionSamplesMs": [
+        615.48,
+        627.098,
+        614.629
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 49,
+          "rows": 0,
+          "rowsRemoved": 14359,
+          "sharedHits": 162197,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 892928,
+      "medianExecutionMs": 17.338,
+      "medianPlanningMs": 0.536,
+      "executionSamplesMs": [
+        17.338,
+        19.249,
+        16.206
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3460,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.172,
+      "medianPlanningMs": 0.232,
+      "executionSamplesMs": [
+        0.172,
+        0.173,
+        0.172
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.18,
+      "medianPlanningMs": 0.259,
+      "executionSamplesMs": [
+        0.18,
+        0.231,
+        0.179
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.2,
+      "medianPlanningMs": 0.191,
+      "executionSamplesMs": [
+        0.255,
+        0.2,
+        0.2
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.138,
+      "medianPlanningMs": 0.182,
+      "executionSamplesMs": [
+        0.228,
+        0.137,
+        0.138
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.148,
+      "medianPlanningMs": 0.171,
+      "executionSamplesMs": [
+        0.145,
+        0.148,
+        0.205
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.172,
+      "medianPlanningMs": 0.212,
+      "executionSamplesMs": [
+        0.246,
+        0.172,
+        0.166
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 16.314,
+      "medianPlanningMs": 0.28,
+      "executionSamplesMs": [
+        16.314,
+        15.701,
+        16.893
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 47.983,
+      "medianPlanningMs": 0.356,
+      "executionSamplesMs": [
+        49.309,
+        47.983,
+        47.958
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 18.78,
+      "medianPlanningMs": 0.3,
+      "executionSamplesMs": [
+        18.864,
+        18.78,
+        18.453
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.171,
+      "medianPlanningMs": 0.174,
+      "executionSamplesMs": [
+        0.172,
+        0.171,
+        0.171
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.181,
+      "medianPlanningMs": 0.18,
+      "executionSamplesMs": [
+        0.181,
+        0.178,
+        0.184
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.24,
+      "medianPlanningMs": 0.197,
+      "executionSamplesMs": [
+        0.203,
+        0.24,
+        0.273
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.14,
+      "medianPlanningMs": 0.192,
+      "executionSamplesMs": [
+        0.14,
+        0.137,
+        0.218
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.186,
+      "medianPlanningMs": 0.177,
+      "executionSamplesMs": [
+        0.215,
+        0.146,
+        0.186
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.167,
+      "medianPlanningMs": 0.183,
+      "executionSamplesMs": [
+        0.228,
+        0.167,
+        0.166
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 21.032,
+      "medianPlanningMs": 0.331,
+      "executionSamplesMs": [
+        20.339,
+        21.032,
+        21.344
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 21.186,
+      "medianPlanningMs": 0.312,
+      "executionSamplesMs": [
+        21.186,
+        21.814,
+        20.701
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 1,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 22.033,
+      "medianPlanningMs": 0.323,
+      "executionSamplesMs": [
+        22.126,
+        20.864,
+        22.033
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.202,
+      "medianPlanningMs": 0.241,
+      "executionSamplesMs": [
+        0.219,
+        0.175,
+        0.202
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.185,
+      "medianPlanningMs": 0.232,
+      "executionSamplesMs": [
+        0.227,
+        0.18,
+        0.185
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.2,
+      "medianPlanningMs": 0.204,
+      "executionSamplesMs": [
+        0.199,
+        0.2,
+        0.2
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.139,
+      "medianPlanningMs": 0.169,
+      "executionSamplesMs": [
+        0.178,
+        0.139,
+        0.138
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.145,
+      "medianPlanningMs": 0.174,
+      "executionSamplesMs": [
+        0.144,
+        0.145,
+        0.215
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.168,
+      "medianPlanningMs": 0.184,
+      "executionSamplesMs": [
+        0.166,
+        0.168,
+        0.169
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 14.223,
+      "medianPlanningMs": 0.402,
+      "executionSamplesMs": [
+        14.223,
+        13.061,
+        14.417
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 15005,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 17.489,
+      "medianPlanningMs": 0.395,
+      "executionSamplesMs": [
+        17.651,
+        17.489,
+        16.673
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 599,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 16.216,
+      "medianPlanningMs": 0.463,
+      "executionSamplesMs": [
+        16.885,
+        16.216,
+        15.831
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 599,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.171,
+      "medianPlanningMs": 0.192,
+      "executionSamplesMs": [
+        0.501,
+        0.171,
+        0.169
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.345,
+      "medianPlanningMs": 0.179,
+      "executionSamplesMs": [
+        0.175,
+        0.345,
+        0.381
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.29,
+      "medianPlanningMs": 0.231,
+      "executionSamplesMs": [
+        0.199,
+        0.344,
+        0.29
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.137,
+      "medianPlanningMs": 0.198,
+      "executionSamplesMs": [
+        0.139,
+        0.134,
+        0.137
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.199,
+      "medianPlanningMs": 0.17,
+      "executionSamplesMs": [
+        0.199,
+        0.288,
+        0.145
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 892928,
+      "medianExecutionMs": 0.167,
+      "medianPlanningMs": 0.2,
+      "executionSamplesMs": [
+        0.167,
+        0.165,
+        0.19
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 892928,
+      "medianExecutionMs": 13.367,
+      "medianPlanningMs": 0.455,
+      "executionSamplesMs": [
+        12.927,
+        14.054,
+        13.367
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 15005,
+          "sharedHits": 3460,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 892928,
+      "medianExecutionMs": 639.307,
+      "medianPlanningMs": 0.654,
+      "executionSamplesMs": [
+        639.307,
+        641.112,
+        616.07
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 49,
+          "rows": 0,
+          "rowsRemoved": 14359,
+          "sharedHits": 162197,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 892928,
+      "medianExecutionMs": 17.05,
+      "medianPlanningMs": 0.627,
+      "executionSamplesMs": [
+        16.617,
+        18.175,
+        17.05
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "benchmark_receipt_destination_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3460,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.209,
+      "medianPlanningMs": 0.2,
+      "executionSamplesMs": [
+        0.171,
+        0.209,
+        0.408
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.179,
+      "medianPlanningMs": 0.206,
+      "executionSamplesMs": [
+        0.179,
+        0.175,
+        0.18
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.199,
+      "medianPlanningMs": 0.231,
+      "executionSamplesMs": [
+        0.199,
+        0.22,
+        0.198
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.139,
+      "medianPlanningMs": 0.192,
+      "executionSamplesMs": [
+        0.344,
+        0.137,
+        0.139
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.177,
+      "medianPlanningMs": 0.207,
+      "executionSamplesMs": [
+        0.181,
+        0.146,
+        0.177
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.168,
+      "medianPlanningMs": 0.184,
+      "executionSamplesMs": [
+        0.168,
+        0.167,
+        0.168
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 15.312,
+      "medianPlanningMs": 0.269,
+      "executionSamplesMs": [
+        15.312,
+        15.159,
+        18.414
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 46.82,
+      "medianPlanningMs": 0.388,
+      "executionSamplesMs": [
+        46.82,
+        47.369,
+        46.756
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 18.909,
+      "medianPlanningMs": 0.372,
+      "executionSamplesMs": [
+        18.918,
+        18.26,
+        18.909
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.223,
+      "medianPlanningMs": 0.191,
+      "executionSamplesMs": [
+        0.171,
+        0.223,
+        0.254
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.184,
+      "medianPlanningMs": 0.193,
+      "executionSamplesMs": [
+        0.232,
+        0.184,
+        0.183
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 3,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.236,
+      "medianPlanningMs": 0.192,
+      "executionSamplesMs": [
+        0.239,
+        0.236,
+        0.2
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.14,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        0.167,
+        0.137,
+        0.14
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.143,
+      "medianPlanningMs": 0.165,
+      "executionSamplesMs": [
+        0.144,
+        0.142,
+        0.143
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 2,
+      "indexBytes": 0,
+      "medianExecutionMs": 0.169,
+      "medianPlanningMs": 0.179,
+      "executionSamplesMs": [
+        0.169,
+        0.166,
+        0.21
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 19.772,
+      "medianPlanningMs": 0.335,
+      "executionSamplesMs": [
+        19.113,
+        19.928,
+        19.772
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 19.646,
+      "medianPlanningMs": 0.31,
+      "executionSamplesMs": [
+        19.5,
+        19.646,
+        20.532
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "receipt-heavy",
+      "trial": 2,
+      "leadEvery": 1000,
+      "receiptEvery": 2,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 20.693,
+      "medianPlanningMs": 0.323,
+      "executionSamplesMs": [
+        20.477,
+        20.693,
+        20.91
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Index Scan",
+          "index": "sent_messages_recipient_suppression_idx",
+          "loops": 1,
+          "rows": 15004,
+          "rowsRemoved": 1,
+          "sharedHits": 3516,
+          "sharedReads": 0,
+          "indexCondition": "(user_id = 991)"
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 8.898,
+      "medianPlanningMs": 0.172,
+      "executionSamplesMs": [
+        8.898,
+        8.917,
+        8.694
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.181,
+      "medianPlanningMs": 0.175,
+      "executionSamplesMs": [
+        9.181,
+        9.012,
+        9.342
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.343,
+      "medianPlanningMs": 0.191,
+      "executionSamplesMs": [
+        9.408,
+        9.343,
+        9.254
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 5.938,
+      "medianPlanningMs": 0.21,
+      "executionSamplesMs": [
+        6.118,
+        5.929,
+        5.938
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.02,
+      "medianPlanningMs": 0.175,
+      "executionSamplesMs": [
+        6.227,
+        6.02,
+        5.885
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.312,
+      "medianPlanningMs": 0.179,
+      "executionSamplesMs": [
+        6.312,
+        6.199,
+        6.468
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.234,
+      "medianPlanningMs": 0.396,
+      "executionSamplesMs": [
+        3.234,
+        3.55,
+        3.159
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.82,
+      "medianPlanningMs": 0.437,
+      "executionSamplesMs": [
+        10.142,
+        9.625,
+        9.82
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 23.17,
+      "medianPlanningMs": 0.542,
+      "executionSamplesMs": [
+        23.424,
+        23.04,
+        23.17
+      ],
+      "jitMs": 19.232,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 8.706,
+      "medianPlanningMs": 0.201,
+      "executionSamplesMs": [
+        8.651,
+        10.012,
+        8.706
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 40960,
+      "medianExecutionMs": 8.958,
+      "medianPlanningMs": 0.206,
+      "executionSamplesMs": [
+        9.088,
+        8.958,
+        8.851
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 40960,
+      "medianExecutionMs": 9.767,
+      "medianPlanningMs": 0.193,
+      "executionSamplesMs": [
+        9.875,
+        8.982,
+        9.767
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 6.06,
+      "medianPlanningMs": 0.186,
+      "executionSamplesMs": [
+        6.06,
+        6.08,
+        5.894
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 40960,
+      "medianExecutionMs": 5.867,
+      "medianPlanningMs": 0.171,
+      "executionSamplesMs": [
+        5.856,
+        5.871,
+        5.867
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 40960,
+      "medianExecutionMs": 6.496,
+      "medianPlanningMs": 0.181,
+      "executionSamplesMs": [
+        6.496,
+        6.535,
+        6.334
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 40960,
+      "medianExecutionMs": 3.202,
+      "medianPlanningMs": 0.464,
+      "executionSamplesMs": [
+        3.17,
+        3.202,
+        3.367
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 9.633,
+      "medianPlanningMs": 0.463,
+      "executionSamplesMs": [
+        9.633,
+        9.616,
+        9.975
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 25.347,
+      "medianPlanningMs": 0.483,
+      "executionSamplesMs": [
+        25.347,
+        23.322,
+        27.49
+      ],
+      "jitMs": 23.115,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 10.128,
+      "medianPlanningMs": 0.174,
+      "executionSamplesMs": [
+        10.428,
+        10.128,
+        9.359
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.615,
+      "medianPlanningMs": 0.172,
+      "executionSamplesMs": [
+        9.615,
+        9.154,
+        10.6
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.756,
+      "medianPlanningMs": 0.187,
+      "executionSamplesMs": [
+        10.242,
+        9.756,
+        9.265
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.294,
+      "medianPlanningMs": 0.162,
+      "executionSamplesMs": [
+        6.294,
+        7.046,
+        6.034
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.011,
+      "medianPlanningMs": 0.279,
+      "executionSamplesMs": [
+        5.801,
+        6.011,
+        6.482
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.471,
+      "medianPlanningMs": 0.181,
+      "executionSamplesMs": [
+        6.471,
+        6.219,
+        6.874
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.329,
+      "medianPlanningMs": 0.298,
+      "executionSamplesMs": [
+        3.329,
+        3.415,
+        3.322
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 11.306,
+      "medianPlanningMs": 0.316,
+      "executionSamplesMs": [
+        11.306,
+        11.479,
+        9.83
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.652,
+      "medianPlanningMs": 0.3,
+      "executionSamplesMs": [
+        4.003,
+        3.65,
+        3.652
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.759,
+      "medianPlanningMs": 0.168,
+      "executionSamplesMs": [
+        9.759,
+        9.9,
+        9.522
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.919,
+      "medianPlanningMs": 0.175,
+      "executionSamplesMs": [
+        10.771,
+        9.919,
+        8.911
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.741,
+      "medianPlanningMs": 0.189,
+      "executionSamplesMs": [
+        10.189,
+        9.741,
+        9.562
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.353,
+      "medianPlanningMs": 0.164,
+      "executionSamplesMs": [
+        6.553,
+        6.203,
+        6.353
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.239,
+      "medianPlanningMs": 0.165,
+      "executionSamplesMs": [
+        6.29,
+        6.239,
+        6.192
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.863,
+      "medianPlanningMs": 0.213,
+      "executionSamplesMs": [
+        6.863,
+        6.997,
+        6.477
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 4.727,
+      "medianPlanningMs": 0.342,
+      "executionSamplesMs": [
+        4.78,
+        4.354,
+        4.727
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 4.6,
+      "medianPlanningMs": 0.343,
+      "executionSamplesMs": [
+        4.482,
+        4.6,
+        4.666
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 1,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 5.088,
+      "medianPlanningMs": 0.36,
+      "executionSamplesMs": [
+        6.075,
+        4.858,
+        5.088
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.683,
+      "medianPlanningMs": 0.182,
+      "executionSamplesMs": [
+        9.683,
+        9.075,
+        10.788
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.388,
+      "medianPlanningMs": 0.181,
+      "executionSamplesMs": [
+        9.606,
+        9.125,
+        9.388
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.676,
+      "medianPlanningMs": 0.197,
+      "executionSamplesMs": [
+        9.411,
+        10.233,
+        9.676
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.752,
+      "medianPlanningMs": 0.169,
+      "executionSamplesMs": [
+        6.752,
+        9.126,
+        6.392
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.076,
+      "medianPlanningMs": 0.172,
+      "executionSamplesMs": [
+        5.806,
+        6.076,
+        6.371
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.898,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        6.898,
+        6.611,
+        7.752
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.463,
+      "medianPlanningMs": 0.403,
+      "executionSamplesMs": [
+        3.853,
+        3.365,
+        3.463
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 10.392,
+      "medianPlanningMs": 0.814,
+      "executionSamplesMs": [
+        10.392,
+        11.061,
+        10.024
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "base",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 23.832,
+      "medianPlanningMs": 0.418,
+      "executionSamplesMs": [
+        23.832,
+        24.835,
+        23.292
+      ],
+      "jitMs": 18.926,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 9.96,
+      "medianPlanningMs": 0.183,
+      "executionSamplesMs": [
+        9.267,
+        9.96,
+        10.006
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 40960,
+      "medianExecutionMs": 9.433,
+      "medianPlanningMs": 0.184,
+      "executionSamplesMs": [
+        9.831,
+        9.433,
+        9.282
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 40960,
+      "medianExecutionMs": 9.795,
+      "medianPlanningMs": 0.194,
+      "executionSamplesMs": [
+        9.934,
+        9.795,
+        8.929
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 40960,
+      "medianExecutionMs": 6.295,
+      "medianPlanningMs": 0.17,
+      "executionSamplesMs": [
+        7.037,
+        5.904,
+        6.295
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 40960,
+      "medianExecutionMs": 6.276,
+      "medianPlanningMs": 0.171,
+      "executionSamplesMs": [
+        6.072,
+        6.57,
+        6.276
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 40960,
+      "medianExecutionMs": 6.342,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        6.163,
+        6.342,
+        6.473
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 40960,
+      "medianExecutionMs": 3.814,
+      "medianPlanningMs": 0.482,
+      "executionSamplesMs": [
+        3.419,
+        3.814,
+        4.108
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 0,
+          "rowsRemoved": 305,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 10.147,
+      "medianPlanningMs": 0.515,
+      "executionSamplesMs": [
+        9.72,
+        10.147,
+        10.554
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-receipt-index",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 40960,
+      "medianExecutionMs": 24.118,
+      "medianPlanningMs": 0.536,
+      "executionSamplesMs": [
+        24.979,
+        24.118,
+        23.651
+      ],
+      "jitMs": 19.652,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 305,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.558,
+      "medianPlanningMs": 0.178,
+      "executionSamplesMs": [
+        9.215,
+        9.558,
+        10.254
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.121,
+      "medianPlanningMs": 0.217,
+      "executionSamplesMs": [
+        9.791,
+        8.987,
+        9.121
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.615,
+      "medianPlanningMs": 0.243,
+      "executionSamplesMs": [
+        9.158,
+        9.615,
+        9.656
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.194,
+      "medianPlanningMs": 0.166,
+      "executionSamplesMs": [
+        5.997,
+        6.194,
+        7.09
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.211,
+      "medianPlanningMs": 0.171,
+      "executionSamplesMs": [
+        6.211,
+        6.022,
+        6.665
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.086,
+      "medianPlanningMs": 0.189,
+      "executionSamplesMs": [
+        6.873,
+        6.038,
+        6.086
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.675,
+      "medianPlanningMs": 0.468,
+      "executionSamplesMs": [
+        3.561,
+        3.675,
+        3.818
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 10.397,
+      "medianPlanningMs": 0.287,
+      "executionSamplesMs": [
+        10.397,
+        10.525,
+        9.897
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-materialized-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 3.903,
+      "medianPlanningMs": 0.332,
+      "executionSamplesMs": [
+        3.903,
+        3.996,
+        3.867
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.569,
+      "medianPlanningMs": 0.2,
+      "executionSamplesMs": [
+        9.975,
+        9.532,
+        9.569
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 50,
+      "suppressedCount": 7,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.052,
+      "medianPlanningMs": 0.193,
+      "executionSamplesMs": [
+        8.923,
+        9.159,
+        9.052
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "whatsapp",
+      "size": 200,
+      "suppressedCount": 22,
+      "indexBytes": 0,
+      "medianExecutionMs": 9.503,
+      "medianPlanningMs": 0.196,
+      "executionSamplesMs": [
+        10.753,
+        9.503,
+        9.185
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 1,
+      "suppressedCount": 1,
+      "indexBytes": 0,
+      "medianExecutionMs": 5.966,
+      "medianPlanningMs": 0.22,
+      "executionSamplesMs": [
+        5.966,
+        6.043,
+        5.929
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 50,
+      "suppressedCount": 6,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.941,
+      "medianPlanningMs": 0.19,
+      "executionSamplesMs": [
+        7.908,
+        6.364,
+        6.941
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "sms",
+      "size": 200,
+      "suppressedCount": 21,
+      "indexBytes": 0,
+      "medianExecutionMs": 6.484,
+      "medianPlanningMs": 0.185,
+      "executionSamplesMs": [
+        6.619,
+        6.484,
+        6.146
+      ],
+      "jitMs": 0,
+      "receiptNodes": []
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 1,
+      "suppressedCount": 0,
+      "indexBytes": 0,
+      "medianExecutionMs": 4.547,
+      "medianPlanningMs": 0.31,
+      "executionSamplesMs": [
+        4.547,
+        4.333,
+        4.967
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 50,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 4.739,
+      "medianPlanningMs": 0.36,
+      "executionSamplesMs": [
+        4.833,
+        4.621,
+        4.739
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    },
+    {
+      "distribution": "dense-leads",
+      "trial": 2,
+      "leadEvery": 10,
+      "receiptEvery": 100,
+      "variant": "proposed-union-receipts",
+      "channel": "email",
+      "size": 200,
+      "suppressedCount": 4,
+      "indexBytes": 0,
+      "medianExecutionMs": 4.927,
+      "medianPlanningMs": 0.333,
+      "executionSamplesMs": [
+        4.959,
+        4.681,
+        4.927
+      ],
+      "jitMs": 0,
+      "receiptNodes": [
+        {
+          "type": "Bitmap Heap Scan",
+          "loops": 1,
+          "rows": 304,
+          "rowsRemoved": 1,
+          "sharedHits": 306,
+          "sharedReads": 0
+        }
+      ]
+    }
+  ]
+}

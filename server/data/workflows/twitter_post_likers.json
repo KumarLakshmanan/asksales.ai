@@ -1,0 +1,167 @@
+{
+  "workflow_id": "twitter_post_likers",
+  "platform": "twitter_post_likers",
+  "title": "Twitter Post Likers",
+  "description": "Search Twitter/X posts by keyword and extract users who liked those posts with enriched profiles. Best for finding people who actively engage with content in your niche through likes \u2014 the broadest form of engagement. Use when you want to build large prospect lists from Twitter by targeting people who show interest in industry-relevant content. Likers represent a wider audience than repliers or retweeters, making this ideal for brand awareness campaigns.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords or hashtags for searchTerms.\n- Likers are the BROADEST engagement signal \u2014 many more likers than repliers.\n- searchTerms should be an array of keyword strings.\n- maxItems controls how many tweets to process.\n- This produces larger lead lists than replier/retweeter workflows.\n- Great for consumer brands and awareness campaigns.",
+  "nodes": [
+    {
+      "id": "twitter_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Twitter Post Search",
+        "actorId": "apidojo/tweet-scraper",
+        "actorName": "Tweet Scraper",
+        "description": "Search for tweets by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchTerms": "{{searchTerms}}",
+          "maxItems": "{{maxItems}}",
+          "sort": "Top"
+        },
+        "output_key": "twitter_tweets",
+        "finalValues": {
+          "sort": "Top",
+          "tweetLanguage": "en",
+          "onlyVerifiedUsers": false,
+          "onlyImage": false,
+          "onlyVideo": false
+        }
+      }
+    },
+    {
+      "id": "twitter_liker_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Liker Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Get profiles of users who liked the tweets",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "startUrls": [
+            "{_current_item.url}"
+          ],
+          "maxItems": 20
+        },
+        "iterate_over": "twitter_tweets",
+        "output_key": "twitter_likers",
+        "field_mapping": {
+          "startUrls": "url"
+        }
+      }
+    },
+    {
+      "id": "db_save_tweets",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Tweets",
+        "description": "Save search tweets to posts table",
+        "iterate_over": "twitter_tweets",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "post_id": "id",
+          "postId": "id",
+          "content": "text",
+          "text": "text",
+          "url": "url",
+          "postUrl": "url",
+          "author_handle": "author.userName",
+          "authorName": "author.name",
+          "authorUsername": "author.userName",
+          "likes_count": "likeCount",
+          "likesCount": "likeCount",
+          "comments_count": "replyCount",
+          "shares_count": "retweetCount",
+          "retweetCount": "retweetCount",
+          "viewCount": "viewCount",
+          "posted_at": "createdAt",
+          "createdAt": "createdAt",
+          "source": "'twitter'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_likers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Likers as Leads",
+        "description": "Save tweet likers to leads table",
+        "iterate_over": "twitter_likers",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "engagementType": "'liker'",
+          "fullName": "name",
+          "name": "name",
+          "twitterHandle": "userName",
+          "twitterUrl": "'https://twitter.com/' + userName",
+          "profileUrl": "'https://twitter.com/' + userName",
+          "bio": "description",
+          "about": "description",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "followersCount": "followers",
+          "followingCount": "following",
+          "postsCount": "statusesCount",
+          "website": "url",
+          "location": "location",
+          "verified": "isVerified",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_likers",
+      "source": "twitter_search",
+      "target": "twitter_liker_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_tweets",
+      "source": "twitter_search",
+      "target": "db_save_tweets",
+      "animated": true
+    },
+    {
+      "id": "e_likers_to_save",
+      "source": "twitter_liker_profiles",
+      "target": "db_save_likers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

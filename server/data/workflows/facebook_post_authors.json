@@ -1,0 +1,170 @@
+{
+  "workflow_id": "facebook_post_authors",
+  "platform": "facebook_post_authors",
+  "title": "Facebook Post Author Profiles",
+  "description": "Search Facebook posts by keyword and extract detailed author page profiles as leads. Best for identifying Facebook pages actively posting about topics in your niche. Use when you want to find businesses or influencers creating content around specific keywords, then reach out to them with partnership or sales proposals. A lightweight 2-step strategy.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords for the search query.\n- This workflow enriches post authors with full page data (followers, likes, intro, website).\n- Keep maxResults between 10-30.\n- Great for finding active business pages in your niche.",
+  "nodes": [
+    {
+      "id": "facebook_post_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Facebook Post Search",
+        "actorId": "powerai/facebook-post-search-scraper",
+        "actorName": "Facebook Post Search Scraper",
+        "description": "Search for Facebook posts by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{query}}",
+          "maxResults": "{{maxResults}}"
+        },
+        "output_key": "facebook_posts",
+        "finalValues": {
+          "recent_posts": true
+        }
+      }
+    },
+    {
+      "id": "facebook_profile",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Author Profiles",
+        "actorId": "apify/facebook-pages-scraper",
+        "actorName": "Facebook Pages Scraper",
+        "description": "Get detailed profiles of post authors",
+        "config": {
+          "timeout": 900,
+          "memory": 6144
+        },
+        "inputMapping": {
+          "startUrls": [
+            {
+              "url": "{_current_item.author.url}"
+            }
+          ]
+        },
+        "iterate_over": "facebook_posts",
+        "output_key": "facebook_profiles"
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Posts",
+        "description": "Save Facebook posts to posts table",
+        "iterate_over": "facebook_posts",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "post_id": "post_id",
+          "postId": "post_id",
+          "content": "message",
+          "text": "message",
+          "url": "url",
+          "postUrl": "url",
+          "authorName": "author.name",
+          "authorId": "author.id",
+          "authorProfileUrl": "author.url",
+          "likes_count": "reactions_count",
+          "likesCount": "reactions.like",
+          "comments_count": "comments_count",
+          "sharesCount": "reshare_count",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'facebook'",
+          "postType": "type"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_authors",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Author Profiles",
+        "description": "Save Facebook author profiles to leads table",
+        "iterate_over": "facebook_profiles",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "source": "'facebook'",
+          "leadType": "'page'",
+          "platformType": "'facebook'",
+          "engagementType": "'post_author'",
+          "profileId": "pageId",
+          "fullName": "title",
+          "name": "title",
+          "companyName": "title",
+          "bio": "intro",
+          "about": "intro",
+          "location": "address",
+          "website": "website",
+          "phone": "phone",
+          "email": "email",
+          "facebookUrl": "facebookUrl",
+          "profileUrl": "facebookUrl",
+          "profilePicture": "profilePictureUrl",
+          "photo": "profilePictureUrl",
+          "followersCount": "followers",
+          "likeCount": "likes",
+          "categories": "categories",
+          "rating": "rating",
+          "reviewCount": "ratingCount",
+          "postUrl": "postUrl",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_post_to_profile",
+      "source": "facebook_post_search",
+      "target": "facebook_profile",
+      "animated": true
+    },
+    {
+      "id": "e_post_to_db_posts",
+      "source": "facebook_post_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_profile_to_db_authors",
+      "source": "facebook_profile",
+      "target": "db_save_authors",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_authors",
+      "source": "db_save_posts",
+      "target": "db_save_authors",
+      "animated": false
+    }
+  ],
+  "mappings": []
+}

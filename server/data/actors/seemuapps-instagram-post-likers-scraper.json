@@ -1,0 +1,81 @@
+{
+  "id": "seemuapps/instagram-post-likers-scraper",
+  "name": "Instagram Post Likers Scraper",
+  "description": "Extract public liker identities from an Instagram post or reel URL without requiring login or cookies.",
+  "category": "Social Media",
+  "platform": "instagram",
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      {
+        "title": "Single liker",
+        "description": "One Instagram user who liked the supplied post.",
+        "priceUsd": 0.0023
+      }
+    ]
+  },
+  "isDeprecated": false,
+  "inputSchema": {
+    "title": "Instagram Post Likers Scraper Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "required": [
+      "post"
+    ],
+    "properties": {
+      "post": {
+        "title": "Post URL or shortcode",
+        "type": "string",
+        "description": "A public Instagram post or reel URL, or its shortcode."
+      },
+      "maxItems": {
+        "title": "Max Likers",
+        "type": "integer",
+        "description": "Maximum number of likers to return. Zero asks for as many as Instagram exposes.",
+        "minimum": 0,
+        "default": 0
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string",
+        "description": "Instagram user ID of the liker."
+      },
+      "username": {
+        "type": "string",
+        "description": "Instagram username of the liker."
+      },
+      "displayName": {
+        "type": "string",
+        "description": "Display name of the liker."
+      },
+      "profilePicUrl": {
+        "type": "string",
+        "description": "Profile picture URL."
+      },
+      "isPrivate": {
+        "type": "boolean",
+        "description": "Whether the liker account is private."
+      },
+      "isVerified": {
+        "type": "boolean",
+        "description": "Whether the liker account is verified."
+      },
+      "postId": {
+        "type": "string",
+        "description": "Instagram ID of the liked post."
+      },
+      "postShortcode": {
+        "type": "string",
+        "description": "Shortcode of the liked post."
+      },
+      "postUrl": {
+        "type": "string",
+        "description": "URL of the liked post."
+      }
+    }
+  }
+}

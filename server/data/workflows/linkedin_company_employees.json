@@ -1,0 +1,90 @@
+{
+  "workflow_id": "linkedin_company_employees",
+  "platform": "linkedin_company_employees",
+  "title": "LinkedIn Company Employees Search",
+  "description": "Extract employees from specific LinkedIn company pages with optional job title and seniority filters. Best for account-based marketing (ABM) when you already know the target companies and need to find specific people within them. Use when you have company URLs or names and want to identify decision-makers, department heads, or specific role holders inside those organizations.",
+  "version": "1.0",
+  "tips": "- companies MUST be full LinkedIn company URLs (e.g., \"https://www.linkedin.com/company/google\").\n- Company URLs are sufficient for company-only discovery. searchQuery, locations, jobTitles and seniorityLevelIds are OPTIONAL. If the user asks for empty/no filters, leave them empty or omitted; never inject historical ICP roles or locations.\n- Otherwise use jobTitles to target requested roles and seniorityLevelIds for requested seniority (220=Director, 300=VP, 310=CXO).\n- This is ideal when you know TARGET COMPANIES and want to find specific people there.\n- Generate MULTIPLE entries if targeting 3+ companies, one per company.",
+  "nodes": [
+    {
+      "id": "linkedin_company_employees",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Extract Company Employees",
+        "actorId": "harvestapi/linkedin-company-employees",
+        "actorName": "LinkedIn Company Employees Scraper",
+        "description": "Extract employees from LinkedIn company pages",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "companies": "{{companies}}",
+          "maxItems": "{{maxItems}}",
+          "profileScraperMode": "Short ($4 per 1k)",
+          "searchQuery": "{{searchQuery}}",
+          "locations": "{{locations}}",
+          "jobTitles": "{{jobTitles}}",
+          "seniorityLevelIds": "{{seniorityLevelIds}}"
+        },
+        "output_key": "company_employees",
+        "finalValues": {
+          "profileScraperMode": "Short ($4 per 1k)",
+          "startPage": 1
+        }
+      }
+    },
+    {
+      "id": "db_save_employees",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Employees as Leads",
+        "description": "Save LinkedIn company employees to leads table",
+        "iterate_over": "company_employees",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'company_employee'",
+          "fullName": "firstName + ' ' + lastName",
+          "name": "firstName + ' ' + lastName",
+          "firstName": "firstName",
+          "lastName": "lastName",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "headline": "headline",
+          "title": "headline",
+          "email": "email",
+          "bio": "about",
+          "location": "location.parsed.text",
+          "company": "experience[0].companyName",
+          "companyName": "experience[0].companyName",
+          "jobTitle": "experience[0].position",
+          "publicId": "publicIdentifier",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_employees_to_db",
+      "source": "linkedin_company_employees",
+      "target": "db_save_employees",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

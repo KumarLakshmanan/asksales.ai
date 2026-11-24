@@ -1,0 +1,2258 @@
+{
+  "baseline": "10d00c7262d372dd7830a0b146209babcd319e64",
+  "note": "Source and navigation inventory only. It does not prove any live workflow or provider integration succeeds.",
+  "topics": [
+    {
+      "slug": "getting-started",
+      "title": "Getting started",
+      "group": "Start here",
+      "evidence": [
+        "client/src/hooks/useSetupComplete.ts",
+        "client/src/app/dashboard/(main)/layout.tsx",
+        "client/src/hooks/use-business-profiles.ts",
+        "client/src/lib/settings-navigation.ts",
+        "client/src/lib/platform-access.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Home",
+          "href": "/dashboard/home"
+        },
+        {
+          "label": "Business profiles",
+          "href": "/dashboard/business-profiles"
+        },
+        {
+          "label": "Workspace configuration",
+          "href": "/dashboard/settings/workspace"
+        }
+      ]
+    },
+    {
+      "slug": "business-and-brands",
+      "title": "Businesses, onboarding and brands",
+      "group": "Start here",
+      "evidence": [
+        "client/src/app/setup/business-profile/page.tsx",
+        "client/src/app/setup/brand-toolkit/page.tsx",
+        "client/src/app/dashboard/(main)/brand-toolkit/page.tsx",
+        "client/src/hooks/use-business-profiles.ts",
+        "docs/business-profile-isolation.md"
+      ],
+      "destinations": [
+        {
+          "label": "Business profiles",
+          "href": "/dashboard/business-profiles"
+        },
+        {
+          "label": "Brand Toolkit",
+          "href": "/dashboard/brand-toolkit"
+        },
+        {
+          "label": "Workspace configuration",
+          "href": "/dashboard/settings/workspace"
+        }
+      ]
+    },
+    {
+      "slug": "assistants",
+      "title": "Assistants and delivery readiness",
+      "group": "Customer service",
+      "evidence": [
+        "client/src/components/outreach/assistants/AssistantList.tsx",
+        "client/src/components/outreach/assistants/AssistantEditor.tsx",
+        "client/src/components/outreach/assistants/AssistantSimulator.tsx",
+        "server/services/assistants/CustomerDeliveryGate.ts",
+        "server/services/assistants/ConversationDeliveryGate.ts",
+        "server/migrations/571_hold_unreviewed_customer_delivery.js",
+        "client/src/hooks/use-outreach-assistants.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Assistants",
+          "href": "/dashboard/settings/outreach"
+        },
+        {
+          "label": "Reply operations",
+          "href": "/dashboard/settings/outreach/operations"
+        }
+      ]
+    },
+    {
+      "slug": "knowledge-and-privacy",
+      "title": "Knowledge, publication and privacy",
+      "group": "Customer service",
+      "evidence": [
+        "client/src/components/knowledge/KnowledgeReadiness.tsx",
+        "client/src/components/knowledge/KnowledgeReviewDialog.tsx",
+        "server/services/knowledge/KnowledgeReadinessService.ts",
+        "server/services/knowledge/KnowledgeGateway.ts",
+        "server/controllers/knowledgeGovernanceController.ts",
+        "docs/EVIDENCE_FIRST_KNOWLEDGE_ARCHITECTURE.md"
+      ],
+      "destinations": [
+        {
+          "label": "Knowledge Base",
+          "href": "/dashboard/knowledge-base"
+        },
+        {
+          "label": "Documents",
+          "href": "/dashboard/knowledge-base/documents"
+        },
+        {
+          "label": "Media galleries",
+          "href": "/dashboard/knowledge-base/media"
+        }
+      ]
+    },
+    {
+      "slug": "leads",
+      "title": "Lead discovery, qualification and enrichment",
+      "group": "Sales",
+      "evidence": [
+        "client/src/app/dashboard/(main)/leads/page.tsx",
+        "client/src/components/leads/LeadForm.tsx",
+        "client/src/app/dashboard/(main)/enrichment/page.tsx",
+        "client/src/app/dashboard/(main)/settings/leads/page.tsx",
+        "docs/LEAD_GENERATION_MANUAL_BROWSER_QA.md"
+      ],
+      "destinations": [
+        {
+          "label": "Leads",
+          "href": "/dashboard/leads"
+        },
+        {
+          "label": "Enrichment",
+          "href": "/dashboard/enrichment"
+        },
+        {
+          "label": "Lead Settings",
+          "href": "/dashboard/settings/leads"
+        }
+      ]
+    },
+    {
+      "slug": "crm",
+      "title": "CRM contacts, pipeline and My Work",
+      "group": "Sales",
+      "evidence": [
+        "client/src/app/dashboard/(main)/crm/contacts/page.tsx",
+        "client/src/app/dashboard/(main)/crm/contacts/[id]/page.tsx",
+        "client/src/app/dashboard/(main)/crm/pipeline/page.tsx",
+        "client/src/app/dashboard/(main)/crm/work/page.tsx",
+        "client/src/app/dashboard/(main)/crm/reports/page.tsx",
+        "client/src/components/crm/ContactReminders.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "Contacts",
+          "href": "/dashboard/crm/contacts"
+        },
+        {
+          "label": "Pipeline",
+          "href": "/dashboard/crm/pipeline"
+        },
+        {
+          "label": "My Work",
+          "href": "/dashboard/crm/work"
+        },
+        {
+          "label": "Reminders",
+          "href": "/dashboard/crm/reminders"
+        },
+        {
+          "label": "Reports",
+          "href": "/dashboard/crm/reports"
+        },
+        {
+          "label": "Configuration",
+          "href": "/dashboard/crm/configuration"
+        }
+      ]
+    },
+    {
+      "slug": "imports-and-exports",
+      "title": "Contact imports and exports",
+      "group": "Sales",
+      "evidence": [
+        "client/src/app/dashboard/(main)/crm/import/page.tsx",
+        "server/services/CrmImportLedger.ts",
+        "client/src/app/dashboard/(main)/crm/contacts/page.tsx",
+        "docs/DATA_INTEGRITY_IMPLEMENTATION_2026-10-23.md"
+      ],
+      "destinations": [
+        {
+          "label": "Import Contacts",
+          "href": "/dashboard/crm/import"
+        },
+        {
+          "label": "Contacts and export",
+          "href": "/dashboard/crm/contacts"
+        }
+      ]
+    },
+    {
+      "slug": "campaigns-and-outreach",
+      "title": "Campaigns, conversations and outreach",
+      "group": "Sales",
+      "evidence": [
+        "client/src/app/dashboard/(main)/conversations/[[...threadId]]/page.tsx",
+        "client/src/components/outreach/create/OutreachCreationPage.tsx",
+        "client/src/components/outreach/CampaignDeliveryReview.tsx",
+        "server/services/outreach/CreationService.ts",
+        "server/services/outreach/CampaignDeliveryService.ts",
+        "docs/outreach-inbox.md"
+      ],
+      "destinations": [
+        {
+          "label": "Campaign History",
+          "href": "/dashboard/chats"
+        },
+        {
+          "label": "New campaign conversation",
+          "href": "/dashboard/conversations"
+        },
+        {
+          "label": "Outreach inbox",
+          "href": "/dashboard/outreach/inbox"
+        },
+        {
+          "label": "Compose outreach",
+          "href": "/dashboard/outreach/create"
+        },
+        {
+          "label": "Outreach activity",
+          "href": "/dashboard/outreach/activity"
+        }
+      ]
+    },
+    {
+      "slug": "manual-follow-ups",
+      "title": "Campaign manual follow-ups",
+      "group": "Sales",
+      "evidence": [
+        "client/src/components/outreach/create/CampaignManualSequence.tsx",
+        "server/services/outreach/CampaignManualFollowUpService.ts",
+        "shared/campaignManualFollowUps.ts",
+        "server/services/outreach/ConfiguredFollowUpDispatchService.ts",
+        "client/src/components/outreach/create/OutreachCreationPage.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "Compose outreach",
+          "href": "/dashboard/outreach/create"
+        },
+        {
+          "label": "Channel follow-up defaults",
+          "href": "/dashboard/outreach/follow-ups"
+        }
+      ]
+    },
+    {
+      "slug": "email-and-templates",
+      "title": "Email assets, names and variables",
+      "group": "Sales",
+      "evidence": [
+        "shared/templateVariables.ts",
+        "shared/templateRenderContext.ts",
+        "shared/emailTemplateSections.ts",
+        "shared/emailFormatting.ts",
+        "client/src/components/outreach/TemplateSelector.tsx",
+        "server/tests/campaignEmailIdentity.test.ts",
+        "server/tests/resendTemplateVariables.test.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Email library",
+          "href": "/dashboard/saved-templates/email"
+        },
+        {
+          "label": "Email connection",
+          "href": "/dashboard/integrations/email"
+        },
+        {
+          "label": "Compose outreach",
+          "href": "/dashboard/outreach/create"
+        }
+      ]
+    },
+    {
+      "slug": "support",
+      "title": "Support tickets, teams and human handoff",
+      "group": "Customer service",
+      "evidence": [
+        "client/src/app/dashboard/(main)/support/page.tsx",
+        "client/src/app/dashboard/(main)/support/[id]/page.tsx",
+        "client/src/lib/supportTicketWorkspace.ts",
+        "server/services/SupportChatRouting.ts",
+        "server/services/SupportChatService.ts",
+        "client/src/app/dashboard/(main)/support-ai/widget-settings/page.tsx",
+        "docs/CONVO_AI_SUPPORT_ARCHITECTURE.md"
+      ],
+      "destinations": [
+        {
+          "label": "Tickets",
+          "href": "/dashboard/support"
+        },
+        {
+          "label": "Teams",
+          "href": "/dashboard/support/teams"
+        },
+        {
+          "label": "Support analytics",
+          "href": "/dashboard/support/analytics"
+        },
+        {
+          "label": "Widget settings",
+          "href": "/dashboard/support-ai/widget-settings"
+        },
+        {
+          "label": "Support AI chat",
+          "href": "/dashboard/support-ai/chat"
+        }
+      ]
+    },
+    {
+      "slug": "proposals",
+      "title": "Proposals, catalog and offer lifecycle",
+      "group": "Sales",
+      "evidence": [
+        "client/src/components/proposals/ProposalEditor.tsx",
+        "shared/proposals.ts",
+        "server/services/ProposalService.ts",
+        "server/services/ProposalLifecycleService.ts",
+        "server/services/ProposalApprovalService.ts",
+        "server/services/ProposalDeliveryService.ts",
+        "server/services/ProposalTemplateLibraryService.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Proposals",
+          "href": "/dashboard/proposals"
+        },
+        {
+          "label": "Products & Services",
+          "href": "/dashboard/proposals/catalog"
+        },
+        {
+          "label": "Proposal templates",
+          "href": "/dashboard/proposals/templates"
+        },
+        {
+          "label": "Proposal settings",
+          "href": "/dashboard/proposals/settings"
+        },
+        {
+          "label": "Proposal analytics",
+          "href": "/dashboard/proposals/analytics"
+        }
+      ]
+    },
+    {
+      "slug": "content",
+      "title": "Content creation, library and calendar",
+      "group": "Marketing",
+      "evidence": [
+        "client/src/components/content-studio/ContentCreatorShell.tsx",
+        "client/src/components/content-studio/CreatorPreview.tsx",
+        "client/src/app/dashboard/(main)/saved-templates/page.tsx",
+        "client/src/app/dashboard/(main)/content-calendar/page.tsx",
+        "client/src/app/dashboard/(main)/saved-templates/social/publish/page.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "Content library",
+          "href": "/dashboard/saved-templates"
+        },
+        {
+          "label": "Calendar",
+          "href": "/dashboard/content-calendar"
+        },
+        {
+          "label": "Brand Toolkit",
+          "href": "/dashboard/brand-toolkit"
+        }
+      ]
+    },
+    {
+      "slug": "social-insights",
+      "title": "Social accounts and insights",
+      "group": "Marketing",
+      "evidence": [
+        "docs/performance-marketing-workspaces.md",
+        "client/src/app/dashboard/(main)/marketing/analytics/page.tsx",
+        "server/controllers/socialAnalyticsController.ts",
+        "client/src/lib/integrations.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Social Insights",
+          "href": "/dashboard/marketing/analytics"
+        },
+        {
+          "label": "Integrations",
+          "href": "/dashboard/integrations"
+        }
+      ]
+    },
+    {
+      "slug": "paid-marketing",
+      "title": "Paid Ads and performance readiness",
+      "group": "Marketing",
+      "evidence": [
+        "docs/performance-marketing-workspaces.md",
+        "client/src/app/dashboard/(main)/ads/page.tsx",
+        "client/src/app/dashboard/(main)/ads-campaigns/page.tsx",
+        "server/mastra/agents/performanceAgent.ts",
+        "server/services/ads/AutonomousAdsActionProcessor.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Paid Ads",
+          "href": "/dashboard/ads"
+        },
+        {
+          "label": "Ad Settings",
+          "href": "/dashboard/settings/ads"
+        }
+      ]
+    },
+    {
+      "slug": "ai-visibility",
+      "title": "AI Visibility audits and warnings",
+      "group": "Marketing",
+      "evidence": [
+        "client/src/components/ai-visibility/AiVisibilityWorkspace.tsx",
+        "client/src/lib/ai-visibility.ts",
+        "server/services/aiVisibility/AiVisibilityService.ts",
+        "client/src/app/dashboard/(main)/ai-visibility/page.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "AI Visibility",
+          "href": "/dashboard/ai-visibility"
+        }
+      ]
+    },
+    {
+      "slug": "integrations",
+      "title": "Channels, accounts and integrations",
+      "group": "Workspace",
+      "evidence": [
+        "client/src/lib/integrations.ts",
+        "client/src/lib/settings-navigation.ts",
+        "docs/INTEGRATIONS_WORKSPACE.md",
+        "server/services/integrations/MetaConnectionPolicy.ts",
+        "client/src/app/dashboard/(main)/integrations/msg91/components/MSG91ConnectionGuide.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "All Integrations",
+          "href": "/dashboard/integrations"
+        }
+      ]
+    },
+    {
+      "slug": "storage",
+      "title": "Storage, downloads and Trash",
+      "group": "Workspace",
+      "evidence": [
+        "client/src/hooks/use-storage-workspace.ts",
+        "server/services/storageWorkspace.ts",
+        "server/controllers/storageWorkspaceController.ts",
+        "docs/audits/2026-10-03/storage-workspace.md"
+      ],
+      "destinations": [
+        {
+          "label": "Storage",
+          "href": "/dashboard/storage"
+        }
+      ]
+    },
+    {
+      "slug": "automations",
+      "title": "Automation conditions, actions and dry runs",
+      "group": "Workspace",
+      "evidence": [
+        "client/src/components/crm/AutomationBuilder.tsx",
+        "client/src/components/crm/AutomationRuns.tsx",
+        "shared/crmAutomations.ts",
+        "server/services/automations/AutomationConfiguration.ts",
+        "server/services/automations/AutomationEngine.ts",
+        "server/services/automations/AutomationDelivery.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Automations",
+          "href": "/dashboard/crm/automations"
+        },
+        {
+          "label": "Configuration",
+          "href": "/dashboard/crm/configuration"
+        }
+      ]
+    },
+    {
+      "slug": "billing",
+      "title": "Credits, reservations and transactions",
+      "group": "Workspace",
+      "evidence": [
+        "client/src/app/dashboard/(main)/billing/page.tsx",
+        "client/src/components/billing/CreditActivity.tsx",
+        "client/src/hooks/use-billing-organizations.ts",
+        "server/services/CreditService.ts",
+        "server/services/CreditDeductionHooks.ts"
+      ],
+      "destinations": [
+        {
+          "label": "Billing",
+          "href": "/dashboard/billing"
+        },
+        {
+          "label": "Credit activity",
+          "href": "/dashboard/billing/transactions"
+        },
+        {
+          "label": "Campaign spending",
+          "href": "/dashboard/billing/campaign-spends"
+        },
+        {
+          "label": "Provider spending",
+          "href": "/dashboard/billing/provider-spends"
+        }
+      ]
+    },
+    {
+      "slug": "settings-and-security",
+      "title": "Settings, roles and security",
+      "group": "Workspace",
+      "evidence": [
+        "client/src/lib/settings-navigation.ts",
+        "client/src/lib/sidebarConfig.tsx",
+        "client/src/app/dashboard/(main)/settings/page.tsx",
+        "client/src/components/ProtectedRoute.tsx",
+        "client/src/app/dashboard/(main)/layout.tsx",
+        "client/src/components/CommandPalette.tsx"
+      ],
+      "destinations": [
+        {
+          "label": "Account settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Workspace configuration",
+          "href": "/dashboard/settings/workspace"
+        },
+        {
+          "label": "Staff",
+          "href": "/dashboard/settings/team"
+        },
+        {
+          "label": "Notifications",
+          "href": "/dashboard/notifications"
+        },
+        {
+          "label": "Insights",
+          "href": "/dashboard/insights"
+        }
+      ]
+    }
+  ],
+  "modules": [
+    "ai_visibility",
+    "billing",
+    "campaigns",
+    "content",
+    "crm",
+    "integrations",
+    "knowledge_base",
+    "lead_generation",
+    "outreach",
+    "performance_marketing",
+    "proposals",
+    "storage",
+    "support",
+    "support_ai"
+  ],
+  "diagrams": [
+    {
+      "topic": "getting-started",
+      "id": "application-flow",
+      "title": "From business context to a reviewed outcome",
+      "description": "A selected business supplies resources to leads, CRM, content and proposals. Campaign and outreach review feeds the assistant delivery gate before a provider action. Recorded results return to CRM and support."
+    },
+    {
+      "topic": "assistants",
+      "id": "assistant-gate",
+      "title": "Delivery checks happen before admission and provider delivery",
+      "description": "A reviewed request must match business, channel, account and surface. Runtime must be enabled and the assigned assistant must be published, active and ready. Failure blocks or holds work. Queued work is checked again before provider delivery. Setup never automatically replays held items."
+    },
+    {
+      "topic": "knowledge-and-privacy",
+      "id": "knowledge-publication",
+      "title": "Source approval and current-index readiness",
+      "description": "An uploaded source is reviewed for content and privacy, published, indexed for its current version and selected in an assistant. Retrieval also checks business ownership and surface permissions. Failed review or a stale index prevents it from being treated as ready."
+    },
+    {
+      "topic": "imports-and-exports",
+      "id": "contact-import",
+      "title": "Import and lost-response recovery",
+      "description": "Select CSV, map fields, validate and submit. A saved import receipt identifies committed work. If a response is lost, reconcile import status and reselect the identical file and mapping rather than starting a competing import. Outcomes distinguish saved, skipped and invalid rows."
+    },
+    {
+      "topic": "campaigns-and-outreach",
+      "id": "outreach-delivery",
+      "title": "Draft, review, queue and delivery receipts",
+      "description": "Message inputs become a reviewed snapshot. Any input change returns to editing. Delivery checks occur before queue admission and again before the provider. An accepted queue item can become provider accepted, failed, held or uncertain; it is not automatically delivered."
+    },
+    {
+      "topic": "manual-follow-ups",
+      "id": "manual-isolation",
+      "title": "Campaign and batch isolation",
+      "description": "Campaign A and campaign B each own a channel-specific saved sequence revision. Each reviewed recipient batch captures immutable sequence and template revisions. Later batches load their explicitly selected campaign. Saving a newer revision does not silently rewrite prior enrollments or another campaign."
+    },
+    {
+      "topic": "support",
+      "id": "support-handoff",
+      "title": "Inbound support and human handoff",
+      "description": "An incoming conversation is routed to a ticket. A human takeover pauses AI handling according to the ticket state. Without takeover, assistant and account readiness are still required before a reply. Internal notes stay internal; customer replies pass delivery checks and record their outcome."
+    },
+    {
+      "topic": "proposals",
+      "id": "proposal-lifecycle",
+      "title": "Offer review, delivery and customer response",
+      "description": "A draft passes required approval and delivery checks. Sending can produce sent or delivery unknown. Sent offers may be viewed, accepted, rejected or expire. A replacement supersedes an old version. Configured onboarding after acceptance has its own outcome."
+    },
+    {
+      "topic": "storage",
+      "id": "storage-lifecycle",
+      "title": "Active file, Trash and permanent deletion",
+      "description": "Active files can move to Trash after dependency review. Trash retains quota for thirty days and can restore an eligible file. Expiry or separately confirmed permanent deletion leads to purge/object cleanup. Published links are not revoked simply by moving a file to Trash."
+    },
+    {
+      "topic": "automations",
+      "id": "automation-run",
+      "title": "Rule evaluation and execution",
+      "description": "A scoped event is matched against an active rule revision and conditions. A dry run previews actions without execution. Real runs record ordered action steps and outcomes; delivery actions require current account, assistant and provider checks. Uncertain steps require review."
+    },
+    {
+      "topic": "billing",
+      "id": "credit-settlement",
+      "title": "Reservation, actual usage and original-transaction refund",
+      "description": "A supported task reserves maximum cost with a durable resource. Final actual usage is settled against the original deduction. Unused credits return once to the original organization. An eligible failed operation may refund the original deduction. Transaction activity records each outcome."
+    }
+  ],
+  "routes": [
+    {
+      "route": "/dashboard/ads",
+      "source": "client/src/app/dashboard/(main)/ads/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ads-analytics",
+      "source": "client/src/app/dashboard/(main)/ads-analytics/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ads-campaigns",
+      "source": "client/src/app/dashboard/(main)/ads-campaigns/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ads/campaigns/managed/[id]",
+      "source": "client/src/app/dashboard/(main)/ads/campaigns/managed/[id]/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ads/campaigns/provider/[platform]/[campaignId]",
+      "source": "client/src/app/dashboard/(main)/ads/campaigns/provider/[platform]/[campaignId]/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ads/create",
+      "source": "client/src/app/dashboard/(main)/ads/create/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ai-visibility",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ai-visibility/aeo",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/aeo/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/assets",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/assets/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/audits/[auditId]",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/audits/[auditId]/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ai-visibility/commerce",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/commerce/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/competitors",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/competitors/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/fixes",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/fixes/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/geo",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/geo/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/reports",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/reports/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/seo",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/seo/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/ai-visibility/websites/[projectId]",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/websites/[projectId]/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/ai-visibility/websites/[projectId]/[view]",
+      "source": "client/src/app/dashboard/(main)/ai-visibility/websites/[projectId]/[view]/page.tsx",
+      "module": "ai_visibility",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/ai-visibility",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/approval-pending",
+      "source": "client/src/app/dashboard/approval-pending/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/billing",
+      "source": "client/src/app/dashboard/(main)/billing/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/analytics",
+      "source": "client/src/app/dashboard/(main)/billing/analytics/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/campaign-spends",
+      "source": "client/src/app/dashboard/(main)/billing/campaign-spends/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/category-spends",
+      "source": "client/src/app/dashboard/(main)/billing/category-spends/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/daywise-spends",
+      "source": "client/src/app/dashboard/(main)/billing/daywise-spends/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/organization",
+      "source": "client/src/app/dashboard/(main)/billing/organization/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/billing/pricing",
+      "source": "client/src/app/dashboard/(main)/billing/pricing/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/provider-spends",
+      "source": "client/src/app/dashboard/(main)/billing/provider-spends/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/recharge",
+      "source": "client/src/app/dashboard/(main)/billing/recharge/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/recharge-history",
+      "source": "client/src/app/dashboard/(main)/billing/recharge-history/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/spending-by-provider",
+      "source": "client/src/app/dashboard/(main)/billing/spending-by-provider/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/subscription",
+      "source": "client/src/app/dashboard/(main)/billing/subscription/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/billing/transactions",
+      "source": "client/src/app/dashboard/(main)/billing/transactions/page.tsx",
+      "module": "billing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/billing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/brand-toolkit",
+      "source": "client/src/app/dashboard/(main)/brand-toolkit/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/brand-toolkit/[id]",
+      "source": "client/src/app/dashboard/(main)/brand-toolkit/[id]/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/business-profiles",
+      "source": "client/src/app/dashboard/(main)/business-profiles/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/business-profiles/[profileId]",
+      "source": "client/src/app/dashboard/(main)/business-profiles/[profileId]/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/business-profiles/new",
+      "source": "client/src/app/dashboard/(main)/business-profiles/new/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/campaigns",
+      "source": "client/src/app/dashboard/(main)/campaigns/page.tsx",
+      "module": "campaigns",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/change-password",
+      "source": "client/src/app/dashboard/(main)/change-password/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/chat/[[...threadId]]",
+      "source": "client/src/app/dashboard/(main)/chat/[[...threadId]]/page.tsx",
+      "module": "campaigns",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/chats",
+      "source": "client/src/app/dashboard/(main)/chats/page.tsx",
+      "module": "campaigns",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/chats/[id]",
+      "source": "client/src/app/dashboard/(main)/chats/[id]/page.tsx",
+      "module": "campaigns",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/company-profile",
+      "source": "client/src/app/dashboard/company-profile/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/content-calendar",
+      "source": "client/src/app/dashboard/(main)/content-calendar/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/content/brand-toolkit",
+      "source": "client/src/app/dashboard/(main)/content/brand-toolkit/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/content/calendar",
+      "source": "client/src/app/dashboard/(main)/content/calendar/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/content/templates",
+      "source": "client/src/app/dashboard/(main)/content/templates/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/conversations/[[...threadId]]",
+      "source": "client/src/app/dashboard/(main)/conversations/[[...threadId]]/page.tsx",
+      "module": "campaigns",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/crm",
+      "source": "client/src/app/dashboard/(main)/crm/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/crm/alerts",
+      "source": "client/src/app/dashboard/(main)/crm/alerts/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/automations",
+      "source": "client/src/app/dashboard/(main)/crm/automations/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/automations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/automations/[id]",
+      "source": "client/src/app/dashboard/(main)/crm/automations/[id]/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/automations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/automations/[id]/runs",
+      "source": "client/src/app/dashboard/(main)/crm/automations/[id]/runs/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/automations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/automations/new",
+      "source": "client/src/app/dashboard/(main)/crm/automations/new/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/automations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/configuration",
+      "source": "client/src/app/dashboard/(main)/crm/configuration/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/contacts",
+      "source": "client/src/app/dashboard/(main)/crm/contacts/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/contacts/[id]",
+      "source": "client/src/app/dashboard/(main)/crm/contacts/[id]/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/crm/contacts/[id]/edit",
+      "source": "client/src/app/dashboard/(main)/crm/contacts/[id]/edit/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/import",
+      "source": "client/src/app/dashboard/(main)/crm/import/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/imports-and-exports",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/pipeline",
+      "source": "client/src/app/dashboard/(main)/crm/pipeline/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/reminders",
+      "source": "client/src/app/dashboard/(main)/crm/reminders/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/reports",
+      "source": "client/src/app/dashboard/(main)/crm/reports/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/crm/work",
+      "source": "client/src/app/dashboard/(main)/crm/work/page.tsx",
+      "module": "crm",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/crm",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/documentation/[[...slug]]",
+      "source": "client/src/app/dashboard/(main)/documentation/[[...slug]]/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/enrichment",
+      "source": "client/src/app/dashboard/(main)/enrichment/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/home",
+      "source": "client/src/app/dashboard/(main)/home/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/getting-started",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/hotel",
+      "source": "client/src/app/dashboard/(main)/hotel/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/insights",
+      "source": "client/src/app/dashboard/(main)/insights/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations",
+      "source": "client/src/app/dashboard/(main)/integrations/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/email",
+      "source": "client/src/app/dashboard/(main)/integrations/email/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/facebook",
+      "source": "client/src/app/dashboard/(main)/integrations/facebook/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/facebook/events",
+      "source": "client/src/app/dashboard/(main)/integrations/facebook/events/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/facebook/webhook",
+      "source": "client/src/app/dashboard/(main)/integrations/facebook/webhook/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/google-ads",
+      "source": "client/src/app/dashboard/(main)/integrations/google-ads/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/instagram",
+      "source": "client/src/app/dashboard/(main)/integrations/instagram/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/instagram/automations",
+      "source": "client/src/app/dashboard/(main)/integrations/instagram/automations/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/instagram/events",
+      "source": "client/src/app/dashboard/(main)/integrations/instagram/events/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/instagram/webhook",
+      "source": "client/src/app/dashboard/(main)/integrations/instagram/webhook/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/instagram/webhook/events",
+      "source": "client/src/app/dashboard/(main)/integrations/instagram/webhook/events/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/linkedin",
+      "source": "client/src/app/dashboard/(main)/integrations/linkedin/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/linkedin/events",
+      "source": "client/src/app/dashboard/(main)/integrations/linkedin/events/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/linkedin/webhook",
+      "source": "client/src/app/dashboard/(main)/integrations/linkedin/webhook/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/meta",
+      "source": "client/src/app/dashboard/(main)/integrations/meta/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/msg91",
+      "source": "client/src/app/dashboard/(main)/integrations/msg91/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/msg91/events",
+      "source": "client/src/app/dashboard/(main)/integrations/msg91/events/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/twitter",
+      "source": "client/src/app/dashboard/(main)/integrations/twitter/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/twitter/events",
+      "source": "client/src/app/dashboard/(main)/integrations/twitter/events/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/twitter/webhook",
+      "source": "client/src/app/dashboard/(main)/integrations/twitter/webhook/page.tsx",
+      "module": "integrations",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/events",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/events/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/templates",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/templates/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/templates/[id]",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/templates/[id]/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/templates/[id]/edit",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/templates/[id]/edit/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/templates/create",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/templates/create/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/integrations/whatsapp/webhook",
+      "source": "client/src/app/dashboard/(main)/integrations/whatsapp/webhook/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/integrations/youtube",
+      "source": "client/src/app/dashboard/(main)/integrations/youtube/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/invitations",
+      "source": "client/src/app/dashboard/invitations/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/knowledge-base",
+      "source": "client/src/app/dashboard/(main)/knowledge-base/page.tsx",
+      "module": "knowledge_base",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/knowledge-and-privacy",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/knowledge-base/[id]",
+      "source": "client/src/app/dashboard/(main)/knowledge-base/[id]/page.tsx",
+      "module": "knowledge_base",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/knowledge-and-privacy",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/knowledge-base/documents",
+      "source": "client/src/app/dashboard/(main)/knowledge-base/documents/page.tsx",
+      "module": "knowledge_base",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/knowledge-and-privacy",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/knowledge-base/media",
+      "source": "client/src/app/dashboard/(main)/knowledge-base/media/page.tsx",
+      "module": "knowledge_base",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/knowledge-and-privacy",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/leads",
+      "source": "client/src/app/dashboard/(main)/leads/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/leads/edit/[id]",
+      "source": "client/src/app/dashboard/(main)/leads/edit/[id]/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/leads/new",
+      "source": "client/src/app/dashboard/(main)/leads/new/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/leads/view/[id]",
+      "source": "client/src/app/dashboard/(main)/leads/view/[id]/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/marketing",
+      "source": "client/src/app/dashboard/(main)/marketing/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/marketing/analytics",
+      "source": "client/src/app/dashboard/(main)/marketing/analytics/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/social-insights",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/marketing/analytics/posts/[id]",
+      "source": "client/src/app/dashboard/(main)/marketing/analytics/posts/[id]/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/social-insights",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/marketing/campaigns",
+      "source": "client/src/app/dashboard/(main)/marketing/campaigns/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/notifications",
+      "source": "client/src/app/dashboard/(main)/notifications/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/onboarding-setup",
+      "source": "client/src/app/dashboard/onboarding-setup/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/outreach",
+      "source": "client/src/app/dashboard/(main)/outreach/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/outreach-analytics",
+      "source": "client/src/app/dashboard/(main)/outreach-analytics/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/activity",
+      "source": "client/src/app/dashboard/(main)/outreach/activity/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/campaigns/[id]/review",
+      "source": "client/src/app/dashboard/(main)/outreach/campaigns/[id]/review/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/create",
+      "source": "client/src/app/dashboard/(main)/outreach/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/email",
+      "source": "client/src/app/dashboard/(main)/outreach/email/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/email/create",
+      "source": "client/src/app/dashboard/(main)/outreach/email/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/facebook",
+      "source": "client/src/app/dashboard/(main)/outreach/facebook/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/facebook/create",
+      "source": "client/src/app/dashboard/(main)/outreach/facebook/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/follow-ups",
+      "source": "client/src/app/dashboard/(main)/outreach/follow-ups/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/manual-follow-ups",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/outreach/inbox",
+      "source": "client/src/app/dashboard/(main)/outreach/inbox/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/instagram",
+      "source": "client/src/app/dashboard/(main)/outreach/instagram/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/instagram/create",
+      "source": "client/src/app/dashboard/(main)/outreach/instagram/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/linkedin",
+      "source": "client/src/app/dashboard/(main)/outreach/linkedin/page.tsx",
+      "module": "outreach",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/linkedin/create",
+      "source": "client/src/app/dashboard/(main)/outreach/linkedin/create/page.tsx",
+      "module": "outreach",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/outreach/sms",
+      "source": "client/src/app/dashboard/(main)/outreach/sms/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/sms/create",
+      "source": "client/src/app/dashboard/(main)/outreach/sms/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/twitter",
+      "source": "client/src/app/dashboard/(main)/outreach/twitter/page.tsx",
+      "module": "outreach",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/twitter/create",
+      "source": "client/src/app/dashboard/(main)/outreach/twitter/create/page.tsx",
+      "module": "outreach",
+      "hidden": true,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/outreach/whatsapp",
+      "source": "client/src/app/dashboard/(main)/outreach/whatsapp/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/outreach/whatsapp/create",
+      "source": "client/src/app/dashboard/(main)/outreach/whatsapp/create/page.tsx",
+      "module": "outreach",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/campaigns-and-outreach",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals",
+      "source": "client/src/app/dashboard/(main)/proposals/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/[id]",
+      "source": "client/src/app/dashboard/(main)/proposals/[id]/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/[id]/edit",
+      "source": "client/src/app/dashboard/(main)/proposals/[id]/edit/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/analytics",
+      "source": "client/src/app/dashboard/(main)/proposals/analytics/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/catalog",
+      "source": "client/src/app/dashboard/(main)/proposals/catalog/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/new",
+      "source": "client/src/app/dashboard/(main)/proposals/new/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/settings",
+      "source": "client/src/app/dashboard/(main)/proposals/settings/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/proposals/templates",
+      "source": "client/src/app/dashboard/(main)/proposals/templates/page.tsx",
+      "module": "proposals",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/proposals",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates",
+      "source": "client/src/app/dashboard/(main)/saved-templates/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/ads",
+      "source": "client/src/app/dashboard/(main)/saved-templates/ads/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/ads/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/ads/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/ads/publish",
+      "source": "client/src/app/dashboard/(main)/saved-templates/ads/publish/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/blog",
+      "source": "client/src/app/dashboard/(main)/saved-templates/blog/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/blog/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/blog/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/dm",
+      "source": "client/src/app/dashboard/(main)/saved-templates/dm/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/dm/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/dm/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/email",
+      "source": "client/src/app/dashboard/(main)/saved-templates/email/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/email-and-templates",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/email/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/email/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/email-and-templates",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/image",
+      "source": "client/src/app/dashboard/(main)/saved-templates/image/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/image/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/image/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/sms",
+      "source": "client/src/app/dashboard/(main)/saved-templates/sms/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/sms/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/sms/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/social",
+      "source": "client/src/app/dashboard/(main)/saved-templates/social/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/social/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/social/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/social/publish",
+      "source": "client/src/app/dashboard/(main)/saved-templates/social/publish/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/video",
+      "source": "client/src/app/dashboard/(main)/saved-templates/video/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/video/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/video/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/saved-templates/whatsapp",
+      "source": "client/src/app/dashboard/(main)/saved-templates/whatsapp/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/saved-templates/whatsapp/[id]",
+      "source": "client/src/app/dashboard/(main)/saved-templates/whatsapp/[id]/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/saved-templates/whatsapp/[id]/edit",
+      "source": "client/src/app/dashboard/(main)/saved-templates/whatsapp/[id]/edit/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/saved-templates/whatsapp/generate",
+      "source": "client/src/app/dashboard/(main)/saved-templates/whatsapp/generate/page.tsx",
+      "module": "content",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/content",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/select-profile",
+      "source": "client/src/app/dashboard/select-profile/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings",
+      "source": "client/src/app/dashboard/(main)/settings/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/ads",
+      "source": "client/src/app/dashboard/(main)/settings/ads/page.tsx",
+      "module": "performance_marketing",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/paid-marketing",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/company",
+      "source": "client/src/app/dashboard/(main)/settings/company/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/company/[profileId]",
+      "source": "client/src/app/dashboard/(main)/settings/company/[profileId]/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/company/new",
+      "source": "client/src/app/dashboard/(main)/settings/company/new/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/business-and-brands",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/integrations",
+      "source": "client/src/app/dashboard/(main)/settings/integrations/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/integrations/[...slug]",
+      "source": "client/src/app/dashboard/(main)/settings/integrations/[...slug]/page.tsx",
+      "module": "integrations",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/integrations",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/leads",
+      "source": "client/src/app/dashboard/(main)/settings/leads/page.tsx",
+      "module": "lead_generation",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/leads",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/[agentType]",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/[agentType]/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/settings/outreach/assistants/[assistantId]",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/assistants/[assistantId]/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/legacy",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/legacy/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/new",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/new/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/operations",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/operations/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/orchestration",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/orchestration/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/outreach/playbooks",
+      "source": "client/src/app/dashboard/(main)/settings/outreach/playbooks/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/assistants",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/preferences",
+      "source": "client/src/app/dashboard/(main)/settings/preferences/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/team",
+      "source": "client/src/app/dashboard/(main)/settings/team/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/settings/workspace",
+      "source": "client/src/app/dashboard/(main)/settings/workspace/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/settings-and-security",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/social-posts",
+      "source": "client/src/app/dashboard/(main)/social-posts/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    },
+    {
+      "route": "/dashboard/storage",
+      "source": "client/src/app/dashboard/(main)/storage/page.tsx",
+      "module": "storage",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/storage",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support",
+      "source": "client/src/app/dashboard/(main)/support/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support-ai/chat",
+      "source": "client/src/app/dashboard/(main)/support-ai/chat/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support-ai/embed",
+      "source": "client/src/app/dashboard/(main)/support-ai/embed/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support-ai/quality",
+      "source": "client/src/app/dashboard/(main)/support-ai/quality/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support-ai/reports",
+      "source": "client/src/app/dashboard/(main)/support-ai/reports/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support-ai/widget-settings",
+      "source": "client/src/app/dashboard/(main)/support-ai/widget-settings/page.tsx",
+      "module": "support_ai",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/[id]",
+      "source": "client/src/app/dashboard/(main)/support/[id]/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/analytics",
+      "source": "client/src/app/dashboard/(main)/support/analytics/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/notifications",
+      "source": "client/src/app/dashboard/(main)/support/notifications/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/pipeline",
+      "source": "client/src/app/dashboard/(main)/support/pipeline/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/playbooks",
+      "source": "client/src/app/dashboard/(main)/support/playbooks/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/teams",
+      "source": "client/src/app/dashboard/(main)/support/teams/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/teams/[id]",
+      "source": "client/src/app/dashboard/(main)/support/teams/[id]/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/teams/[id]/members/[memberId]",
+      "source": "client/src/app/dashboard/(main)/support/teams/[id]/members/[memberId]/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/support/teams/[id]/members/[memberId]/activity",
+      "source": "client/src/app/dashboard/(main)/support/teams/[id]/members/[memberId]/activity/page.tsx",
+      "module": "support",
+      "hidden": false,
+      "contextualHelp": "/dashboard/documentation/support",
+      "sourceContainsRedirect": false
+    },
+    {
+      "route": "/dashboard/user-profile",
+      "source": "client/src/app/dashboard/(main)/user-profile/page.tsx",
+      "module": null,
+      "hidden": false,
+      "contextualHelp": null,
+      "sourceContainsRedirect": true
+    }
+  ],
+  "missingEvidence": [],
+  "missingLinks": [],
+  "moduleRoutesWithoutGuide": []
+}

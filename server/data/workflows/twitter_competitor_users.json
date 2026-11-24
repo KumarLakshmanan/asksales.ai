@@ -1,0 +1,98 @@
+{
+  "workflow_id": "twitter_competitor_users",
+  "platform": "twitter_competitor_users",
+  "title": "Twitter Competitor Users",
+  "description": "Search public Twitter/X user profiles by competitor brand name or industry keyword and save the matching accounts as leads. Best for identifying companies, thought leaders, or professionals whose public profile matches a reviewed market term.",
+  "version": "1.0",
+  "tips": "- \"searchTerms\" must contain the exact competitor brand names or industry keywords you want to search.\n- Keep maxItems aligned with the reviewed global saved-lead cap for small, auditable runs.\n- This workflow finds matching public profiles; it does not find a competitor's followers.\n- Use precise terms to reduce unrelated profile matches.\n- Keyword search matches public profile names/bios. Use short brand or industry terms, not a sentence combining every role and location. It does not provide a geographic search filter. Enforce the reviewed geography on actual profile location evidence.\n- The provider fetch budget is at least 5 candidates; the reviewed final saved-lead cap remains separate. Do not automatically broaden a no-result search or start another paid run.",
+  "nodes": [
+    {
+      "id": "twitter_user_actor",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Scrape Twitter Users",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Scrape Twitter user profiles by search terms",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "searchTerms": "{{searchTerms}}",
+          "maxItems": "{{maxItems}}"
+        },
+        "reviewableInputFields": [
+          "searchTerms",
+          "maxItems"
+        ],
+        "requiredInputFields": [
+          "searchTerms"
+        ],
+        "output_key": "twitter_users",
+        "finalValues": {
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        }
+      }
+    },
+    {
+      "id": "db_save_users",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Twitter Users as Leads",
+        "description": "Save competitor/industry Twitter users as leads",
+        "iterate_over": "twitter_users",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "engagementType": "'competitor_profile'",
+          "fullName": "name",
+          "name": "name",
+          "twitterHandle": "userName",
+          "twitterUsername": "userName",
+          "profileId": "id",
+          "twitterUrl": "twitterUrl",
+          "profileUrl": "twitterUrl",
+          "bio": "description",
+          "about": "description",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "followersCount": "followers",
+          "twitterFollowers": "followers",
+          "followingCount": "following",
+          "postsCount": "statusesCount",
+          "website": "entities.url.urls[0].expanded_url",
+          "location": "location",
+          "verified": "isVerified",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_users_to_leads",
+      "source": "twitter_user_actor",
+      "target": "db_save_users",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

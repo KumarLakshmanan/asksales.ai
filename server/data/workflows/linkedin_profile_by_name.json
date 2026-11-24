@@ -1,0 +1,89 @@
+{
+  "workflow_id": "linkedin_profile_by_name",
+  "platform": "linkedin_profile_by_name",
+  "title": "LinkedIn Profile Search by Name",
+  "description": "Find LinkedIn profiles by first and last name with company, school, job title, industry, and location filters. Best for Account-Based Marketing (ABM) campaigns where you already know the names of decision-makers from target companies. Use when you have a list of people to find on LinkedIn \u2014 such as event attendee lists, conference speakers, or CRM contacts you want to enrich with LinkedIn data.",
+  "version": "1.0",
+  "tips": "- firstName and lastName are REQUIRED fields.\n- Use currentCompanies to narrow results to specific target companies.\n- Use currentJobTitles to filter by role (e.g., 'CTO', 'VP Engineering').\n- profileScraperMode: 'Short' is cheapest, 'Full + email search' includes email.\n- This is ideal for ABM when you KNOW the person's name and want their LinkedIn profile.\n- Generate MULTIPLE entries if searching for 3+ people, one per person.",
+  "nodes": [
+    {
+      "id": "linkedin_name_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "LinkedIn Name Search",
+        "actorId": "harvestapi/linkedin-profile-search-by-name",
+        "actorName": "LinkedIn People Search by Name",
+        "description": "Search LinkedIn profiles by first and last name",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "firstName": "{{firstName}}",
+          "lastName": "{{lastName}}",
+          "maxItems": "{{maxItems}}",
+          "profileScraperMode": "Short",
+          "locations": "{{locations}}",
+          "currentCompanies": "{{currentCompanies}}",
+          "currentJobTitles": "{{currentJobTitles}}"
+        },
+        "output_key": "linkedin_profiles_by_name",
+        "finalValues": {
+          "profileScraperMode": "Short",
+          "strictSearch": false
+        }
+      }
+    },
+    {
+      "id": "db_save_profiles",
+      "type": "saveToLeads",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Save LinkedIn Profiles",
+        "description": "Save found LinkedIn profiles to leads table",
+        "iterate_over": "linkedin_profiles_by_name",
+        "field_mapping": {
+          "platform": "'linkedin'",
+          "source": "'linkedin'",
+          "leadType": "'profile'",
+          "platformType": "'linkedin'",
+          "engagementType": "'name_search'",
+          "fullName": "name",
+          "name": "name",
+          "firstName": "firstName",
+          "lastName": "lastName",
+          "linkedinUrl": "linkedinUrl",
+          "profileUrl": "linkedinUrl",
+          "headline": "position",
+          "title": "position",
+          "email": "email",
+          "bio": "about",
+          "location": "location.linkedinText",
+          "jobTitle": "position",
+          "role": "position",
+          "publicId": "publicIdentifier",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_name_search_to_db",
+      "source": "linkedin_name_search",
+      "target": "db_save_profiles",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

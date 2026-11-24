@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo_gradient" x1="32" y1="32" x2="224" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="64" fill="#0F172A"/>
+  <path d="M80 180L128 60L176 180H150L128 120L106 180H80Z" fill="url(#logo_gradient)" filter="url(#glow)"/>
+  <path d="M100 150L128 135L156 150L128 165L100 150Z" fill="white" fill-opacity="0.9"/>
+  <circle cx="128" cy="135" r="4" fill="white">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+  </circle>
+  <path d="M180 80L195 95M195 80L180 95" stroke="#38BDF8" stroke-width="4" stroke-linecap="round"/>
+</svg>

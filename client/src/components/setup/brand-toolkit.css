@@ -1,0 +1,55 @@
+.brand-draft-fields { min-width: 0; border: 0; margin: 0; padding: 0; }
+.brand-advanced { border: 1px solid #dde0ec; border-radius: 12px; background: #fcfcfe; }
+.brand-advanced > summary { cursor: pointer; padding: 16px 18px; color: #34384d; font-size: 13px; font-weight: 650; }
+.brand-advanced > summary small { display: block; color: #6d7289; font-size: 12px; font-weight: 400; margin: 6px 0 0 16px; }
+.brand-advanced > .setup-fieldset { padding: 8px 18px 20px; }
+.brand-advanced > summary:focus-visible, .brand-review-omitted > summary:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 4px; }
+.brand-review-sections { display: grid; gap: 20px; }
+.brand-review-section { min-width: 0; border: 1px solid #dde0ec; border-radius: 12px; padding: 20px; }
+.brand-review-heading, .brand-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.brand-review-heading { margin-bottom: 16px; }
+.brand-review-heading h3, .brand-preview-heading h3 { color: #34384d; font-size: 16px; font-weight: 650; }
+.brand-review-empty, .brand-review-omitted { color: #6d7289; font-size: 12px; line-height: 1.65; }
+.brand-review-omitted { margin-top: 14px; }
+.brand-review-omitted > summary { cursor: pointer; }
+.brand-review-omitted > p { margin-top: 8px; overflow-wrap: anywhere; }
+.brand-content-preview { padding: 20px; border: 1px solid #dde0ec; background: #f6f7fb; border-radius: 12px; min-width: 0; }
+.brand-preview-heading { flex-wrap: wrap; align-items: flex-start; margin-bottom: 18px; }
+.brand-preview-heading p, .brand-preview-note { font-size: 12px; line-height: 1.65; color: #6d7289; margin-top: 7px; }
+.brand-preview-formats { display: flex; flex-wrap: wrap; gap: 5px; }
+.brand-preview-formats button { border: 1px solid #dde0ec; border-radius: 7px; background: #fff; padding: 7px 9px; color: #34384d; font-size: 11px; }
+.brand-preview-formats button[aria-pressed="true"] { border-color: hsl(var(--primary)); color: hsl(var(--primary)); background: color-mix(in srgb, hsl(var(--primary)) 10%, hsl(var(--background))); }
+.brand-preview-paper { border: 1px solid #dde0ec; border-top: 5px solid; padding: 24px; background: #fff; border-radius: 8px; }
+.brand-preview-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #6d7289; }
+.brand-preview-paper h4 { color: #20243b; font-size: clamp(20px, 3vw, 27px); font-weight: 650; margin: 14px 0 12px; overflow-wrap: anywhere; }
+.brand-preview-paper p { color: #34384d; font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.brand-preview-cta { display: inline-block; padding: 9px 14px; margin-top: 18px; border-radius: 7px; font-size: 12px; font-weight: 650; }
+.brand-images-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.brand-image-card { min-width: 0; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); }
+.brand-image-card.is-selected { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary)); }
+.brand-image-select { display: block; position: relative; width: 100%; text-align: left; }
+.brand-image-meta { padding: 12px; display: grid; gap: 8px; }
+.brand-image-meta > p { color: hsl(var(--muted-foreground)); font-size: 11px; overflow-wrap: anywhere; }
+.brand-image-meta label { font-size: 11px; font-weight: 550; display: grid; gap: 5px; }
+.brand-image-meta input { width: 100%; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 7px 8px; font-size: 12px; }
+.brand-image-order { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11px; }
+.brand-image-order button { padding: 5px 7px; border: 1px solid hsl(var(--border)); border-radius: 5px; }
+.brand-image-order button:disabled { opacity: .4; }
+.dark .brand-advanced, .dark .brand-review-section, .dark .brand-content-preview, .dark .brand-preview-paper { border-color: #293243; background: #131a26; }
+.dark .brand-content-preview { background: #0c1018; }
+.dark .brand-review-heading h3, .dark .brand-preview-heading h3, .dark .brand-advanced > summary, .dark .brand-preview-paper h4, .dark .brand-preview-paper p { color: #edf0f7; }
+.dark .brand-preview-formats button { background: #131a26; color: #edf0f7; border-color: #293243; }
+.dark .brand-preview-formats button[aria-pressed="true"] { border-color: hsl(var(--primary)); background: color-mix(in srgb, hsl(var(--primary)) 15%, hsl(var(--background))); color: hsl(var(--primary)); }
+.dark .brand-review-empty, .dark .brand-review-omitted, .dark .brand-preview-heading p, .dark .brand-preview-note, .dark .brand-preview-eyebrow, .dark .brand-advanced > summary small { color: #9ca8bc; }
+/* The standalone setup shell deliberately uses a light surface in either
+   account theme. Keep its nested brand sections on that same surface. */
+.dark .setup-studio .brand-advanced, .dark .setup-studio .brand-review-section, .dark .setup-studio .brand-content-preview, .dark .setup-studio .brand-preview-paper { border-color: #dde0ec; background: #fcfcfe; }
+.dark .setup-studio .brand-content-preview { background: #f6f7fb; }
+.dark .setup-studio .brand-preview-paper { background: #fff; }
+.dark .setup-studio .brand-review-heading h3, .dark .setup-studio .brand-preview-heading h3, .dark .setup-studio .brand-advanced > summary, .dark .setup-studio .brand-preview-paper p { color: #34384d; }
+.dark .setup-studio .brand-preview-paper h4 { color: #20243b; }
+.dark .setup-studio .brand-preview-formats button { background: #fff; color: #34384d; border-color: #dde0ec; }
+.dark .setup-studio .brand-preview-formats button[aria-pressed="true"] { border-color: hsl(var(--primary)); color: hsl(var(--primary)); background: color-mix(in srgb, hsl(var(--primary)) 10%, white); }
+.dark .setup-studio .brand-review-empty, .dark .setup-studio .brand-review-omitted, .dark .setup-studio .brand-preview-heading p, .dark .setup-studio .brand-preview-note, .dark .setup-studio .brand-preview-eyebrow, .dark .setup-studio .brand-advanced > summary small { color: #6d7289; }
+@media (min-width: 640px) { .brand-images-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .brand-review-section, .brand-content-preview { padding: 15px; } .brand-preview-paper { padding: 18px; } .setup-form .setup-navigation { flex-wrap: wrap; } }

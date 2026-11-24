@@ -1,0 +1,12 @@
+flowchart TD
+  accTitle: AskSales workflow overview
+  accDescr: A selected business supplies resources to draft workflows. Reviewed customer actions pass delivery gates and record outcomes.
+  B[Selected business and permitted resources] --> L[Lead discovery and CRM]
+  B --> C[Content and proposals]
+  L --> D[Campaign conversation and outreach draft]
+  C --> D
+  D --> R[Review exact recipients and accounts]
+  R --> G{Assistant and provider ready?}
+  G -->|No| H[Blocked or held for explicit review]
+  G -->|Yes| P[Provider attempt]
+  P --> O[Recorded outcome in activity, CRM and support]

@@ -1,0 +1,92 @@
+{
+  "id": "powerai/twitter-user-retweets-scraper",
+  "name": "Twitter User Retweets Scraper",
+  "description": "Scrape users who retweeted a specific tweet from any Twitter account, with auto-pagination and detailed retweeter info.",
+  "inputSchema": {
+    "type": "object",
+    "schemaVersion": 1,
+    "title": "Twitter Retweets Input",
+    "properties": {
+      "id": {
+        "title": "Tweet ID",
+        "type": "string",
+        "description": "The ID of the tweet whose retweets you want to fetch.",
+        "editor": "textfield",
+        "default": "1700199139470942473"
+      },
+      "maxResults": {
+        "title": "Max Results",
+        "type": "integer",
+        "description": "Maximum number of retweets to fetch.",
+        "default": 30,
+        "minimum": 30,
+        "maximum": 50000,
+        "editor": "number"
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string",
+        "nullable": true,
+        "description": "Description"
+      },
+      "followers_count": {
+        "type": "number",
+        "nullable": true,
+        "description": "Followers count"
+      },
+      "friends_count": {
+        "type": "number",
+        "nullable": true,
+        "description": "Friends count"
+      },
+      "media_count": {
+        "type": "number",
+        "nullable": true,
+        "description": "Media count"
+      },
+      "name": {
+        "type": "string",
+        "nullable": true,
+        "description": "Name"
+      },
+      "profile_image": {
+        "type": "null",
+        "description": "Profile image"
+      },
+      "screen_name": {
+        "type": "string",
+        "nullable": true,
+        "description": "Screen name"
+      },
+      "statuses_count": {
+        "type": "number",
+        "nullable": true,
+        "description": "Statuses count"
+      },
+      "user_id": {
+        "type": "string",
+        "nullable": true,
+        "description": "User id"
+      },
+      "scrapedAt": {
+        "type": "string",
+        "description": "Scraped at"
+      }
+    }
+  },
+  "iterate_over": null,
+  "skip_if_empty": [
+    "id"
+  ],
+  "required_inputs": [
+    "id"
+  ],
+  "validation_rules": {}
+}

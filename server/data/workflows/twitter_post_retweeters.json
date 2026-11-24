@@ -1,0 +1,218 @@
+{
+  "workflow_id": "twitter_post_retweeters",
+  "platform": "twitter_post_retweeters",
+  "title": "Twitter Post Retweeters",
+  "description": "Search Twitter/X posts by keyword, extract people who retweeted those posts, and enrich their profiles. Best for identifying Twitter/X users who amplify content in your niche. Retweeters endorse the content they share. Use when you want leads who are active amplifiers and have their own audiences \u2014 great for partnership-focused outreach or viral marketing campaigns.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords or hashtags for searchQuery.\n- Retweeters amplify content \u2014 they share interests aligned with the topic.\n- Keep maxTweets at 10-20 (each tweet generates multiple retweeters).\n- Retweeter profiles are enriched with full user data.",
+  "nodes": [
+    {
+      "id": "twitter_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Twitter Search",
+        "actorId": "powerai/twitter-search-scraper",
+        "actorName": "Twitter Search Scraper",
+        "description": "Search for tweets by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{searchQuery}}",
+          "maxResults": "{{maxTweets}}",
+          "searchType": "Top"
+        },
+        "output_key": "twitter_tweets",
+        "finalValues": {
+          "searchType": "Top"
+        }
+      }
+    },
+    {
+      "id": "twitter_retweets",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Retweets",
+        "actorId": "powerai/twitter-user-retweets-scraper",
+        "actorName": "Twitter Retweets Scraper",
+        "description": "Extract retweeters from tweets",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "id": "{_current_item.tweet_id}",
+          "maxResults": 20
+        },
+        "immediateEnrichment": {
+          "enabled": true,
+          "profileNodeId": "twitter_retweeter_profiles",
+          "usernameField": "screen_name"
+        },
+        "iterate_over": "twitter_tweets",
+        "output_key": "twitter_retweets",
+        "field_mapping": {
+          "id": "tweet_id"
+        }
+      }
+    },
+    {
+      "id": "twitter_retweeter_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Retweeter Profiles",
+        "actorId": "apidojo/twitter-user-scraper",
+        "actorName": "Twitter User Scraper",
+        "description": "Get detailed profiles for retweeters",
+        "isProfileEnrichment": true,
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "twitterHandles": [
+            "{_current_item.screen_name}"
+          ],
+          "maxItems": 1,
+          "getFollowers": false,
+          "getFollowing": false,
+          "getAbout": false,
+          "getRetweeters": false,
+          "includeUnavailableUsers": false
+        },
+        "iterate_over": "twitter_retweets",
+        "output_key": "twitter_retweeter_profiles",
+        "field_mapping": {
+          "twitterHandles": "screen_name"
+        }
+      }
+    },
+    {
+      "id": "db_save_tweets",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Tweets",
+        "description": "Save tweets to posts table",
+        "iterate_over": "twitter_tweets",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "post_id": "tweet_id",
+          "postId": "tweet_id",
+          "content": "text",
+          "text": "text",
+          "url": "'https://twitter.com/' + screen_name + '/status/' + tweet_id",
+          "postUrl": "'https://twitter.com/' + screen_name + '/status/' + tweet_id",
+          "author_handle": "screen_name",
+          "authorName": "user_info.name",
+          "authorUsername": "screen_name",
+          "authorProfileUrl": "'https://twitter.com/' + screen_name",
+          "likes_count": "favorites",
+          "likesCount": "favorites",
+          "comments_count": "replies",
+          "shares_count": "retweets",
+          "retweetCount": "retweets",
+          "replyCount": "replies",
+          "quoteCount": "quotes",
+          "viewCount": "views",
+          "bookmarkCount": "bookmarks",
+          "posted_at": "created_at",
+          "createdAt": "created_at",
+          "source": "'twitter'",
+          "hashtags": "entities.hashtags",
+          "mentions": "entities.mentions",
+          "mediaUrls": "media",
+          "lang": "lang",
+          "sourceApp": "source"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_retweeters",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Retweeter Profiles",
+        "description": "Save Twitter retweeter profiles to leads table",
+        "iterate_over": "twitter_retweeter_profiles",
+        "field_mapping": {
+          "platform": "'twitter'",
+          "name": "name",
+          "bio": "description",
+          "verified": "isVerified",
+          "source": "'twitter'",
+          "leadType": "'profile'",
+          "platformType": "'twitter'",
+          "profileId": "id",
+          "fullName": "name",
+          "twitterUsername": "userName",
+          "twitterHandle": "userName",
+          "twitterUrl": "twitterUrl",
+          "profileUrl": "twitterUrl",
+          "website": "url",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "about": "description",
+          "location": "location",
+          "followersCount": "followers",
+          "twitterFollowers": "followers",
+          "followingCount": "following",
+          "registeredAt": "createdAt",
+          "engagementType": "'retweeter'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_retweets",
+      "source": "twitter_search",
+      "target": "twitter_retweets",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_tweets",
+      "source": "twitter_search",
+      "target": "db_save_tweets",
+      "animated": true
+    },
+    {
+      "id": "e_retweets_to_profiles",
+      "source": "twitter_retweets",
+      "target": "twitter_retweeter_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_retweeters_to_db",
+      "source": "twitter_retweeter_profiles",
+      "target": "db_save_retweeters",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

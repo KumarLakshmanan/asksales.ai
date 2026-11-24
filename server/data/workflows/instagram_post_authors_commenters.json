@@ -1,0 +1,212 @@
+{
+  "workflow_id": "instagram_post_authors_commenters",
+  "platform": "instagram_post_authors_commenters",
+  "title": "Instagram Post Authors & Commenters",
+  "description": "Search Instagram posts by hashtags, scrape author profiles, and extract people who commented on those posts with enriched profiles. Best for finding highly engaged Instagram users who actively participate in conversations within your niche. Commenters show high intent — they took time to write something. Use when quality matters more than quantity.",
+  "version": "1.0",
+  "tips": "- Hashtags should be relevant to the ICP industry AND location.\n- This workflow discovers people who COMMENT on posts in your niche — high-intent leads.\n- Commenters often have stronger engagement intent than likers.\n- Keep resultsLimit between 10-30 (each post generates multiple commenters).\n- If the user supplied exact hashtags, preserve them and use keywordSearch=false. Otherwise use keywordSearch=true with concise industry/location phrases; do not invent concatenated hashtags. Multi-word phrases require keywordSearch=true.\n- resultsLimit is per hashtag/keyword, not a final saved-lead cap. Review both limits before execution.",
+  "nodes": [
+    {
+      "id": "instagram_hashtag_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Instagram Hashtag Search",
+        "actorId": "apify/instagram-hashtag-scraper",
+        "actorName": "Instagram Hashtag Scraper",
+        "description": "Search Instagram posts by hashtags",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "hashtags": "{{hashtags}}",
+          "resultsLimit": "{{resultsLimit}}",
+          "keywordSearch": "{{keywordSearch}}"
+        },
+        "output_key": "instagram_posts",
+        "finalValues": {
+          "resultsType": "posts"
+        },
+        "reviewableInputFields": [
+          "hashtags",
+          "resultsLimit",
+          "keywordSearch",
+          "resultsType"
+        ]
+      }
+    },
+    {
+      "id": "instagram_comments",
+      "type": "actor",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Extract Comments",
+        "actorId": "apify/instagram-comment-scraper",
+        "actorName": "Instagram Comments Scraper",
+        "description": "Extract commenters for each post",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "directUrls": [
+            "{_current_item.url}"
+          ],
+          "resultsLimit": 20
+        },
+        "iterate_over": "instagram_posts",
+        "output_key": "instagram_comments",
+        "field_mapping": {
+          "directUrls": "url"
+        }
+      }
+    },
+    {
+      "id": "instagram_commenter_profiles",
+      "type": "actor",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Commenter Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Get profiles for commenters (batch mode)",
+        "isProfileEnrichment": true,
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": []
+        },
+        "batch_collect": {
+          "enabled": true,
+          "source_field": "ownerUsername",
+          "target_field": "usernames"
+        },
+        "iterate_over": "instagram_comments",
+        "output_key": "instagram_commenter_profiles",
+        "field_mapping": {
+          "usernames": "ownerUsername"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 700,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Instagram Posts",
+        "description": "Save Instagram posts to posts table",
+        "iterate_over": "instagram_posts",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "post_id": "id",
+          "postId": "id",
+          "content": "caption",
+          "text": "caption",
+          "url": "url",
+          "postUrl": "url",
+          "author_handle": "ownerUsername",
+          "authorName": "ownerFullName",
+          "authorUsername": "ownerUsername",
+          "likes_count": "likesCount",
+          "likesCount": "likesCount",
+          "comments_count": "commentsCount",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'instagram'",
+          "mediaUrls": "displayUrl"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_commenters",
+      "type": "saveToLeads",
+      "position": {
+        "x": 700,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Commenter Profiles",
+        "description": "Save Instagram commenter profiles to leads table",
+        "iterate_over": "instagram_commenter_profiles",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "name": "fullName",
+          "bio": "biography",
+          "source": "'instagram'",
+          "leadType": "'profile'",
+          "platformType": "'instagram'",
+          "profileId": "id",
+          "instagramHandle": "username",
+          "fullName": "fullName",
+          "about": "biography",
+          "profilePicture": "profilePicUrl",
+          "photo": "profilePicUrl",
+          "instagramUrl": "'https://instagram.com/' + username",
+          "profileUrl": "'https://instagram.com/' + username",
+          "postUrl": "postUrl",
+          "followersCount": "followersCount",
+          "followingCount": "followsCount",
+          "postsCount": "postsCount",
+          "verified": "verified",
+          "website": "externalUrl",
+          "categories": "businessCategoryName",
+          "engagementType": "'commenter'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_comments",
+      "source": "instagram_hashtag_search",
+      "target": "instagram_comments",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "instagram_hashtag_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_comments_to_profiles",
+      "source": "instagram_comments",
+      "target": "instagram_commenter_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_commenter_profiles_to_db",
+      "source": "instagram_commenter_profiles",
+      "target": "db_save_commenters",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_commenter_save",
+      "source": "db_save_posts",
+      "target": "db_save_commenters",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

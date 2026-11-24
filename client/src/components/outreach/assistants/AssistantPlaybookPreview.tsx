@@ -1,0 +1,17 @@
+'use client';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Field, nativeSelectClass } from './AssistantShared';
+import type { AssistantPanelProps } from './AssistantConfiguration';
+import { assistantChannelLabels } from '@/lib/outreach-assistants';
+import { previewPlaybookAssignments } from './assistantEditorUtils';
+
+export function AssistantPlaybookPreview({ draft, catalog }: Pick<AssistantPanelProps, 'draft' | 'catalog'>) {
+  const [intent, setIntent] = useState('faq');
+  const [binding, setBinding] = useState('');
+  const [brochure, setBrochure] = useState(false);
+  const selected = draft.bindings.find(b => `${b.channel}:${b.surface}` === binding) || draft.bindings[0];
+  const matches = selected ? previewPlaybookAssignments(draft, selected.channel, selected.surface, intent, brochure) : [];
+  const overlaps = draft.playbooks.assignments.filter((a, index, entries) => entries.slice(0, index).some(b => a.channel === b.channel && a.surface === b.surface && (a.intent === b.intent || a.intent === null || b.intent === null)));
+  return <section className="mt-5 space-y-4 rounded-xl border bg-muted/20 p-4"><h3 className="text-sm font-semibold">Assignment preview</h3><p className="text-xs leading-5 text-muted-foreground">Exact intent takes precedence over any-intent assignments. A confirmed brochure information request can use the FAQ lane before an any-intent assignment. Lower priority numbers win within each group; lower playbook IDs break ties. Active runs and explicit proposal actions are handled by the runtime separately.</p><div className="grid gap-3 sm:grid-cols-2"><Field label="Preview channel & surface" htmlFor="playbook-preview-binding"><select id="playbook-preview-binding" className={nativeSelectClass} value={selected ? `${selected.channel}:${selected.surface}` : ''} onChange={e => setBinding(e.target.value)}>{[...new Set(draft.bindings.map(b => `${b.channel}:${b.surface}`))].map(key => { const b = draft.bindings.find(item => `${item.channel}:${item.surface}` === key)!; return <option key={key} value={key}>{assistantChannelLabels[b.channel]} · {b.surface === 'private' ? 'Private' : 'Public comments'}</option>; })}</select></Field><Field label="Classified intent" htmlFor="playbook-preview-intent"><Input id="playbook-preview-intent" value={intent} maxLength={80} onChange={e => setIntent(e.target.value)} /></Field></div><label className="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" checked={brochure} onChange={e => setBrochure(e.target.checked)} />Confirmed brochure information request</label>{matches.length ? <ol className="space-y-2">{matches.map((a, index) => <li key={`${a.playbookId}-${index}`} className="rounded-lg border bg-background p-3 text-sm">{index === 0 ? 'Selected' : `Fallback candidate ${index}`} · {catalog.playbooks.find(p => p.id === a.playbookId)?.name || `Unavailable playbook ${a.playbookId}`}<span className="mt-1 block text-xs text-muted-foreground">{a.intent || 'Any intent'} · Priority {a.priority}</span></li>)}</ol> : <p className="text-sm text-muted-foreground">No assigned playbook matches this channel, surface and intent.</p>}{overlaps.length > 0 && <p role="status" className="text-xs text-amber-700 dark:text-amber-400">{overlaps.length} potentially overlapping assignment{overlaps.length === 1 ? '' : 's'}. Check representative intents above before publishing.</p>}</section>;
+}

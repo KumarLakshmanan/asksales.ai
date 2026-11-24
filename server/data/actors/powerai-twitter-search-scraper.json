@@ -1,0 +1,484 @@
+{
+  "id": "powerai/twitter-search-scraper",
+  "name": "Twitter Search Scraper",
+  "description": "Search for tweets on Twitter by keyword, with support for Top, Latest, Media, Lists, and People search types. Auto-pagination and detailed tweet info.",
+  "inputSchema": {
+    "type": "object",
+    "schemaVersion": 1,
+    "title": "Twitter Search Input",
+    "properties": {
+      "query": {
+        "title": "Search Query",
+        "type": "string",
+        "description": "The search keyword or phrase.",
+        "editor": "textfield",
+        "default": "OpenAI"
+      },
+      "searchType": {
+        "title": "Search Type",
+        "type": "string",
+        "description": "Type of search result to fetch.",
+        "editor": "select",
+        "enum": [
+          "Top",
+          "Latest",
+          "Media",
+          "People",
+          "Lists"
+        ],
+        "default": "Top"
+      },
+      "maxResults": {
+        "title": "Max Results",
+        "type": "integer",
+        "description": "Maximum number of tweets to fetch.",
+        "default": 15,
+        "editor": "number",
+        "minimum": 15,
+        "maximum": 10000
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "media": {
+        "type": "unknown[]",
+        "nullable": false,
+        "description": "Media"
+      },
+      "conversation_id": {
+        "type": "string",
+        "nullable": true,
+        "description": "Conversation id"
+      },
+      "bookmarks": {
+        "type": "number",
+        "description": "Bookmarks"
+      },
+      "favorites": {
+        "type": "number",
+        "description": "Favorites"
+      },
+      "quotes": {
+        "type": "number",
+        "description": "Quotes"
+      },
+      "replies": {
+        "type": "number",
+        "description": "Replies"
+      },
+      "retweets": {
+        "type": "number",
+        "description": "Retweets"
+      },
+      "entities": {
+        "type": "object",
+        "properties": {
+          "hashtags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "display_url": {
+                  "type": "string"
+                },
+                "expanded_url": {
+                  "type": "string"
+                },
+                "id_str": {
+                  "type": "string"
+                },
+                "media_key": {
+                  "type": "string"
+                },
+                "media_url_https": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "timestamps": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "display_url": {
+                  "type": "string"
+                },
+                "expanded_url": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "user_mentions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "indices": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "id_str": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "screen_name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "description": "Entities"
+      },
+      "place": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "more_data_url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "place_type": {
+            "type": "string"
+          }
+        },
+        "description": "Place"
+      },
+      "quoted": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "unknown[]",
+            "nullable": false
+          },
+          "bookmarks": {
+            "type": "number",
+            "nullable": true
+          },
+          "conversation_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "favorites": {
+            "type": "number",
+            "nullable": true
+          },
+          "lang": {
+            "type": "string",
+            "nullable": true
+          },
+          "quotes": {
+            "type": "number",
+            "nullable": true
+          },
+          "replies": {
+            "type": "number",
+            "nullable": true
+          },
+          "retweets": {
+            "type": "number",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "tweet_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "views": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "blue_verified": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "avatar": {
+                "type": "string",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "rest_id": {
+                "type": "string",
+                "nullable": true
+              },
+              "screen_name": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        },
+        "description": "Quoted"
+      },
+      "user_info": {
+        "type": "object",
+        "properties": {
+          "verified": {
+            "type": "boolean"
+          },
+          "cover_image": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "verified_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "favourites_count": {
+            "type": "number"
+          },
+          "followers_count": {
+            "type": "number"
+          },
+          "friends_count": {
+            "type": "number"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rest_id": {
+            "type": "string"
+          },
+          "screen_name": {
+            "type": "string"
+          }
+        },
+        "description": "User info"
+      },
+      "created_at": {
+        "type": "string",
+        "description": "Created at"
+      },
+      "in_reply_to_screen_name": {
+        "type": "string",
+        "description": "In reply to screen name"
+      },
+      "in_reply_to_status_id_str": {
+        "type": "string",
+        "nullable": true,
+        "description": "In reply to status id str"
+      },
+      "in_reply_to_user_id_str": {
+        "type": "string",
+        "description": "In reply to user id str"
+      },
+      "lang": {
+        "type": "string",
+        "description": "Lang"
+      },
+      "scrapedAt": {
+        "type": "string",
+        "description": "Scraped at"
+      },
+      "screen_name": {
+        "type": "string",
+        "description": "Screen name"
+      },
+      "source": {
+        "type": "string",
+        "description": "Source"
+      },
+      "text": {
+        "type": "string",
+        "description": "Text"
+      },
+      "tweet_id": {
+        "type": "string",
+        "description": "Tweet id"
+      },
+      "type": {
+        "type": "string",
+        "description": "Type"
+      },
+      "views": {
+        "type": "string",
+        "nullable": true,
+        "description": "Views"
+      },
+      "community_id": {
+        "type": "string",
+        "description": "Community id"
+      },
+      "retweeted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "description": "Retweeted"
+      },
+      "retweeted_tweet": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "unknown[]",
+            "nullable": false
+          },
+          "bookmarks": {
+            "type": "number"
+          },
+          "favorites": {
+            "type": "number"
+          },
+          "quotes": {
+            "type": "number"
+          },
+          "replies": {
+            "type": "number"
+          },
+          "retweets": {
+            "type": "number"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "blue_verified": {
+                "type": "boolean"
+              },
+              "avatar": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "rest_id": {
+                "type": "string"
+              },
+              "screen_name": {
+                "type": "string"
+              }
+            }
+          },
+          "conversation_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "lang": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tweet_id": {
+            "type": "string"
+          }
+        },
+        "description": "Retweeted tweet"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "query"
+  ],
+  "validation_rules": []
+}

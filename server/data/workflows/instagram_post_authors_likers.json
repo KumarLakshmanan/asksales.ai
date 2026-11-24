@@ -1,0 +1,210 @@
+{
+  "workflow_id": "instagram_post_authors_likers",
+  "platform": "instagram_post_authors_likers",
+  "title": "Instagram Post Author Likers",
+  "description": "Search Instagram posts by hashtags, extract people who liked those posts, and enrich the liker profiles. Best for finding Instagram users who show interest through likes — a broader pool than commenters but still indicates active engagement. Use when you want volume of engaged prospects from a specific hashtag or topic.",
+  "version": "1.0",
+  "tips": "- Hashtags should be relevant to the ICP industry AND location.\n- This workflow discovers people who LIKE posts in your niche — great for engagement-based leads.\n- Start with a small resultsLimit because each post can generate multiple likers.\n- Likers are enriched with full profile data including bio, followers, website.\n- If the user supplied exact hashtags, preserve them and use keywordSearch=false. Otherwise use keywordSearch=true with concise industry/location phrases; do not invent concatenated hashtags. Multi-word phrases require keywordSearch=true.\n- resultsLimit is per hashtag/keyword, not a final saved-lead cap. Review both limits before execution.",
+  "nodes": [
+    {
+      "id": "instagram_hashtag_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Instagram Hashtag Search",
+        "actorId": "apify/instagram-hashtag-scraper",
+        "actorName": "Instagram Hashtag Scraper",
+        "description": "Search Instagram posts by hashtags",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "hashtags": "{{hashtags}}",
+          "resultsLimit": "{{resultsLimit}}",
+          "keywordSearch": "{{keywordSearch}}"
+        },
+        "output_key": "instagram_posts",
+        "finalValues": {
+          "resultsType": "posts"
+        },
+        "reviewableInputFields": [
+          "hashtags",
+          "resultsLimit",
+          "keywordSearch",
+          "resultsType"
+        ]
+      }
+    },
+    {
+      "id": "instagram_likes",
+      "type": "actor",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Extract Likes",
+        "actorId": "seemuapps/instagram-post-likers-scraper",
+        "actorName": "Instagram Post Likers Scraper",
+        "description": "Extract likers for each post",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "post": "{_current_item.url}",
+          "maxItems": 20
+        },
+        "iterate_over": "instagram_posts",
+        "output_key": "instagram_likes",
+        "field_mapping": {
+          "post": "url"
+        }
+      }
+    },
+    {
+      "id": "instagram_liker_profiles",
+      "type": "actor",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Get Liker Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Get profiles for likers (batch mode)",
+        "isProfileEnrichment": true,
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": []
+        },
+        "batch_collect": {
+          "enabled": true,
+          "source_field": "username",
+          "target_field": "usernames"
+        },
+        "iterate_over": "instagram_likes",
+        "output_key": "instagram_liker_profiles",
+        "field_mapping": {
+          "usernames": "username"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 700,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Instagram Posts",
+        "description": "Save Instagram posts to posts table",
+        "iterate_over": "instagram_posts",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "post_id": "id",
+          "postId": "id",
+          "content": "caption",
+          "text": "caption",
+          "url": "url",
+          "postUrl": "url",
+          "author_handle": "ownerUsername",
+          "authorName": "ownerFullName",
+          "authorUsername": "ownerUsername",
+          "likes_count": "likesCount",
+          "likesCount": "likesCount",
+          "comments_count": "commentsCount",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'instagram'",
+          "mediaUrls": "displayUrl"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_likers",
+      "type": "saveToLeads",
+      "position": {
+        "x": 700,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Liker Profiles",
+        "description": "Save Instagram liker profiles to leads table",
+        "iterate_over": "instagram_liker_profiles",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "name": "fullName",
+          "bio": "biography",
+          "source": "'instagram'",
+          "leadType": "'profile'",
+          "platformType": "'instagram'",
+          "profileId": "id",
+          "instagramHandle": "username",
+          "fullName": "fullName",
+          "about": "biography",
+          "profilePicture": "profilePicUrl",
+          "photo": "profilePicUrl",
+          "instagramUrl": "'https://instagram.com/' + username",
+          "profileUrl": "'https://instagram.com/' + username",
+          "postUrl": "postUrl",
+          "followersCount": "followersCount",
+          "followingCount": "followsCount",
+          "postsCount": "postsCount",
+          "verified": "verified",
+          "website": "externalUrl",
+          "categories": "businessCategoryName",
+          "engagementType": "'liker'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_likes",
+      "source": "instagram_hashtag_search",
+      "target": "instagram_likes",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "instagram_hashtag_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_likes_to_profiles",
+      "source": "instagram_likes",
+      "target": "instagram_liker_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_liker_profiles_to_db",
+      "source": "instagram_liker_profiles",
+      "target": "db_save_likers",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_liker_save",
+      "source": "db_save_posts",
+      "target": "db_save_likers",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

@@ -1,0 +1,44 @@
+import React from "react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), push: vi.fn(), toast: vi.fn(), invalidate: vi.fn() }));
+const router = { push: mocks.push };
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
+vi.mock("@/lib/api", () => ({ default: { get: mocks.get, put: mocks.put } }));
+vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: mocks.toast }) }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: mocks.invalidate }) }));
+import { BusinessProfileForm } from "@/components/BusinessProfileForm";
+beforeEach(() => { vi.clearAllMocks(); mocks.get.mockResolvedValue({ id: 26, companyName: "Northstar", role: "owner", version: 7, workspaceType: "business", applicationUses: [], preferredChannels: [], timezone: "UTC" }); mocks.put.mockResolvedValue({ id: 26, version: 8 }); mocks.invalidate.mockResolvedValue(undefined); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+describe("profile editing recovery", () => {
+  it("uses the saved version and advances it when saving again in the same editor", async () => {
+    const user = userEvent.setup(); render(<BusinessProfileForm profileId={26} />);
+    const name = await screen.findByLabelText("Workspace name *");
+    await user.clear(name); await user.type(name, "Northstar New");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledTimes(1));
+    expect(mocks.put.mock.calls[0][1]).toMatchObject({ name: "Northstar New", expectedVersion: 7 });
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("All changes saved"));
+    await user.type(name, " v2");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledTimes(2));
+    expect(mocks.put.mock.calls[1][1]).toMatchObject({ name: "Northstar New v2", expectedVersion: 8 });
+  });
+  it("keeps edits and the dirty guard when a save conflicts", async () => {
+    mocks.put.mockRejectedValueOnce(Object.assign(new Error("This workspace changed in another tab. Reload the latest profile before saving."), { status: 409 }));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup(); render(<BusinessProfileForm profileId={26} />);
+    const name = await screen.findByLabelText("Workspace name *");
+    await user.type(name, " edits");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("changed in another tab");
+    expect(name).toHaveValue("Northstar edits");
+    expect(screen.getByRole("button", { name: "Load latest saved profile" })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(confirm).toHaveBeenCalledOnce(); expect(mocks.push).not.toHaveBeenCalled();
+    const before = new Event("beforeunload", { cancelable: true }); window.dispatchEvent(before);
+    expect(before.defaultPrevented).toBe(true);
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+  });
+});

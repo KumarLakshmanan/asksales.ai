@@ -1,0 +1,190 @@
+{
+  "id": "compass/crawler-google-places",
+  "name": "Google Maps Scraper",
+  "description": "Extract data from thousands of Google Maps locations and businesses, including reviews, reviewer details, images, contact info, opening hours, prices & more.",
+  "inputSchema": {
+    "title": "Google Maps Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "searchStringsArray": {
+        "title": "Search term(s)",
+        "type": "array",
+        "description": "Search queries for Google Maps (e.g. 'restaurants', 'tech companies').",
+        "prefill": ["restaurant"]
+      },
+      "locationQuery": {
+        "title": "Location",
+        "type": "string",
+        "description": "Location for the search (e.g. 'New York, USA').",
+        "prefill": "New York, USA"
+      },
+      "maxCrawledPlacesPerSearch": {
+        "title": "Max Places Per Search",
+        "type": "integer",
+        "description": "Maximum number of places to extract per search term.",
+        "prefill": 50
+      },
+      "language": {
+        "title": "Language",
+        "type": "string",
+        "default": "en",
+        "prefill": "en"
+      },
+      "skipClosedPlaces": {
+        "title": "Skip Closed Places",
+        "type": "boolean",
+        "default": false
+      },
+      "placeMinimumStars": {
+        "title": "Minimum Star Rating",
+        "type": "string",
+        "default": ""
+      },
+      "scrapePlaceDetailPage": {
+        "title": "Scrape place detail page",
+        "type": "boolean",
+        "default": false
+      },
+      "maxReviews": {
+        "title": "Max Reviews Per Place",
+        "type": "integer",
+        "default": 0
+      },
+      "maxImages": {
+        "title": "Max Images Per Place",
+        "type": "integer",
+        "default": 0
+      },
+      "scrapeContacts": {
+        "title": "Scrape Contacts (from website)",
+        "type": "boolean",
+        "default": false
+      },
+      "scrapeSocialMediaProfiles": {
+        "title": "Scrape Social Media Profiles",
+        "type": "object",
+        "default": {
+          "facebooks": false,
+          "instagrams": false,
+          "youtubes": false,
+          "tiktoks": false,
+          "twitters": false
+        }
+      },
+      "countryCode": {
+        "title": "Country Code",
+        "type": "string",
+        "description": "Lowercase two-letter country code to restrict results (e.g. 'us', 'gb', 'in'). The provider rejects uppercase codes. Empty string means no country filter.",
+        "pattern": "^([a-z]{2})?$"
+      },
+      "city": {
+        "title": "City",
+        "type": "string"
+      },
+      "state": {
+        "title": "State",
+        "type": "string"
+      },
+      "postalCode": {
+        "title": "Postal Code",
+        "type": "string"
+      },
+      "startUrls": {
+        "title": "Google Maps URLs",
+        "type": "array",
+        "description": "Direct Google Maps URLs to scrape."
+      },
+      "placeIds": {
+        "title": "Place IDs",
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Google Maps place IDs to scrape directly."
+      },
+      "categoryFilterWords": {
+        "title": "Category Filter Words",
+        "type": "array",
+        "description": "Filter results to only places whose category matches one of these words."
+      },
+      "searchMatching": {
+        "title": "Search Matching",
+        "type": "string",
+        "default": "all",
+        "description": "How strictly to match search terms: all, only_includes, or only_exact."
+      },
+      "website": {
+        "title": "Website Filter",
+        "type": "string",
+        "default": "allPlaces",
+        "description": "Filter by website presence: allPlaces, withWebsite, withoutWebsite."
+      },
+      "maximumLeadsEnrichmentRecords": {
+        "title": "Maximum Leads Enrichment Records",
+        "type": "integer",
+        "default": 0,
+        "description": "Number of records to enrich with contact details. 0 = none."
+      },
+      "leadsEnrichmentDepartments": {
+        "title": "Leads Enrichment Departments",
+        "type": "array",
+        "description": "Provider department codes for contact enrichment, not job titles. Use an empty array when enrichment is disabled.",
+        "items": {
+          "type": "string",
+          "enum": ["c_suite", "product", "engineering_technical", "design", "education", "finance", "human_resources", "information_technology", "legal", "marketing", "medical_health", "operations", "sales", "consulting"]
+        }
+      }
+    },
+    "required": []
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "title":            { "type": "string",  "description": "Business/place name" },
+      "categoryName":     { "type": "string",  "description": "Primary category" },
+      "categories":       { "type": "array",   "description": "All categories" },
+      "address":          { "type": "string",  "description": "Full formatted address" },
+      "neighborhood":     { "type": "string",  "description": "Neighborhood" },
+      "street":           { "type": "string",  "description": "Street address" },
+      "city":             { "type": "string",  "description": "City" },
+      "postalCode":       { "type": "string",  "description": "Postal/ZIP code" },
+      "state":            { "type": "string",  "description": "State or region" },
+      "countryCode":      { "type": "string",  "description": "Country code (e.g. US)" },
+      "website":          { "type": "string",  "description": "Business website URL" },
+      "phone":            { "type": "string",  "description": "Formatted phone number" },
+      "phoneUnformatted": { "type": "string",  "description": "Unformatted phone number" },
+      "phones":           { "type": "array",   "description": "All phone numbers" },
+      "emails":           { "type": "array",   "description": "Email addresses from website" },
+      "location":         { "type": "object",  "description": "Geo coordinates { lat, lng }" },
+      "totalScore":       { "type": "number",  "description": "Overall rating score" },
+      "reviewsCount":     { "type": "integer", "description": "Total number of reviews" },
+      "reviewsDistribution": { "type": "object", "description": "Reviews by star rating" },
+      "permanentlyClosed": { "type": "boolean", "description": "Permanently closed?" },
+      "temporarilyClosed": { "type": "boolean", "description": "Temporarily closed?" },
+      "placeId":          { "type": "string",  "description": "Google Maps place ID" },
+      "cid":              { "type": "string",  "description": "Google CID" },
+      "kgmid":            { "type": "string",  "description": "Knowledge Graph ID" },
+      "fid":              { "type": "string",  "description": "Feature ID" },
+      "imageUrl":         { "type": "string",  "description": "Primary image URL" },
+      "imageUrls":        { "type": "array",   "description": "Array of image URLs" },
+      "openingHours":     { "type": "array",   "description": "Opening hours per day" },
+      "reviews":          { "type": "array",   "description": "Review objects" },
+      "facebooks":        { "type": "array",   "description": "Facebook profile URLs" },
+      "instagrams":       { "type": "array",   "description": "Instagram profile URLs" },
+      "linkedIns":        { "type": "array",   "description": "LinkedIn profile URLs" },
+      "twitters":         { "type": "array",   "description": "Twitter/X profile URLs" },
+      "leadsEnrichment":  { "type": "array",   "description": "Enriched lead contacts (name, email, jobTitle, linkedin etc.)" },
+      "url":              { "type": "string",  "description": "Google Maps URL" },
+      "searchString":     { "type": "string",  "description": "Search term that found this place" },
+      "rank":             { "type": "integer", "description": "Rank in search results" },
+      "depth":            { "type": "number",  "description": "Scrape depth" },
+      "scrapedAt":        { "type": "string",  "description": "ISO timestamp of scrape" },
+      "language":         { "type": "string",  "description": "Language of results" },
+      "domain":           { "type": "string",  "description": "Website domain" },
+      "popularTimesHistogram": { "type": "object", "description": "Popular times by day/hour" }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": ["searchStringsArray"],
+  "validation_rules": []
+}

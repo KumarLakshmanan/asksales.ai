@@ -1,0 +1,13 @@
+flowchart TD
+  accTitle: Mandatory assistant delivery prerequisite
+  accDescr: Admission and final delivery require a matching published active ready assistant and enabled runtime. Setup never automatically replays held work.
+  R[Reviewed customer action] --> M{Exact business, channel, account and surface?}
+  M -->|No| B[Block or hold]
+  M -->|Yes| A{Runtime enabled and assigned assistant published, active and ready?}
+  A -->|No| B
+  A -->|Yes| Q[Admit reviewed work]
+  Q --> F{Recheck assistant and provider before delivery}
+  F -->|Not ready| B
+  F -->|Ready| P[Provider delivery attempt]
+  B --> E[Explicit review and recovery required]
+  E --> N[Setup never automatically replays held work]

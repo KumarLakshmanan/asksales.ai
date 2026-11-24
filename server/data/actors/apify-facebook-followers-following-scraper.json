@@ -1,0 +1,164 @@
+{
+  "id": "apify/facebook-followers-following-scraper",
+  "name": "Facebook Followers & Following Scraper",
+  "description": "Extract data from Facebook pages and profiles about its followers and profiles it follows. Just enter the URL, and you'll get data such as follow type, profile's URL, image, title, and subtitle.",
+  "category": "Social Media",
+  "platform": "facebook",
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      {
+        "title": "Result",
+        "description": "One follower or following result written to the default dataset; current pricing is tiered by plan.",
+        "priceUsd": 0.0082
+      }
+    ]
+  },
+  "isDeprecated": false,
+  "inputSchema": {
+    "title": "Input schema for actor.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "startUrls": {
+        "title": "Facebook URLs",
+        "type": "array",
+        "description": "Valid facebook page or profile URL",
+        "editor": "requestListSources",
+        "prefill": [
+          {
+            "url": "https://www.facebook.com/LeonardoDiCaprio"
+          }
+        ],
+        "items": {
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        }
+      },
+      "resultsLimit": {
+        "title": "Results amount",
+        "type": "integer",
+        "description": "If this limit is not set as many results as possible are returned",
+        "editor": "number",
+        "prefill": 40,
+        "minimum": 1
+      },
+      "followType": {
+        "title": "Relation type",
+        "type": "string",
+        "description": "Select follows sub-section(s)",
+        "editor": "select",
+        "enum": [
+          "",
+          "follower",
+          "following"
+        ],
+        "enumTitles": [
+          "Both followers and following",
+          "Only Followers",
+          "Only Following"
+        ],
+        "default": "",
+        "prefill": ""
+      }
+    },
+    "required": [
+      "startUrls"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique ID"
+      },
+      "facebookId": {
+        "type": ["string", "null"],
+        "description": "Facebook ID of the source profile or page"
+      },
+      "facebookUrl": {
+        "type": ["string", "null"],
+        "description": "URL of the source Facebook profile or page that was scraped"
+      },
+      "title": {
+        "type": ["string", "null"],
+        "description": "Profile name/title"
+      },
+      "subtitle_text": {
+        "type": ["string", "null"],
+        "description": "Profile subtitle text"
+      },
+      "image": {
+        "type": ["string", "null"],
+        "description": "Profile picture URL"
+      },
+      "followType": {
+        "type": ["string", "null"],
+        "description": "Relation type: followers or following"
+      },
+      "followersId": {
+        "type": "string",
+        "description": "Followers ID"
+      },
+      "followingId": {
+        "type": "string",
+        "description": "Following ID"
+      },
+      "inputUrl": {
+        "type": ["string", "null"],
+        "description": "Input URL that was scraped"
+      },
+      "url": {
+        "type": ["string", "null"],
+        "description": "Follower or following profile URL"
+      },
+      "__typename": {
+        "type": "string",
+        "description": "Facebook entity type"
+      },
+      "__isEntity": {
+        "type": "string",
+        "description": "Entity type indicator"
+      },
+      "pageAdLibrary": {
+        "type": "object",
+        "description": "Ad library info (is_business_page_active, id)"
+      },
+      "navSections": {
+        "type": "array",
+        "description": "Navigation sections (id, name, url)"
+      },
+      "privacy_scope": {
+        "type": ["object", "null"],
+        "description": "Privacy scope"
+      },
+      "profile_picture": {
+        "type": ["object", "null"],
+        "description": "Profile picture object with an optional uri field"
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if any"
+      },
+      "errorDescription": {
+        "type": "string",
+        "description": "Error description"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "startUrls"
+  ],
+  "validation_rules": []
+}

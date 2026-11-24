@@ -1,0 +1,354 @@
+{
+  "id": "codingfrontend/justdial-business-lead-extractor",
+  "name": "JustDial Business Lead Extractor",
+  "description": "Scrape business listings from JustDial.com based on location and search term. Extract comprehensive business details including name, phone, address, ratings, reviews, operating hours, services, amenities, images, and geo coordinates.",
+  "inputSchema": {
+    "title": "JustDial Leads Extractor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "location": {
+        "title": "Location",
+        "type": "string",
+        "description": "City or location to search in",
+        "editor": "textfield",
+        "default": "Mumbai",
+        "prefill": "Mumbai"
+      },
+      "maxItems": {
+        "title": "Max Items",
+        "type": "integer",
+        "description": "Maximum number of items to scrape",
+        "minimum": 10,
+        "default": 100,
+        "maximum": 1000,
+        "editor": "number",
+        "prefill": 100
+      },
+      "search": {
+        "title": "Search Term",
+        "type": "string",
+        "description": "Business type or search term to look for",
+        "editor": "textfield",
+        "default": "restaurants",
+        "prefill": "restaurants"
+      },
+      "headless": {
+        "title": "Headless Mode",
+        "type": "boolean",
+        "description": "Run browser in headless mode (no visible UI). Set to false for debugging.",
+        "default": true,
+        "prefill": true
+      },
+      "proxyConfiguration": {
+        "title": "Proxy Configuration",
+        "type": "object",
+        "description": "Optionally, use Apify Proxy or custom HTTP proxy to avoid IP address-based blocking.",
+        "default": {
+          "useApifyProxy": true,
+          "apifyProxyGroups": [
+            "RESIDENTIAL"
+          ],
+          "apifyProxyCountry": "IN"
+        },
+        "editor": "proxy"
+      }
+    },
+    "required": [
+      "location",
+      "maxItems",
+      "search",
+      "proxyConfiguration"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "card_info": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "d": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "cl": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "data": {
+                    "type": "string[]",
+                    "nullable": false
+                  },
+                  "html": {
+                    "type": "number"
+                  },
+                  "bg": {
+                    "type": "string"
+                  },
+                  "desc": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "link": {
+                    "type": "string"
+                  },
+                  "tagText": {
+                    "type": "string"
+                  },
+                  "tag_key": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "t": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Card info"
+      },
+      "dimages": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Dimages"
+      },
+      "nwtaglin": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Nwtaglin"
+      },
+      "response_rate": {
+        "type": "unknown[]",
+        "nullable": false,
+        "description": "Response rate"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "bg_colour": {
+              "type": "string"
+            },
+            "tag_image": {
+              "type": "string"
+            },
+            "tag_name": {
+              "type": "string"
+            },
+            "txt_colour": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Tags"
+      },
+      "top_categories": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "catid": {
+              "type": "number"
+            },
+            "ncatid": {
+              "type": "number"
+            },
+            "catname": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Top categories"
+      },
+      "wpnumber": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Wpnumber"
+      },
+      "isAd": {
+        "type": "boolean",
+        "description": "Is ad"
+      },
+      "success": {
+        "type": "boolean",
+        "description": "Success"
+      },
+      "cancall": {
+        "type": "number",
+        "description": "Cancall"
+      },
+      "opennow": {
+        "type": "number",
+        "nullable": false,
+        "description": "Opennow"
+      },
+      "paidStatus": {
+        "type": "number",
+        "nullable": false,
+        "description": "Paid status"
+      },
+      "NewAddress": {
+        "type": "string",
+        "description": "New address"
+      },
+      "VNumber": {
+        "type": "string",
+        "description": "V number"
+      },
+      "amenities": {
+        "type": "string",
+        "description": "Amenities"
+      },
+      "area": {
+        "type": "string",
+        "description": "Area"
+      },
+      "businessType": {
+        "type": "string",
+        "description": "Business type"
+      },
+      "category": {
+        "type": "string",
+        "description": "Category"
+      },
+      "checkin_image": {
+        "type": "string",
+        "description": "Checkin image"
+      },
+      "city": {
+        "type": "string",
+        "description": "City"
+      },
+      "compRating": {
+        "type": "string",
+        "description": "Comp rating"
+      },
+      "discount_offer": {
+        "type": "string",
+        "description": "Discount offer"
+      },
+      "distance": {
+        "type": "string",
+        "description": "Distance"
+      },
+      "docid": {
+        "type": "string",
+        "description": "Docid"
+      },
+      "established_year": {
+        "type": "string",
+        "description": "Established year"
+      },
+      "experience": {
+        "type": "string",
+        "description": "Experience"
+      },
+      "guarantee": {
+        "type": "string",
+        "description": "Guarantee"
+      },
+      "lat": {
+        "type": "string",
+        "description": "Lat"
+      },
+      "loccity": {
+        "type": "string",
+        "description": "Loccity"
+      },
+      "lon": {
+        "type": "string",
+        "description": "Lon"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name"
+      },
+      "opstring_status": {
+        "type": "string",
+        "description": "Opstring status"
+      },
+      "opstring_timing": {
+        "type": "string",
+        "description": "Opstring timing"
+      },
+      "photocnt": {
+        "type": "string",
+        "description": "Photocnt"
+      },
+      "pincode": {
+        "type": "string",
+        "description": "Pincode"
+      },
+      "rate_color": {
+        "type": "string",
+        "description": "Rate color"
+      },
+      "scd": {
+        "type": "string",
+        "description": "Scd"
+      },
+      "services": {
+        "type": "string",
+        "description": "Services"
+      },
+      "shared_url": {
+        "type": "string",
+        "description": "Shared url"
+      },
+      "thumbnail": {
+        "type": "string",
+        "description": "Thumbnail"
+      },
+      "totJdReviews": {
+        "type": "string",
+        "description": "Tot jd reviews"
+      },
+      "totalReviews": {
+        "type": "string",
+        "description": "Total reviews"
+      },
+      "verified": {
+        "type": "string",
+        "description": "Verified"
+      },
+      "vertical_name": {
+        "type": "string",
+        "description": "Vertical name"
+      },
+      "video": {
+        "type": "string",
+        "description": "Video"
+      },
+      "weburl": {
+        "type": "string",
+        "description": "Weburl"
+      }
+    }
+  },
+  "iterate_over": "$.results[*]",
+  "skip_if_empty": false,
+  "required_inputs": [
+    "location",
+    "search"
+  ],
+  "validation_rules": []
+}

@@ -1,0 +1,73 @@
+import { act, cleanup, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { useChat } from '@/hooks/useChat';
+const mocks = vi.hoisted(() => ({ post:vi.fn(),get:vi.fn(async()=>[]),send:vi.fn(()=> 'queued'),subscribe:vi.fn((_type: string, _callback: (event: any) => void)=>()=>undefined),releaseQueuedMessage:vi.fn(),toast:vi.fn() }));
+vi.mock('@/lib/api',()=>({api:{post:mocks.post,get:mocks.get}}));
+vi.mock('@/services/WebSocketService',()=>({default:{send:mocks.send,subscribe:mocks.subscribe,releaseQueuedMessage:mocks.releaseQueuedMessage}}));
+vi.mock('@/hooks/use-toast',()=>({useToast:()=>({toast:mocks.toast})}));
+afterEach(()=>{cleanup();sessionStorage.clear();vi.restoreAllMocks();});
+beforeEach(()=>{mocks.post.mockReset();mocks.send.mockClear();mocks.subscribe.mockClear();});
+it('reuses the same campaign request after a lost HTTP response and a reload',async()=>{
+  const log=vi.spyOn(console,'error').mockImplementation(()=>undefined);
+  mocks.post.mockRejectedValueOnce(new Error('Connection lost')).mockResolvedValueOnce({threadId:7123,message:{id:1,content:'Read my campaign status'},response:{messageId:2,content:'Saved status'}});
+  const first=renderHook(()=>useChat('',()=>undefined));
+  await act(async()=>{first.result.current.setCurrentThreadId(7123);});
+  await act(async()=>{await first.result.current.handleSendMessage('Read my campaign status');});
+  const id=mocks.post.mock.calls[0][1].idempotencyKey; first.unmount();
+  const second=renderHook(()=>useChat('',()=>undefined));
+  await act(async()=>{second.result.current.setCurrentThreadId(7123);});
+  await act(async()=>{await second.result.current.handleSendMessage('Read my campaign status');});
+  expect(mocks.post.mock.calls[1][1].idempotencyKey).toBe(id);
+  expect(second.result.current.messages.filter(m=>m.role==='assistant').map(m=>m.content)).toEqual(['Saved status']);
+  expect(sessionStorage.getItem('conversation-attempt:campaign:7123')).toBeNull(); log.mockRestore();
+});
+it('keeps both HTTP replies when the second message is queued in the same conversation', async () => {
+  let completeFirst!: (value: unknown) => void; let completeSecond!: (value: unknown) => void;
+  mocks.post.mockImplementationOnce(() => new Promise(resolve => { completeFirst = resolve; }))
+    .mockImplementationOnce(() => new Promise(resolve => { completeSecond = resolve; }));
+  const hook = renderHook(() => useChat('', () => undefined));
+  await act(async () => { hook.result.current.setCurrentThreadId(7124); });
+  let first!: Promise<unknown>; let second!: Promise<unknown>;
+  await act(async () => { first = hook.result.current.handleSendMessage('First question'); });
+  await act(async () => { second = hook.result.current.handleSendMessage('Second question'); });
+  await act(async () => { completeFirst({threadId:7124,message:{id:11,content:'First question'},response:{messageId:12,content:'First answer'}}); await first; });
+  expect(hook.result.current.messages.some(message => message.id === '12')).toBe(true);
+  expect(hook.result.current.isProcessing).toBe(true);
+  await act(async () => { completeSecond({threadId:7124,message:{id:13,content:'Second question'},response:{messageId:14,content:'Second answer'}}); await second; });
+  expect(hook.result.current.messages.filter(message => message.role === 'assistant').map(message => message.content)).toEqual(['First answer','Second answer']);
+  expect(hook.result.current.messages.filter(message => message.role === 'user').every(message => !message.metadata?.optimistic)).toBe(true);
+});
+it('binds the first attempt on thread resolution and preserves its original profile after reload', async () => {
+  vi.spyOn(console,'error').mockImplementation(() => undefined);
+  let rejectFirst!: (error: Error) => void;
+  mocks.post.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectFirst = reject; }));
+  const first = renderHook(() => useChat('17', () => undefined));
+  let pending!: Promise<unknown>;
+  await act(async () => { pending = first.result.current.handleSendMessage('Explain this campaign'); });
+  const original = mocks.post.mock.calls[0][1];
+  await act(async () => { mocks.subscribe.mock.calls.find(([type]) => type === 'thread_resolved')?.[1]({threadId:7125,requestMessageId:original.idempotencyKey}); });
+  await act(async () => { rejectFirst(new Error('Response lost')); await pending; });
+  first.unmount();
+  mocks.post.mockResolvedValueOnce({threadId:7125,message:{id:21},response:{messageId:22,content:'Saved explanation'}});
+  const retry = renderHook(() => useChat('', () => undefined));
+  await act(async () => { retry.result.current.setCurrentThreadId(7125); });
+  await act(async () => { await retry.result.current.handleSendMessage('Explain this campaign'); });
+  expect(mocks.post.mock.calls[1][1]).toMatchObject({threadId:7125,businessProfileId:17,idempotencyKey:original.idempotencyKey});
+  expect(sessionStorage.getItem('conversation-attempt:campaign:new')).toBeNull();
+  expect(sessionStorage.getItem('conversation-attempt:campaign:7125')).toBeNull();
+});
+it('never inserts an unresolved first response into a different newly created conversation', async () => {
+  let complete!: (value: unknown) => void;
+  mocks.post.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
+  const hook = renderHook(() => useChat('', () => undefined));
+  let pending!: Promise<unknown>;
+  await act(async () => { pending = hook.result.current.handleSendMessage('Question in campaign A'); });
+  await act(async () => {
+    hook.result.current.locallyCreatedThreadRef.current = 7127;
+    hook.result.current.setCurrentThreadId(7127);
+    hook.result.current.setMessages([{id:'99',role:'user',content:'Campaign B',timestamp:Date.now()}]);
+  });
+  await act(async () => { complete({threadId:7126,message:{id:31},response:{messageId:32,content:'Answer for campaign A'}}); await pending; });
+  expect(hook.result.current.currentThreadId).toBe(7127);
+  expect(hook.result.current.messages.map(message => message.content)).toEqual(['Campaign B']);
+});

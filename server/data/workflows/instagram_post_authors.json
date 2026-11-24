@@ -1,0 +1,176 @@
+{
+  "workflow_id": "instagram_post_authors",
+  "platform": "instagram_post_authors",
+  "title": "Instagram Post Author Profiles",
+  "description": "Search Instagram posts by hashtags and extract detailed author profiles as leads. Best for finding Instagram creators and influencers who actively post about topics in your niche. Use when you want to identify content creators for partnerships, influencer outreach, or B2C prospecting. A lightweight 2-step strategy that captures author bios, follower counts, and contact info.",
+  "version": "1.0",
+  "tips": "- Hashtags should be relevant to the ICP industry AND location.\n- Mix location-specific hashtags with generic ones.\n- Keep resultsLimit between 10-50.\n- Do NOT use spaces in hashtags.\n- This workflow finds post authors and enriches their profiles — ideal for discovering active content creators in your niche.\n- For multiple audience segments, use MULTIPLE searches in a \"searches\" array.\n- If the user supplied exact hashtags, preserve them and use keywordSearch=false. Otherwise use keywordSearch=true with concise industry/location phrases; do not invent concatenated hashtags. Multi-word phrases require keywordSearch=true.\n- resultsLimit is per hashtag/keyword, not a final saved-lead cap. Review both limits before execution.",
+  "nodes": [
+    {
+      "id": "instagram_hashtag_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Instagram Hashtag Search",
+        "actorId": "apify/instagram-hashtag-scraper",
+        "actorName": "Instagram Hashtag Scraper",
+        "description": "Search Instagram posts by hashtags",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "hashtags": "{{hashtags}}",
+          "resultsLimit": "{{resultsLimit}}",
+          "keywordSearch": "{{keywordSearch}}"
+        },
+        "output_key": "instagram_posts",
+        "finalValues": {
+          "resultsType": "posts"
+        },
+        "reviewableInputFields": [
+          "hashtags",
+          "resultsLimit",
+          "keywordSearch",
+          "resultsType"
+        ]
+      }
+    },
+    {
+      "id": "instagram_author_profiles",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Get Author Profiles",
+        "actorId": "apify/instagram-profile-scraper",
+        "actorName": "Instagram Profile Scraper",
+        "description": "Get detailed author profiles for posts (batch mode)",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "usernames": []
+        },
+        "batch_collect": {
+          "enabled": true,
+          "source_field": "ownerUsername",
+          "target_field": "usernames"
+        },
+        "iterate_over": "instagram_posts",
+        "output_key": "instagram_author_profiles",
+        "field_mapping": {
+          "usernames": "ownerUsername"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Instagram Posts",
+        "description": "Save Instagram posts to posts table",
+        "iterate_over": "instagram_posts",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "post_id": "id",
+          "postId": "id",
+          "content": "caption",
+          "text": "caption",
+          "url": "url",
+          "postUrl": "url",
+          "author_handle": "ownerUsername",
+          "authorName": "ownerFullName",
+          "authorUsername": "ownerUsername",
+          "likes_count": "likesCount",
+          "likesCount": "likesCount",
+          "comments_count": "commentsCount",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'instagram'",
+          "mediaUrls": "displayUrl"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_authors",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 450
+      },
+      "data": {
+        "label": "Save Author Profiles",
+        "description": "Save Instagram author profiles to leads table",
+        "iterate_over": "instagram_author_profiles",
+        "field_mapping": {
+          "platform": "'instagram'",
+          "name": "fullName",
+          "bio": "biography",
+          "verified": "verified",
+          "source": "'instagram'",
+          "leadType": "'profile'",
+          "platformType": "'instagram'",
+          "profileId": "id",
+          "instagramHandle": "username",
+          "fullName": "fullName",
+          "about": "biography",
+          "profilePicture": "profilePicUrl",
+          "photo": "profilePicUrl",
+          "instagramUrl": "'https://instagram.com/' + username",
+          "profileUrl": "'https://instagram.com/' + username",
+          "postUrl": "postUrl",
+          "followersCount": "followersCount",
+          "followingCount": "followsCount",
+          "postsCount": "postsCount",
+          "website": "externalUrl",
+          "categories": "businessCategoryName",
+          "engagementType": "'author'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_authors",
+      "source": "instagram_hashtag_search",
+      "target": "instagram_author_profiles",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "instagram_hashtag_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_authors_to_save",
+      "source": "instagram_author_profiles",
+      "target": "db_save_authors",
+      "animated": true
+    },
+    {
+      "id": "e_posts_to_author_save",
+      "source": "db_save_posts",
+      "target": "db_save_authors",
+      "animated": true
+    }
+  ],
+  "mappings": []
+}

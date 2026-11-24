@@ -1,0 +1,168 @@
+{
+  "workflow_id": "facebook_post_commenters",
+  "platform": "facebook_post_commenters",
+  "title": "Facebook Post Commenters",
+  "description": "Search Facebook posts by keyword and save public commenter identities from those posts. Best for finding engaged prospects who actively participate in Facebook discussions. Use when you want leads who demonstrated interest by commenting; returned public profile data may be sparse.",
+  "version": "1.0",
+  "tips": "- Use ICP-relevant keywords for the search query.\n- Commenters show strong engagement — they actively discuss topics.\n- Keep maxResults at 10-20 (each post generates multiple commenters).\n- Great for finding opinionated leads in your industry.",
+  "nodes": [
+    {
+      "id": "facebook_post_search",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "data": {
+        "label": "Facebook Post Search",
+        "actorId": "powerai/facebook-post-search-scraper",
+        "actorName": "Facebook Post Search Scraper",
+        "description": "Search for Facebook posts by keyword",
+        "config": {
+          "timeout": 600,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "query": "{{query}}",
+          "maxResults": "{{maxResults}}"
+        },
+        "output_key": "facebook_posts",
+        "finalValues": {
+          "recent_posts": true
+        }
+      }
+    },
+    {
+      "id": "facebook_comments",
+      "type": "actor",
+      "position": {
+        "x": 100,
+        "y": 450
+      },
+      "data": {
+        "label": "Extract Comments",
+        "actorId": "apify/facebook-comments-scraper",
+        "actorName": "Facebook Comments Scraper",
+        "description": "Extract public commenter identities from Facebook posts",
+        "config": {
+          "timeout": 900,
+          "memory": 4096
+        },
+        "inputMapping": {
+          "startUrls": [
+            {
+              "url": "{_current_item.url}"
+            }
+          ],
+          "resultsLimit": 20
+        },
+        "iterate_over": "facebook_posts",
+        "output_key": "facebook_comments",
+        "field_mapping": {
+          "startUrls[0].url": "url"
+        }
+      }
+    },
+    {
+      "id": "db_save_posts",
+      "type": "saveToPosts",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "data": {
+        "label": "Save Posts",
+        "description": "Save Facebook posts to posts table",
+        "iterate_over": "facebook_posts",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "post_id": "post_id",
+          "postId": "post_id",
+          "content": "message",
+          "text": "message",
+          "url": "url",
+          "postUrl": "url",
+          "authorName": "author.name",
+          "authorId": "author.id",
+          "authorProfileUrl": "author.url",
+          "likes_count": "reactions_count",
+          "likesCount": "reactions.like",
+          "comments_count": "comments_count",
+          "sharesCount": "reshare_count",
+          "posted_at": "timestamp",
+          "createdAt": "timestamp",
+          "source": "'facebook'",
+          "postType": "type"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-posts"
+      }
+    },
+    {
+      "id": "db_save_commenters",
+      "type": "saveToLeads",
+      "position": {
+        "x": 400,
+        "y": 650
+      },
+      "data": {
+        "label": "Save Commenter Profiles",
+        "description": "Save Facebook commenter profiles to leads table",
+        "iterate_over": "facebook_comments",
+        "field_mapping": {
+          "platform": "'facebook'",
+          "source": "'facebook'",
+          "leadType": "'profile'",
+          "platformType": "'facebook'",
+          "engagementType": "'commenter'",
+          "profileId": "profileId",
+          "fullName": "profileName",
+          "name": "profileName",
+          "facebookUrl": "profileUrl",
+          "profileUrl": "profileUrl",
+          "profilePicture": "profilePicture",
+          "photo": "profilePicture",
+          "postUrl": "postUrl",
+          "status": "'uncontacted'"
+        },
+        "batch_insert": true,
+        "on_conflict": "skip",
+        "nodeId": "save-to-leads"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_search_to_comments",
+      "source": "facebook_post_search",
+      "target": "facebook_comments",
+      "animated": true
+    },
+    {
+      "id": "e_search_to_save_posts",
+      "source": "facebook_post_search",
+      "target": "db_save_posts",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_comment_extraction",
+      "source": "db_save_posts",
+      "target": "facebook_comments",
+      "animated": false
+    },
+    {
+      "id": "e_commenters_to_db",
+      "source": "facebook_comments",
+      "target": "db_save_commenters",
+      "animated": true
+    },
+    {
+      "id": "e_posts_saved_before_commenters",
+      "source": "db_save_posts",
+      "target": "db_save_commenters",
+      "animated": false
+    }
+  ],
+  "mappings": []
+}

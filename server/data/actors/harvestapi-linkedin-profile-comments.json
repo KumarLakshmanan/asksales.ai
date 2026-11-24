@@ -1,0 +1,68 @@
+{
+  "actorId": "harvestapi/linkedin-profile-comments",
+  "title": "LinkedIn Profile Comments Scraper (No Cookies)",
+  "description": "Extract comments made by LinkedIn profiles on posts. Discover what content a person engages with via comments. No cookies or account required.",
+  "categories": ["Lead Generation", "Social Media", "Engagement Analysis"],
+  "pricing": {
+    "model": "PAY_PER_EVENT",
+    "events": [
+      { "title": "Comment", "description": "Comment result item", "priceUsd": 0.002 },
+      { "title": "Actor Start", "priceUsd": 0.00005 }
+    ]
+  },
+  "input": {
+    "profiles": {
+      "type": "array",
+      "title": "Profile URLs",
+      "description": "List of LinkedIn profile URLs to scrape comments from.",
+      "required": true,
+      "example": ["https://www.linkedin.com/in/satyanadella/", "https://www.linkedin.com/in/billgates/"]
+    },
+    "maxItems": {
+      "type": "integer",
+      "title": "Maximum comments per profile",
+      "description": "Maximum number of comments to scrape per each profile.",
+      "default": 20,
+      "required": false
+    },
+    "postedLimit": {
+      "type": "string",
+      "title": "Posted Limit",
+      "description": "Fetch comments no older than X time.",
+      "enum": ["any", "24h", "week", "month", "3months", "6months", "year"],
+      "default": "month",
+      "required": false
+    }
+  },
+  "output": {
+    "commentary": { "type": "string", "description": "Comment text" },
+    "postContent": { "type": "string", "description": "Content of the commented post" },
+    "postUrl": { "type": "string", "description": "URL of the commented post" },
+    "postAuthor": {
+      "type": "object",
+      "description": "Author of the commented post",
+      "properties": {
+        "name": "string",
+        "linkedinUrl": "string",
+        "headline": "string"
+      }
+    },
+    "createdAt": { "type": "string", "description": "When the comment was made" },
+    "createdAtTimestamp": { "type": "number", "description": "Comment timestamp" },
+    "engagement": {
+      "type": "object",
+      "description": "Comment engagement metrics",
+      "properties": {
+        "likes": "number",
+        "replies": "number"
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "Source query info",
+      "properties": {
+        "profile": "string"
+      }
+    }
+  }
+}

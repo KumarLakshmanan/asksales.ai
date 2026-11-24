@@ -1,0 +1,377 @@
+{
+  "id": "apify/instagram-hashtag-scraper",
+  "name": "Instagram Hashtag Scraper",
+  "description": "Scrape Instagram posts and reels by hashtags. Just add one or more hashtags and extract captions, locations, likes, plays, shares, comments count, images, timestamps, audio, and other hashtags. Export scraped hashtags, run the scraper via API, schedule and monitor runs or integrate with other tools.",
+  "inputSchema": {
+    "title": "Input schema for Instagram hashtag scraper",
+    "type": "object",
+    "description": "This scraper will let you scrape Instagram posts or reels that include the hashtag of your choice. To scrape hashtag results, just type in a <b>#️⃣ Hashtag</b>, choose <b>📝🎞️ What you want to scrape</b>, and the <b>💯 Number of results</b>. Alternatively, you could also choose to scrape by <b>🔎 Keyword instead of hashtag</b>. Then click &#9655;<b> Start </b>, and your data is on its way! <br><br>⚠️ Free usage covers just the first page of results. Upgrade to <a href='https://console.apify.com/billing/current-period' target='_blank' rel='noopener'>Starter plan</a> for full access. If you need any guidance, just <a href='https://apify.it/43PnE99' target='_blank' rel='noopener'>follow this video tutorial</a>. <br><br>🎞️ If you would like to scrape reels in more detail, go for our <a href='https://console.apify.com/actors/xMc5Ga1oCONPmWJIa/input' target='_blank' rel='noopener'>Instagram Reel Scraper</a>. <br>🔥 If you would like to find popular reels by search (new feature), go for our <a href='https://console.apify.com/actors/DrF9mzPPEuVizVF4l/input' target='_blank' rel='noopener'>Instagram Search Scraper</a>. <br>📊 If you would like to discover what other hashtags are out there for your topic + their reach, go for our <a href='https://console.apify.com/actors/cHedUknx10dsaavpI' target='_blank' rel='noopener'>Instagram Analytics Scraper</a>.",
+    "schemaVersion": 1,
+    "properties": {
+      "hashtags": {
+        "title": "#️⃣ Hashtags or keywords",
+        "type": "array",
+        "description": "Type in or paste the hashtag with or without <code>#</code> symbol.<br><br> ⚠️ Each hashtag is treated as <strong>one single search term</strong>. If you put several words in one line (e.g. <code>travel photography food</code>), they'll be merged into a single hashtag (<code>#travelphotographyfood</code>). To search for terms separately, add each one as its own entry using the <strong>&#43; Add</strong> button — and use keyword search if you need multi-word phrases. <br><br>🔎 <strong>Searching by keyword?</strong> Add your keywords in this same field, then enable <strong>Scrape with a keyword instead of hashtag</strong> toggle below. You can add as many keywords as you like in one field, space-separated.",
+        "editor": "stringList",
+        "items": {
+          "type": "string",
+          "pattern": "^\\s*#?[^!?.,:;\\-+=*&%$#@/\\~^|<>()[\\]{}\"'`]+$"
+        },
+        "prefill": [
+          "natgeo"
+        ]
+      },
+      "keywordSearch": {
+        "title": "🔎 Scrape with a keyword instead of hashtag",
+        "type": "boolean",
+        "description": "Enable this option if you want to get posts or reels by a specific keyword instead of a hashtag. Add your keywords to the <strong>Hashtags or keywords</strong> field above. Unlike with hashtags, <b>multiple words are supported as keywords</b>, just add spaces between them. The dataset will be slightly different than the one produced by hashtag. <a href='https://apify.com/apify/instagram-hashtag-scraper#what-is-the-difference-between-extracting-instagram-data-by-hashtag-and-by-keyword' target='_blank' rel='noopener'>See examples here</a> with the difference between hashtag and keyword extraction.",
+        "editor": "checkbox"
+      },
+      "resultsType": {
+        "title": "📝 🎞️ Content type",
+        "type": "string",
+        "description": "Choose whether to scrape posts or reels for the selected hashtags or keywords.",
+        "editor": "select",
+        "enum": [
+          "posts",
+          "reels",
+          "stories"
+        ],
+        "enumTitles": [
+          "Scrape posts",
+          "Scrape reels",
+          " "
+        ],
+        "default": "posts",
+        "prefill": "posts"
+      },
+      "resultsLimit": {
+        "title": "💯 Maximum posts or reels per hashtag or keyword",
+        "type": "integer",
+        "description": "Set the maximum number of results (reels or posts) you want to scrape. If you set this to <code>5</code>, you will scrape 5 posts for each hashtag or keyword you provide. With this setup, if you decide to add <code>7</code> different hashtags or keywords, you will scrape <code>35</code> posts altogether.<br><br>⚠️ Free usage covers just the first page of results. To get more pages, <a href='https://console.apify.com/billing/current-period' target='_blank' rel='noopener'>Upgrade your plan</a>.",
+        "editor": "number",
+        "prefill": 20,
+        "minimum": 1
+      }
+    },
+    "required": [
+      "hashtags"
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "childPosts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "childPosts": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "hashtags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "latestComments": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "taggedUsers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "is_private": {
+                    "type": "boolean"
+                  },
+                  "is_verified": {
+                    "type": "boolean"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "profile_pic_id": {
+                    "type": "string"
+                  },
+                  "profile_pic_url": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "commentsCount": {
+              "type": "number"
+            },
+            "dimensionsHeight": {
+              "type": "number"
+            },
+            "dimensionsWidth": {
+              "type": "number"
+            },
+            "caption": {
+              "type": "string"
+            },
+            "displayUrl": {
+              "type": "string"
+            },
+            "firstComment": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "productType": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "videoDuration": {
+              "type": "number"
+            },
+            "alt": {
+              "type": "string"
+            },
+            "videoUrl": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Child posts"
+      },
+      "hashtags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Hashtags"
+      },
+      "images": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Images"
+      },
+      "latestComments": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Latest comments"
+      },
+      "mentions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Mentions"
+      },
+      "commentsCount": {
+        "type": "number",
+        "description": "Comments count"
+      },
+      "dimensionsHeight": {
+        "type": "number",
+        "description": "Dimensions height"
+      },
+      "dimensionsWidth": {
+        "type": "number",
+        "description": "Dimensions width"
+      },
+      "igPlayCount": {
+        "type": "number",
+        "description": "Ig play count"
+      },
+      "likesCount": {
+        "type": "number",
+        "description": "Likes count"
+      },
+      "videoDuration": {
+        "type": "number",
+        "description": "Video duration"
+      },
+      "videoPlayCount": {
+        "type": "number",
+        "description": "Video play count"
+      },
+      "musicInfo": {
+        "type": "...",
+        "nullable": true,
+        "description": "Music info"
+      },
+      "caption": {
+        "type": "string",
+        "description": "Caption"
+      },
+      "displayUrl": {
+        "type": "string",
+        "description": "Display url"
+      },
+      "firstComment": {
+        "type": "string",
+        "description": "First comment"
+      },
+      "id": {
+        "type": "string",
+        "description": "Id"
+      },
+      "inputUrl": {
+        "type": "string",
+        "description": "Input url"
+      },
+      "ownerFullName": {
+        "type": "string",
+        "description": "Owner full name"
+      },
+      "ownerId": {
+        "type": "string",
+        "description": "Owner id"
+      },
+      "ownerUsername": {
+        "type": "string",
+        "description": "Owner username"
+      },
+      "productType": {
+        "type": "string",
+        "description": "Product type"
+      },
+      "shortCode": {
+        "type": "string",
+        "description": "Short code"
+      },
+      "timestamp": {
+        "type": "string",
+        "description": "Timestamp"
+      },
+      "type": {
+        "type": "string",
+        "description": "Type"
+      },
+      "url": {
+        "type": "string",
+        "description": "Url"
+      },
+      "videoUrl": {
+        "type": "string",
+        "description": "Video url"
+      },
+      "coauthorProducers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "is_private": {
+              "type": "boolean"
+            },
+            "is_verified": {
+              "type": "boolean"
+            },
+            "full_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "pk": {
+              "type": "string"
+            },
+            "profile_pic_id": {
+              "type": "string"
+            },
+            "profile_pic_url": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Coauthor producers"
+      },
+      "taggedUsers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "is_private": {
+              "type": "boolean"
+            },
+            "is_verified": {
+              "type": "boolean"
+            },
+            "full_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "profile_pic_id": {
+              "type": "string"
+            },
+            "profile_pic_url": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Tagged users"
+      },
+      "locationId": {
+        "type": "string",
+        "description": "Location id"
+      },
+      "locationName": {
+        "type": "string",
+        "description": "Location name"
+      },
+      "alt": {
+        "type": "string",
+        "description": "Alt"
+      },
+      "isPinned": {
+        "type": "boolean",
+        "description": "Is pinned"
+      }
+    }
+  },
+  "iterate_over": null,
+  "skip_if_empty": [
+    "hashtags"
+  ],
+  "required_inputs": [
+    "hashtags"
+  ],
+  "validation_rules": {}
+}

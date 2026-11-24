@@ -1,0 +1,1353 @@
+{
+  "baseSHA": "ab4d082821f9007bc24c94137471413fff389a46",
+  "testStats": {
+    "startTime": "2026-10-10T07:54:34.287Z",
+    "duration": 155473.828,
+    "expected": 34,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "testOutcomes": [
+    {
+      "test": "AS010: brand setup keeps one dashboard main and an accessible settings region in every panel",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS010: brand setup keeps one dashboard main and an accessible settings region in every panel",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/proposals",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/integrations/instagram/events",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/settings/outreach/orchestration",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/seo",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/aeo",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/geo",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/commerce",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/competitors",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/fixes",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/assets",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/reports",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 website navigation, leave/return and browser history keep all ten routes current",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 proposals, Instagram events and orchestration return through dashboard navigation and history",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 shared Events wrappers and AI audit-detail/error states retain the dashboard main",
+      "project": "desktop-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/proposals",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/integrations/instagram/events",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/settings/outreach/orchestration",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/seo",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/aeo",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/geo",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/commerce",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/competitors",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/fixes",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/assets",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 direct load, refresh and skip navigation: /dashboard/ai-visibility/websites/1/reports",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 website navigation, leave/return and browser history keep all ten routes current",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 proposals, Instagram events and orchestration return through dashboard navigation and history",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    },
+    {
+      "test": "AS015 shared Events wrappers and AI audit-detail/error states retain the dashboard main",
+      "project": "mobile-chromium",
+      "status": "expected",
+      "results": [
+        "passed"
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/proposals",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Proposals",
+      "layout": {
+        "tag": "DIV",
+        "className": "page-shell [&_button]:min-h-10 [&_button]:min-w-10",
+        "bounds": {
+          "width": 1184,
+          "height": 631,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "Proposals"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/integrations/instagram/events",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Events and activity",
+      "layout": {
+        "tag": "DIV",
+        "className": "mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8",
+        "bounds": {
+          "width": 1152,
+          "height": 589,
+          "left": 272,
+          "top": 122
+        }
+      },
+      "breadcrumb": "All Integrations\nInstagram\nEvents"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/settings/outreach/orchestration",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AI reply operations",
+      "layout": {
+        "tag": "DIV",
+        "className": "container mx-auto max-w-screen-xl space-y-6 p-4 sm:p-6",
+        "bounds": {
+          "width": 1184,
+          "height": 796,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "Settings\nOutreach\nOrchestration"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AI Visibility websites",
+      "layout": {
+        "tag": "DIV",
+        "className": "mx-auto w-full max-w-[1320px] space-y-5 px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 495,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Visibility overview",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 977,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/seo",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "SEO health",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 802,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nSEO"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/aeo",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AEO coverage",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 905,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nAEO"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/geo",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "GEO observations",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 925,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nGEO"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/commerce",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Commerce readiness",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 835,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nCommerce"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/competitors",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Competitors",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 1377,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nCompetitors"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/fixes",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Prioritized fixes",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 716,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nFixes"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/assets",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Generated assets",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 777,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nAssets"
+    },
+    {
+      "project": "desktop-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/reports",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 1184,
+            "height": 836,
+            "left": 256,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Reports",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 1184,
+          "height": 703,
+          "left": 256,
+          "top": 122
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nReports"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/proposals",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Proposals",
+      "layout": {
+        "tag": "DIV",
+        "className": "page-shell [&_button]:min-h-10 [&_button]:min-w-10",
+        "bounds": {
+          "width": 390,
+          "height": 1050,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "Proposals"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/integrations/instagram/events",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Events and activity",
+      "layout": {
+        "tag": "DIV",
+        "className": "mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8",
+        "bounds": {
+          "width": 390,
+          "height": 939,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "All Integrations\nInstagram\nEvents"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/settings/outreach/orchestration",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AI reply operations",
+      "layout": {
+        "tag": "DIV",
+        "className": "container mx-auto max-w-screen-xl space-y-6 p-4 sm:p-6",
+        "bounds": {
+          "width": 390,
+          "height": 1555.75,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "Settings\nOutreach\nOrchestration"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AI Visibility websites",
+      "layout": {
+        "tag": "DIV",
+        "className": "mx-auto w-full max-w-[1320px] space-y-5 px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 691,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Visibility overview",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1606,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/seo",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "SEO health",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1013,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nSEO"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/aeo",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "AEO coverage",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1046,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nAEO"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/geo",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "GEO observations",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1222,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nGEO"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/commerce",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Commerce readiness",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1076,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nCommerce"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/competitors",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Competitors",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 1800,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nCompetitors"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/fixes",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Prioritized fixes",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 885,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nFixes"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/assets",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Generated assets",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 878,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nAssets"
+    },
+    {
+      "project": "mobile-chromium",
+      "route": "/dashboard/ai-visibility/websites/1/reports",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "facts": [
+        {
+          "tag": "MAIN",
+          "id": "main-content",
+          "role": null,
+          "nested": false,
+          "visible": true,
+          "bounds": {
+            "width": 390,
+            "height": 780,
+            "left": 0,
+            "top": 64
+          }
+        }
+      ],
+      "accessibilityMains": [
+        {
+          "role": "main",
+          "name": ""
+        }
+      ],
+      "heading": "Reports",
+      "layout": {
+        "tag": "SECTION",
+        "className": "mx-auto w-full max-w-[1320px] space-y-3 px-4 pb-12 pt-3 sm:px-6 sm:pt-4 lg:px-10",
+        "bounds": {
+          "width": 390,
+          "height": 846,
+          "left": 0,
+          "top": 118
+        }
+      },
+      "breadcrumb": "AI Visibility\nSynthetic website\nReports"
+    }
+  ]
+}
