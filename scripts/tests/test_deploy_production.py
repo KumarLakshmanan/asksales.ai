@@ -163,7 +163,7 @@ Path(target).write_text('synthetic backup')
         self.assertNotIn(' up -d ', commands)
 
     def test_verified_non_production_branches_cannot_publish(self):
-        for branch in ['v7', 'staging', 'main', '']:
+        for branch in ['v7', 'staging', 'v8', '']:
             with self.subTest(branch=branch):
                 self.env.update(RELEASE_VERIFIED_SHA=SHA, QA_BRANCH=branch)
                 result = subprocess.run(['bash', str(SCRIPT)], env=self.env,

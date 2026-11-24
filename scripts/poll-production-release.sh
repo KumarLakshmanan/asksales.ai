@@ -58,6 +58,11 @@ if [ "$available_kb" -lt 12582912 ]; then
   echo 'The Docker filesystem needs at least 12 GiB free for the release.' >&2
   exit 1
 fi
+exec 9>/var/lock/asksales-release.lock
+if ! flock -n 9; then
+  echo 'A release is already running. The timer will check again.'
+  exit 0
+fi
 printf '%s %s %s\n' "$sha" "$run_id" "$attempt" > "$state/attempted"
-bash "$release_script" "$production" docker-compose.production.yml "$sha" - 0 "$cutover_from"
+bash "$release_script" "$production" docker-compose.production.yml "$sha" - 0 "$cutover_from" inherited-lock
 printf '%s\n' "$sha" > "$state/deployed"

@@ -11,7 +11,9 @@ cutover_from="${6:-}"
 [[ -z "$cutover_from" || "$cutover_from" =~ ^[0-9a-f]{40}$ ]]
 # One SSH process holds this lock from before checkout until all verification ends.
 # Staging takes the same host lock because both environments share build resources.
-exec 9>/var/lock/asksales-release.lock
+if [ "${7:-}" != inherited-lock ]; then
+  exec 9>/var/lock/asksales-release.lock
+fi
 flock -n 9 || { echo 'Another release owns the host lock.' >&2; exit 1; }
 cleanup_bundle() {
   [ "$bundle_file" = - ] || rm -f -- "$bundle_file"
