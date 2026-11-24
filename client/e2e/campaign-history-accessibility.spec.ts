@@ -140,7 +140,11 @@ test('List primary entry follows native links and keeps Delete focus and activat
     const opened = async (open: () => Promise<void>) => {
       const tabRequests: string[] = [];
       const record = (request: Request) => {
-        if (request.isNavigationRequest() && request.frame().page() !== page) tabRequests.push(new URL(request.url()).pathname);
+        if (!request.isNavigationRequest()) return;
+        // A new tab's first request can be sent before its frame exists; only a new tab does that.
+        let fromNewTab = true;
+        try { fromNewTab = request.frame().page() !== page; } catch { /* no frame yet: the new tab */ }
+        if (fromNewTab) tabRequests.push(new URL(request.url()).pathname);
       };
       page.context().on('request', record);
       const tabPromise = page.context().waitForEvent('page');
