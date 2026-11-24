@@ -26,8 +26,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useControlledDialogReturnFocus } from "@/hooks/use-controlled-dialog-return-focus";
-import { BookOpen, Plus, Search, FileText, Trash2, Edit, HelpCircle, File, FileSpreadsheet, FileType, Presentation, FileCode, Globe, Eye, RefreshCw, Images } from "lucide-react";
+import { BookOpen, Plus, Search, FileText, Trash2, Edit, HelpCircle, File, FileSpreadsheet, FileType, Presentation, FileCode, Globe, Eye, RefreshCw, Images, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -75,6 +76,21 @@ interface KnowledgeEntry {
 interface BusinessProfile {
   id: number;
   companyName: string;
+}
+
+function SummaryStat({ label, value, tone = "neutral" }: { label: string; value: number; tone?: "neutral" | "success" | "danger" | "info" }) {
+  const toneClass = {
+    neutral: "text-foreground",
+    success: "text-emerald-700 dark:text-emerald-400",
+    danger: "text-destructive",
+    info: "text-blue-700 dark:text-blue-400",
+  }[tone];
+  return (
+    <div className="rounded-xl border border-border/50 bg-card px-4 py-3 shadow-sm">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className={cn("mt-1 text-2xl font-semibold tabular-nums", toneClass)}>{value}</dd>
+    </div>
+  );
 }
 
 export default function KnowledgeBasePage() {
@@ -414,8 +430,18 @@ export default function KnowledgeBasePage() {
         }
       />
 
+      {/* Summary: what the AI can use right now, and what needs the owner's attention */}
+      {!loading && entries.length > 0 && (
+        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Knowledge base summary">
+          <SummaryStat label="Sources" value={entries.length} />
+          <SummaryStat label="Available to AI" value={entries.filter(entry => entry.readiness?.status === "available").length} tone="success" />
+          <SummaryStat label="Blocked" value={entries.filter(entry => entry.readiness?.status.endsWith("_blocked")).length} tone="danger" />
+          <SummaryStat label="Awaiting review or indexing" value={entries.filter(entry => entry.knowledgeStatus === "ready_for_review" || entry.readiness?.status === "not_indexed").length} tone="info" />
+        </dl>
+      )}
+
       {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-border/50 p-3 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-border/50 bg-card p-3 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10 text-muted-foreground/60" />
           <Input
@@ -538,7 +564,12 @@ export default function KnowledgeBasePage() {
                     </div>
                   );
                 })()}
-                {entry.readiness ? <KnowledgeReadinessDetails readiness={entry.readiness} /> : <div className="space-y-1 text-xs text-muted-foreground">
+                {entry.readiness ? <div className={cn("rounded-lg border p-3",
+                  entry.readiness.status.endsWith("_blocked") ? "border-destructive/30 bg-destructive/5"
+                    : entry.readiness.status === "available" ? "border-emerald-500/30 bg-emerald-500/5"
+                      : "border-border/50 bg-muted/20")}>
+                  <KnowledgeReadinessDetails readiness={entry.readiness} />
+                </div> : <div className="space-y-1 text-xs text-muted-foreground">
                   <p>{entry.currentPublishedVersionId ? `${entry.liveStatus === 'expired' ? 'Expired' : entry.liveStatus === 'scheduled' ? 'Scheduled' : 'Live'}: v${entry.liveVersionNo || "?"}${entry.liveStatus === "published_degraded" ? " · keyword search only" : ""}` : "Not available to agents yet"}</p>
                   {entry.knowledgeStatus === 'ready_for_review' && <p>Draft v{entry.knowledgeVersionNo} awaiting review</p>}
                   <p>{entry.audience === 'internal' || entry.accessScope === 'staff_only' ? 'Staff only' : 'Customers and staff'} · {entry.allowedChannels?.length ? entry.allowedChannels.join(', ') : 'All channels'}{entry.locale ? ` · ${entry.locale}` : ''}</p>
@@ -586,9 +617,10 @@ export default function KnowledgeBasePage() {
                      <Button
                        variant="outline"
                        size="sm"
-                       className="h-9 rounded-lg text-xs"
+                       className="h-9 rounded-lg text-xs mr-auto"
                        onClick={() => setReviewEntry(entry)}
                      >
+                       {entry.readiness?.status.endsWith("_blocked") ? <ShieldAlert className="mr-1.5 h-3.5 w-3.5 text-destructive" /> : <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />}
                        Review versions
                      </Button>
                    ) : null}
