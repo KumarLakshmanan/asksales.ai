@@ -305,6 +305,11 @@ export async function markAdminCredentialInactive(
   id: number,
   reason: string
 ): Promise<AdminApiCredentialRecord | null> {
+  const [previous] = await db
+    .select({ isActive: adminApiCredentialsTable.isActive })
+    .from(adminApiCredentialsTable)
+    .where(eq(adminApiCredentialsTable.id, id))
+    .limit(1);
   const [updated] = await db
     .update(adminApiCredentialsTable)
     .set({ 
@@ -315,8 +320,49 @@ export async function markAdminCredentialInactive(
     })
     .where(eq(adminApiCredentialsTable.id, id))
     .returning();
-  
+
+  if (updated && previous?.isActive) await alertAdminsCredentialSwitchedOff(updated.platform, reason);
   return updated ? decryptAdminCredential(updated) : null;
+}
+
+/**
+ * Reasons worth an alert (credits, billing or a rejected key). Rate limits recover
+ * on their own; AI keys off for credits are switched back on by
+ * LLMCredentialRecoveryService once a test request succeeds.
+ */
+const LASTING_DEACTIVATION_REASONS = new Set(['quota_exceeded', 'billing_or_account_capacity', 'auth_failed', 'invalid_key']);
+const PROVIDER_NAMES: Record<string, string> = {
+  openrouter: 'OpenRouter', openai: 'OpenAI', gemini: 'Gemini', vertex_ai: 'Vertex AI', custom_ai: 'Custom AI',
+};
+
+/**
+ * Tell every administrator once when a key is switched off for a lasting reason,
+ * so an empty provider account is noticed before customers report failed replies.
+ */
+async function alertAdminsCredentialSwitchedOff(platform: string, reason: string): Promise<void> {
+  if (!LASTING_DEACTIVATION_REASONS.has(reason)) return;
+  try {
+    const provider = PROVIDER_NAMES[platform] || platform;
+    const cause = reason === 'quota_exceeded' || reason === 'billing_or_account_capacity'
+      ? 'it ran out of credits or hit its billing limit' : 'the provider rejected the key';
+    const isLlm = (LLM_ADMIN_PLATFORMS as readonly string[]).includes(platform);
+    const remaining = isLlm ? (await getActiveLLMAdminCredentials()).length : null;
+    const impact = remaining === 0
+      ? ' No AI provider is active now, so AI replies, AI follow-ups and other AI features are paused. Approved WhatsApp templates still send.'
+      : remaining ? ` ${remaining} other AI provider key${remaining === 1 ? ' is' : 's are'} still active.` : '';
+    const nextStep = isLlm && reason === 'quota_exceeded'
+      ? ' Add credits to the provider account: AskSales checks every 5 minutes and switches the key back on by itself. Or add a new key under LLM Providers.'
+      : ' Add credits or a new key under LLM Providers, then switch it back on.';
+    const { notifyAllAdmins } = await import('../adminNotifications/functions.js');
+    await notifyAllAdmins({
+      title: `${provider} key switched off`,
+      message: `AskSales switched off the ${provider} key because ${cause}.${impact}${nextStep}`,
+      type: 'error',
+      category: 'system',
+    });
+  } catch (error) {
+    console.error('[AdminApiCredentials] Could not alert administrators about a switched-off key', error);
+  }
 }
 
 /**

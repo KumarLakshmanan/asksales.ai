@@ -1575,6 +1575,12 @@ export async function processGeneralJob(job: Job) {
         log.info({ refreshed: refreshResult.refreshed, failed: refreshResult.failed }, 'Meta token refresh completed');
         break;
       }
+      case 'cron-llm-credit-recovery': {
+        const { recoverCreditDisabledLLMCredentials } = await import('../services/LLMCredentialRecoveryService.js');
+        const recovery = await recoverCreditDisabledLLMCredentials();
+        if (recovery.checked) log.info(recovery, 'AI key credit recovery completed');
+        break;
+      }
       case 'cron-support-sla-check': {
         // Each step is isolated: a failing SLA check must not stop privacy
         // purges, approval expiry or widget commit recovery. Delivery and tool

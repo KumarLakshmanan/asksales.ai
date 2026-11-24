@@ -217,6 +217,16 @@ class CronService {
     );
     logger.info('[CronService] ✅ Meta token refresh scheduled via BullMQ (every 6 hours)');
 
+    // AI keys switched off for lack of credits come back once the provider
+    // account is topped up; each key is test-called at most every 5 minutes.
+    await queueRegistry.addRepeatableJob(
+      QUEUE_NAMES.GENERAL,
+      `${ENV_PREFIX}llm-credit-recovery`,
+      { type: 'cron-llm-credit-recovery' },
+      5 * 60 * 1000,
+    );
+    logger.info('[CronService] ✅ AI key credit recovery scheduled via BullMQ (every 5 minutes)');
+
     // Support ticket SLA risk and breach detection (every 5 minutes)
     await queueRegistry.addRepeatableJob(
       QUEUE_NAMES.GENERAL,

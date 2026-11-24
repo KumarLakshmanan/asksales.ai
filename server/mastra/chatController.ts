@@ -99,6 +99,21 @@ export { getUserLLMConfig, getModelFallbackConfig };
 
 type WorkflowOutcome = NonNullable<AgentState['workflowOutcome']>;
 
+/** Say that a provider ran out of credits when that is why no AI key is on. */
+async function noAIProviderMessage(): Promise<string> {
+  try {
+    const { quotaDisabledAIProviders } = await import('../services/assistants/AssistantModelCatalogService.js');
+    const providers = await quotaDisabledAIProviders();
+    if (providers.length) {
+      const { platformAIQuotaMessage } = await import('../../shared/assistantModelCatalog.js');
+      return platformAIQuotaMessage(providers);
+    }
+  } catch (error) {
+    logger.warn({ err: error }, '[chatController] Could not read switched-off AI keys');
+  }
+  return AI_SETUP_UNAVAILABLE;
+}
+
 async function persistLeadResultsTab(
   threadId: number,
   leadIds: number[],
@@ -766,7 +781,7 @@ async function processMessageDirectUncoordinated(
 
     const llmConfig = await getUserLLMConfig(userId);
     if (!llmConfig) {
-      const errorText = AI_SETUP_UNAVAILABLE;
+      const errorText = await noAIProviderMessage();
       await MessageService.saveMessage({ userId, threadId, role: 'system', content: errorText, agentType: 'orchestrator', metadata: { isError: true, errorCode: 400 } });
       return { message: browserUserMessage, response: null, threadId, error: errorText, code: 400 };
     }
