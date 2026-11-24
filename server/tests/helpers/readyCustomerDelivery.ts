@@ -15,6 +15,7 @@ export function installReadyCustomerDeliveryMock() {
     customerDeliveryReadiness: async (input: Record<string, any>) => ({ ready: true, setupUrl: '/dashboard/settings/outreach', ...input }),
     currentCustomerDeliveryReceipt: () => undefined,
     withCustomerDeliveryReceipt: (_receipt: unknown, work: () => unknown) => work(),
+    withPersonConfirmedContent: (work: () => unknown) => work(),
     deliverySetupFailure: (error: unknown) => error instanceof SetupError ? { success: false, code: error.code, reason: error.reason, error: error.message, setupUrl: error.setupUrl, deliveryAttempted: false, outcomeUncertain: false, retryable: false } : undefined,
     throwIfCustomerDeliverySetupRequired: (result: { code?: string; reason?: string; error?: string }) => {
       if (result.code === 'ASSISTANT_SETUP_REQUIRED') throw new SetupError(result.reason || 'assignment_required', result.error || 'Assistant setup required.');

@@ -228,7 +228,8 @@ export async function resolveCreationAccount(
       : providerVariant === 'gmail'
         ? 'Open Email integrations and reconnect this Gmail account with sending permission.'
         : 'Open Email integrations and verify this sending domain.';
-    account.assistant = await customerDeliveryReadiness({ userId, channel, accountId: sender.email });
+    // The composer sends text a person confirms, so the AI model is not needed to send it.
+    account.assistant = await customerDeliveryReadiness({ userId, channel, accountId: sender.email, personConfirmed: true });
     account.ready = account.ready && account.assistant.ready;
     if (!account.assistant.ready) account.reason = account.assistant.error || 'Configure the assigned assistant before sending.';
     return { account, binding };
@@ -239,9 +240,8 @@ export async function resolveCreationAccount(
         providerAccountId: selection.providerAccountId,
       })
     : Promise.resolve(null),
-    // WhatsApp outreach opens with a Meta-approved template, which does not use
-    // the assistant's AI model. A free-form message is still checked when sent.
-    customerDeliveryReadiness({ userId, channel, accountId: selection.providerAccountId || '', approvedTemplate: channel === 'whatsapp' }),
+    // The composer sends approved templates or text a person confirms; neither uses the AI model.
+    customerDeliveryReadiness({ userId, channel, accountId: selection.providerAccountId || '', personConfirmed: true }),
   ]);
   return {
     binding,

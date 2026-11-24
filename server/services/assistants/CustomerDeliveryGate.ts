@@ -13,6 +13,16 @@ import { isEmailAddress } from '../../../shared/emailAddress.js';
 // Delivery authorization is deliberately separate from the support persona context.
 // Campaign replies must retain their original campaign/thread facts and policy.
 const receiptContext = new AsyncLocalStorage<AssistantProvenance>();
+// Set while sending text a person wrote or reviewed and confirmed: the AI model is not used.
+const personConfirmedContext = new AsyncLocalStorage<true>();
+/**
+ * Run the delivery of text a person confirmed (composer outreach, its configured
+ * follow-ups and Inbox replies). An unavailable AI model does not block it;
+ * every other assistant check still applies.
+ */
+export function withPersonConfirmedContent<T>(work: () => T): T {
+  return personConfirmedContext.run(true, work);
+}
 export const currentCustomerDeliveryReceipt = () => receiptContext.getStore();
 export function withCustomerDeliveryReceipt<T>(receipt: AssistantProvenance, work: () => T): T {
   return receiptContext.run(Object.freeze({ ...receipt }), work);
@@ -63,6 +73,8 @@ export interface CustomerDeliveryIdentity {
    * messages never set this.
    */
   approvedTemplate?: boolean;
+  /** A person wrote or reviewed and confirmed this exact text; see withPersonConfirmedContent. */
+  personConfirmed?: boolean;
 }
 
 /** Checks that only matter when the assistant writes the message with its AI model. */
@@ -129,7 +141,8 @@ async function resolveCustomerDeliveryReady(input: CustomerDeliveryIdentity): Pr
     .map((b: { channel: AssistantProvenance['channel']; surface: AssistantSurface; account_id: string }) =>
       ({ channel: b.channel, surface: b.surface, accountId: b.account_id }));
   const readiness = assistantReadiness(configuration, catalog, platform, deliveryBindings);
-  const failedChecks = readiness.checks.filter(check => !check.ok && !(input.approvedTemplate && AI_MODEL_CHECKS.has(check.key)));
+  const modelNotUsed = input.approvedTemplate || input.personConfirmed || personConfirmedContext.getStore() === true;
+  const failedChecks = readiness.checks.filter(check => !check.ok && !(modelNotUsed && AI_MODEL_CHECKS.has(check.key)));
   if (failedChecks.length) {
     let message = `The assigned assistant needs setup: ${failedChecks.map(check => check.label).join(', ')}.`;
     if (failedChecks.some(check => check.key === 'model')) {

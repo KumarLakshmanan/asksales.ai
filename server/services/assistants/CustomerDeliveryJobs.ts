@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../../models/db.js';
 import { currentBusinessScope, withBusinessScope } from '../../tenancy/businessContext.js';
 import type { AssistantProvenance } from '../../../shared/outreachAssistants.js';
-import { assertCustomerDeliveryReady, assertCustomerDeliveryRuntime, CustomerDeliverySetupError, deliverySetupFailure, withCustomerDeliveryReceipt } from './CustomerDeliveryGate.js';
+import { assertCustomerDeliveryReady, assertCustomerDeliveryRuntime, CustomerDeliverySetupError, deliverySetupFailure, withCustomerDeliveryReceipt, withPersonConfirmedContent } from './CustomerDeliveryGate.js';
 
 type Payload = Record<string, any>;
 const SEND_JOBS = new Set(['send_email', 'send_sms', 'send_follow_up_email', 'send_follow_up_sms',
@@ -52,7 +52,9 @@ async function identity(name: string, data: Payload) {
   }
   // A queued Meta-approved template does not need the assistant's AI model.
   const approvedTemplate = channel === 'whatsapp' && typeof data.templateName === 'string' && data.templateName.trim() !== '';
-  return { userId, channel, accountId, senderId, ...(approvedTemplate ? { approvedTemplate } : {}) };
+  // Composer outreach and its configured follow-ups carry text a person reviewed and confirmed.
+  const personConfirmed = name === 'send_outreach_message';
+  return { userId, channel, accountId, senderId, ...(approvedTemplate ? { approvedTemplate } : {}), ...(personConfirmed ? { personConfirmed } : {}) };
 }
 
 export async function admitCustomerDeliveryJob<T extends Payload>(name: string, data: T): Promise<T & { customerDeliveryAssistant?: AssistantProvenance }> {
@@ -79,7 +81,7 @@ export async function runCustomerDeliveryJob<T>(name: string, data: Payload, wor
     throw new CustomerDeliverySetupError('queued_setup_review_required', 'This unsent queued message has no reviewed assistant assignment. Review and queue it again after setup; automatic replay is blocked.');
   const resolved = await identity(name, data);
   await assertCustomerDeliveryReady({ ...resolved, expected: receipt });
-  return withCustomerDeliveryReceipt(receipt, work);
+  return withCustomerDeliveryReceipt(receipt, resolved.personConfirmed ? () => withPersonConfirmedContent(work) : work);
 }
 
 export async function holdCustomerDeliveryJob(data: Payload, error: unknown) {

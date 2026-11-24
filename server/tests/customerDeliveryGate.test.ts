@@ -17,7 +17,7 @@ jest.unstable_mockModule('../utils/logger.js', () => ({ logger: { info: jest.fn(
 let catalog: any;
 let platform: any;
 jest.unstable_mockModule('../services/assistants/AssistantCatalogService.js', () => ({ assistantCatalog: async () => catalog, assistantPlatformReadiness: async () => platform }));
-const { assertCustomerDeliveryReady, customerDeliveryReadiness, deliverySetupFailure, withCustomerDeliveryReceipt } = await import('../services/assistants/CustomerDeliveryGate.js');
+const { assertCustomerDeliveryReady, customerDeliveryReadiness, deliverySetupFailure, withCustomerDeliveryReceipt, withPersonConfirmedContent } = await import('../services/assistants/CustomerDeliveryGate.js');
 const { admitCustomerDeliveryJob, runCustomerDeliveryJob, holdCustomerDeliveryJob } = await import('../services/assistants/CustomerDeliveryJobs.js');
 const { sendEmail, sendBroadcast } = await import('../services/resendService.js');
 const { withInternalEmailDelivery } = await import('../services/InternalEmailDelivery.js');
@@ -226,6 +226,26 @@ describe('durable queue admission and dispatch receipts', () => {
     const work=jest.fn(async()=>sendEmail(email));
     await expect(scope(()=>runCustomerDeliveryJob('send_outreach_message',admitted,work))).rejects.toMatchObject({code:'ASSISTANT_SETUP_REQUIRED'});
     expect(work).not.toHaveBeenCalled();expect(providerSend).not.toHaveBeenCalled();
+  });
+  it('sends a person-confirmed composer message when the AI model is unavailable', async () => {
+    catalog.models = [];
+    const admitted = await scope(() => admitCustomerDeliveryJob('send_outreach_message', { ...payload(), message: 'Typed by a person' }));
+    // The provider boundary inside the job runs with the same exemption.
+    await expect(scope(() => runCustomerDeliveryJob('send_outreach_message', admitted, () => sendEmail(email)))).resolves.toEqual({ id: 'mock-acceptance' });
+    expect(providerSend).toHaveBeenCalledTimes(1);
+  });
+  it('keeps automated sends waiting for the AI model', async () => {
+    catalog.models = [];
+    await expect(scope(() => admitCustomerDeliveryJob('send_email', payload()))).rejects.toMatchObject({ reason: 'configuration_not_ready' });
+    await expect(scope(() => sendEmail(email))).rejects.toMatchObject({ reason: 'configuration_not_ready' });
+    expect(providerSend).not.toHaveBeenCalled();
+  });
+  it('sends an Inbox reply a person confirmed but still checks the rest of the setup', async () => {
+    catalog.models = [];
+    await expect(scope(() => withPersonConfirmedContent(() => sendEmail(email)))).resolves.toEqual({ id: 'mock-acceptance' });
+    platform.privacyVault = false;
+    await expect(scope(() => withPersonConfirmedContent(() => sendEmail(email)))).rejects.toMatchObject({ reason: 'configuration_not_ready' });
+    expect(providerSend).toHaveBeenCalledTimes(1);
   });
   it('rejects admission when setup is missing and never reaches work or provider', async () => {
     assigned = false;

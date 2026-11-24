@@ -300,7 +300,13 @@ export async function getConversationWithMessages(req: AuthenticatedRequest, res
 /**
  * Send a new message in a conversation
  */
+/** Inbox replies are written or confirmed by a person, so an unavailable AI model does not block them. */
 export async function sendMessage(req: AuthenticatedRequest, res: Response) {
+  const { withPersonConfirmedContent } = await import('../services/assistants/CustomerDeliveryGate.js');
+  return withPersonConfirmedContent(() => sendPersonConfirmedMessage(req, res));
+}
+
+async function sendPersonConfirmedMessage(req: AuthenticatedRequest, res: Response) {
   let claimedIdempotencyKey: string | null = null;
   let providerCallStarted = false;
   let createdMessageId: number | null = null;
