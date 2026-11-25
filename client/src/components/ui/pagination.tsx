@@ -98,7 +98,7 @@ export function Pagination({
             onValueChange={(value) => onPageSizeChange(Number(value))}
             disabled={disabled}
           >
-            <SelectTrigger className="h-9 w-[116px]" aria-label="Rows per page">
+            <SelectTrigger className="h-8 w-[116px]" aria-label="Rows per page">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -115,8 +115,8 @@ export function Pagination({
           {showEdgeButtons ? (
             <Button
               variant="outline"
-              size="icon"
-              className="hidden size-9 sm:inline-flex"
+              size="icon-sm"
+              className="hidden sm:inline-flex"
               aria-label="First page"
               disabled={disabled || atStart}
               onClick={() => go(1)}
@@ -126,8 +126,7 @@ export function Pagination({
           ) : null}
           <Button
             variant="outline"
-            size="icon"
-            className="size-9"
+            size="icon-sm"
             aria-label="Previous page"
             disabled={disabled || atStart}
             onClick={() => go(current - 1)}
@@ -139,8 +138,7 @@ export function Pagination({
           </span>
           <Button
             variant="outline"
-            size="icon"
-            className="size-9"
+            size="icon-sm"
             aria-label="Next page"
             disabled={disabled || atEnd}
             onClick={() => go(current + 1)}
@@ -150,8 +148,8 @@ export function Pagination({
           {showEdgeButtons ? (
             <Button
               variant="outline"
-              size="icon"
-              className="hidden size-9 sm:inline-flex"
+              size="icon-sm"
+              className="hidden sm:inline-flex"
               aria-label="Last page"
               disabled={disabled || atEnd}
               onClick={() => go(totalPages)}

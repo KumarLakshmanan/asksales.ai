@@ -66,7 +66,7 @@ const StatCard = React.forwardRef<HTMLElement, StatCardProps>(
         ref={ref}
         aria-busy={loading || undefined}
         className={cn(
-          "flex min-w-0 flex-col rounded-2xl border p-4 shadow-[0_1px_2px_rgb(0_0_0/0.03)]",
+          "flex min-w-0 flex-col rounded-xl border p-4 shadow-xs",
           toneClasses[tone],
           className,
         )}

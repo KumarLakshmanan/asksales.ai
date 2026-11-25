@@ -6,17 +6,17 @@ import { cn } from "@/lib/utils"
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger" | "progress"
 
 const statusBadgeVariants = cva(
-  "inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium",
+  "inline-flex min-h-[22px] max-w-full items-center gap-1.5 whitespace-nowrap rounded-sm border px-2 py-0.5 text-xs font-medium leading-4",
   {
     variants: {
       tone: {
         // Text stays in the foreground colour for contrast; the dot, border and tint carry the tone.
-        neutral: "border-border bg-muted/60 text-muted-foreground [--status-dot:hsl(var(--muted-foreground))]",
-        info: "border-info/30 bg-info/10 text-foreground [--status-dot:hsl(var(--info))]",
-        success: "border-success/30 bg-success/10 text-foreground [--status-dot:hsl(var(--success))]",
+        neutral: "border-border bg-muted text-foreground [--status-dot:hsl(var(--muted-foreground))]",
+        info: "border-info/25 bg-info/10 text-foreground [--status-dot:hsl(var(--info))]",
+        success: "border-success/25 bg-success/10 text-foreground [--status-dot:hsl(var(--success))]",
         warning: "border-warning/40 bg-warning/10 text-foreground [--status-dot:hsl(var(--warning))]",
-        danger: "border-destructive/30 bg-destructive/10 text-foreground [--status-dot:hsl(var(--destructive))]",
-        progress: "border-primary/30 bg-primary/10 text-foreground [--status-dot:hsl(var(--primary))]",
+        danger: "border-destructive/25 bg-destructive/10 text-foreground [--status-dot:hsl(var(--destructive))]",
+        progress: "border-primary/25 bg-primary/10 text-foreground [--status-dot:hsl(var(--primary))]",
       },
     },
     defaultVariants: { tone: "neutral" },

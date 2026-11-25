@@ -15,7 +15,18 @@ export default {
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
-        input: "hsl(var(--input) / <alpha-value>)",
+        input: {
+          DEFAULT: "hsl(var(--input) / <alpha-value>)",
+          strong: "hsl(var(--input-strong) / <alpha-value>)",
+        },
+        field: "hsl(var(--field) / <alpha-value>)",
+        "control-edge": "hsl(var(--control-edge))",
+        "switch-off": "hsl(var(--switch-off) / <alpha-value>)",
+        overlay: "hsl(var(--overlay))",
+        tooltip: {
+          DEFAULT: "hsl(var(--tooltip) / <alpha-value>)",
+          foreground: "hsl(var(--tooltip-foreground) / <alpha-value>)",
+        },
         card: {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",
@@ -29,10 +40,13 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary) / <alpha-value>)",
           action: "hsl(var(--primary-action) / <alpha-value>)",
+          "action-hover": "hsl(var(--primary-action-hover) / <alpha-value>)",
+          text: "hsl(var(--primary-text) / <alpha-value>)",
           foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
+          hover: "hsl(var(--secondary-hover) / <alpha-value>)",
           foreground: "hsl(var(--secondary-foreground) / <alpha-value>)",
         },
         muted: {
@@ -46,6 +60,8 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
+          action: "hsl(var(--destructive-action) / <alpha-value>)",
+          text: "hsl(var(--destructive-text) / <alpha-value>)",
         },
         success: {
           DEFAULT: "hsl(var(--success) / <alpha-value>)",
@@ -80,6 +96,12 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+      },
+      boxShadow: {
+        // UI kit v3: controls, floating surfaces (menus, toasts, dialogs), filled-button top edge.
+        xs: "var(--shadow-xs)",
+        pop: "var(--shadow-pop)",
+        "edge-highlight": "var(--edge-highlight)",
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(to bottom right, hsl(var(--gradient-from)), hsl(var(--gradient-to)))",

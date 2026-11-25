@@ -144,12 +144,12 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             }
           }}
           className={cn(
-            "flex w-full rounded-[10px] border border-input bg-card pl-9 pr-9 text-base shadow-inner ring-offset-background",
-            "placeholder:text-muted-foreground/[var(--input-placeholder-alpha)] focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20",
-            "disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            "flex w-full rounded-md border border-input-strong bg-field pl-9 pr-9 text-base shadow-xs transition-[border-color,box-shadow] duration-150",
+            "placeholder:text-muted-foreground/[var(--input-placeholder-alpha)] hover:border-foreground/30 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20",
+            "disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-60 md:text-sm",
             // Hide the browser's own clear button; ours is consistent across engines.
             "[&::-webkit-search-cancel-button]:appearance-none",
-            size === "sm" ? "h-9" : "h-10",
+            size === "sm" ? "h-8" : "h-10",
             className,
           )}
           {...props}
@@ -162,7 +162,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
               type="button"
               onClick={clear}
               aria-label={clearLabel}
-              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(size === "sm" ? "size-7" : "size-8", "inline-flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
             >
               <X className={iconSize} aria-hidden="true" />
             </button>

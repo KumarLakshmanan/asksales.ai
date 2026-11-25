@@ -115,7 +115,7 @@ export function PageErrorState({
   const chunkError = isPageChunkError(error);
   return (
     <div className={cn("flex min-h-[45vh] items-center justify-center px-4 py-16", className)}>
-      <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-6 text-center shadow-sm sm:p-8">
+      <div className="w-full max-w-md rounded-xl border border-destructive/20 bg-card p-6 text-center shadow-sm sm:p-8">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
           <AlertCircle className="h-6 w-6" />
         </div>

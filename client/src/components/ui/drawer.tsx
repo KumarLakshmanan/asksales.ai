@@ -31,7 +31,7 @@ const DrawerOverlay = React.forwardRef<
     data-ui-layer="modal"
     style={useModalLayerStyle(style)}
     ref={ref}
-    className={cn("fixed inset-0 z-[var(--ui-layer)] bg-black/55 backdrop-blur-[2px]", className)}
+    className={cn("fixed inset-0 z-[var(--ui-layer)] bg-overlay", className)}
     {...props}
   />
 ))
@@ -48,7 +48,7 @@ const DrawerContent = React.forwardRef<
       style={useModalLayerStyle(style)}
       ref={ref}
       className={cn(
-        "fixed bottom-2 left-1/2 z-[var(--ui-layer)] mt-24 flex h-auto w-[calc(100vw-1rem)] max-w-2xl -translate-x-1/2 flex-col rounded-2xl border border-border/70 bg-background shadow-2xl sm:bottom-4 sm:w-[calc(100vw-2rem)]",
+        "fixed bottom-2 left-1/2 z-[var(--ui-layer)] mt-24 flex h-auto w-[calc(100vw-1rem)] max-w-2xl -translate-x-1/2 flex-col rounded-xl border border-border bg-card shadow-pop sm:bottom-4 sm:w-[calc(100vw-2rem)]",
         className
       )}
       {...props}

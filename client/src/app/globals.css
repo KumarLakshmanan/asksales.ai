@@ -64,7 +64,24 @@
   
   --input: 214 32% 88%;
   --ring: 221 83% 53%;
-  
+
+  /* UI kit v3 (design-references/2026-11-25-ui-components). */
+  --input-strong: 214 24% 79%;          /* field and outline-button edge */
+  --field: 0 0% 100%;                   /* field background */
+  --primary-action-hover: 221 83% 46%;
+  --primary-text: 221 83% 45%;          /* blue text on tints */
+  --destructive-action: 0 72% 50%;      /* filled red that passes with white text */
+  --destructive-text: 0 72% 42%;
+  --secondary-hover: 214 30% 89%;
+  --control-edge: 222 30% 25% / 0.42;   /* empty checkbox and radio */
+  --switch-off: 214 20% 76%;
+  --tooltip: 222 47% 11%;
+  --tooltip-foreground: 210 40% 98%;
+  --overlay: 222 47% 6% / 0.5;          /* one scrim for Dialog, AlertDialog and Sheet */
+  --shadow-xs: 0 1px 2px hsl(222 47% 11% / 0.06);
+  --shadow-pop: 0 12px 32px -12px hsl(222 47% 11% / 0.22), 0 2px 6px hsl(222 47% 11% / 0.06);
+  --edge-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.16);
+
   --radius: 0.625rem;
   
   /* Local system stacks keep production builds independent of third-party font CDNs. */
@@ -115,7 +132,7 @@
   --card-foreground: 210 40% 96%;
   --card-border: 217 28% 19%;
   
-  --popover: 222 42% 9%;
+  --popover: 222 38% 11%;
   --popover-foreground: 210 40% 96%;
   --popover-border: 217 28% 19%;
 
@@ -154,7 +171,23 @@
   
   --input: 217 28% 20%;
   --ring: 217 91% 60%;
-  
+
+  --input-strong: 217 22% 28%;
+  --field: 222 47% 7%;
+  --primary-action-hover: 221 83% 59%;
+  --primary-text: 217 91% 72%;
+  --destructive-action: 0 72% 50%;
+  --destructive-text: 0 84% 74%;
+  --secondary-hover: 217 26% 19%;
+  --control-edge: 210 40% 96% / 0.38;
+  --switch-off: 217 20% 30%;
+  --tooltip: 210 40% 96%;
+  --tooltip-foreground: 222 47% 11%;
+  --overlay: 222 60% 2% / 0.62;
+  --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.4);
+  --shadow-pop: 0 16px 40px -12px hsl(0 0% 0% / 0.75), 0 2px 6px hsl(0 0% 0% / 0.3);
+  --edge-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.14);
+
   /* Elevation System Dark */
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .06);

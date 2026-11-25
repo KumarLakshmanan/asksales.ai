@@ -37,6 +37,32 @@ Conventions every component follows:
 - **Escape hatches:** every component accepts `className`, and the slot props
   (`emptyState`, `footer`, `hint`, `label`) take any `ReactNode`.
 
+## Sizes, corners and tokens
+
+The design behind these values is in `design-references/2026-11-25-ui-components/index.html`.
+
+- **Control heights:** `sm` 32px (table and toolbar actions), default 40px (every field), `lg` 44px.
+  `sm` buttons and `icon-sm` grow to 40px on touch screens. Input, SearchInput, Select and
+  Textarea share one shell: `border-input-strong`, `bg-field`, `shadow-xs` and a 3px
+  `ring-primary/20` focus glow; `aria-invalid="true"` turns the border red.
+- **Corners:** `rounded-sm` (6px) for badges, menu items and tooltips; `rounded-md` (8px) for
+  buttons, fields and tabs; `rounded-xl` (12px) for cards, menus, popovers, dialogs and toasts.
+- **Highlights:** menu, select and command items highlight with `bg-muted`, never `bg-accent`
+  (which is the brand blue).
+- **Tokens added in `globals.css`:** `--input-strong`, `--field`, `--primary-action-hover`,
+  `--primary-text`, `--destructive-action`, `--destructive-text`, `--secondary-hover`,
+  `--control-edge`, `--switch-off`, `--tooltip`, `--tooltip-foreground`, `--overlay`,
+  `--shadow-xs`, `--shadow-pop`, `--edge-highlight`. Dark `--popover` is one step lighter than
+  `--card`, so menus sit above cards.
+
+New options:
+
+```tsx
+<Button size="icon-sm" aria-label="Lead actions"><MoreHorizontal /></Button>   // 32px
+<TabsList variant="underline">…</TabsList>                                     // page sections
+<DropdownMenuItem variant="destructive">Delete lead</DropdownMenuItem>
+```
+
 ## Spinner — `spinner.tsx`
 
 | Prop | Type | Default | Notes |

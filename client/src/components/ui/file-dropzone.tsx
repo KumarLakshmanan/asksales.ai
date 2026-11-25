@@ -206,7 +206,7 @@ export function FileDropzone({
           if (!inactive) handleFiles(event.dataTransfer.files)
         }}
         className={cn(
-          "relative flex w-full cursor-pointer rounded-2xl border-2 border-dashed border-border bg-card text-center transition-colors",
+          "relative flex w-full cursor-pointer rounded-xl border-2 border-dashed border-border bg-card text-center transition-colors",
           "hover:border-primary/50 hover:bg-primary/[0.02]",
           "has-[input:focus-visible]:border-primary has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring/30",
           "data-[dragging]:border-primary data-[dragging]:bg-primary/[0.06]",

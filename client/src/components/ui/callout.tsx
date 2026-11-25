@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 export type CalloutTone = "info" | "success" | "warning" | "danger" | "neutral"
 
-const calloutVariants = cva("relative flex w-full gap-3 rounded-xl border text-sm", {
+const calloutVariants = cva("relative flex w-full gap-3 rounded-md border text-sm", {
   variants: {
     tone: {
       info: "border-info/25 bg-info/[0.06] [--callout-accent:hsl(var(--info))]",
