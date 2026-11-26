@@ -247,11 +247,11 @@ describe('ToolExecutionCard', () => {
   });
 
   describe('unknown tool name', () => {
-    it('should display raw tool name with underscores replaced by spaces', () => {
-      const message = createToolMessage({ toolName: 'some_unknown_tool' });
+    it('should display a readable name without vendor prefixes', () => {
+      const message = createToolMessage({ toolName: 'apify_some_unknown_tool' });
       render(<ToolExecutionCard message={message} />);
 
-      expect(screen.getByText('some unknown tool')).toBeTruthy();
+      expect(screen.getByText('Some unknown')).toBeTruthy();
     });
   });
 

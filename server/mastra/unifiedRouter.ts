@@ -14,6 +14,7 @@ import { classifyIntent, classificationMessages, matchesClassification, getInten
 import { CAMPAIGN_INTENT_QUESTIONS } from '../services/agents/intent/intentQuestions.js';
 import { loadSelectableLeadStrategies, resolveLeadStrategyIntent } from './leadStrategyIntent.js';
 import {dashboardOperationAgent} from './dashboardOperationPolicy.js';
+import { normalizeReviewedLeadIds } from './leadReview.js';
 
 const CACHE_TTL_MS = 30_000;
 const MAX_CACHE_ENTRIES = 256;
@@ -30,7 +31,7 @@ outreach (Emily): recipient selection, campaign/sequence review, sending and fol
 performance_marketing (Sarah): paid campaign preparation, ad creation as part of a paid campaign, Meta/Google publication, pause and analytics. An organic Facebook post is NOT a paid ad.
 
 Interpretation:
-- Preparing a saved outreach review from an uploaded/CRM import uses semanticRequest.dashboardOperation=campaign_prepare and Outreach. Preserve exact audience, account, template, schedule and follow-up choices. It creates a saved draft and opens the composer; it never sends or imports. Reading an existing prepared draft or available choices stays action=question and uses the read-only tools without creating a draft. Use dashboardOperation=none for actual delivery requests or compound work outside this preparation. For retry eligibility, exclusions, cooldowns or recovery requests use dashboardOperation=queue_review and Outreach: it creates a review and opens explicit dashboard confirmation, never directly sends.
+- Preparing a saved outreach review from an uploaded/CRM import uses semanticRequest.dashboardOperation=campaign_prepare and Outreach. When the snapshot shows leads selected for this campaign and the user wants outreach for them (or names no import), that is NOT campaign_prepare: use dashboardOperation=none and Outreach. Preserve exact audience, account, template, schedule and follow-up choices. It creates a saved draft and opens the composer; it never sends or imports. Reading an existing prepared draft or available choices stays action=question and uses the read-only tools without creating a draft. Use dashboardOperation=none for actual delivery requests or compound work outside this preparation. For retry eligibility, exclusions, cooldowns or recovery requests use dashboardOperation=queue_review and Outreach: it creates a review and opens explicit dashboard confirmation, never directly sends.
 - For campaign PDF, Word, Excel or conversation-history downloads use dashboardOperation=report_export, action=question and Outreach. Create one saved snapshot and return its authenticated download card with live progress. To check its progress use get_campaign_export. Contact-only operation_status is not an export status lookup.
 - For customer reply lists, quick replies, menu selections, tracked booking evidence or campaign conversation history use dashboardOperation=customer_engagement, action=question and Outreach. Read exact owned data with pagination, never infer unavailable click/call measurements.
 - Saved contact-file analysis/counts, import review, background-operation progress, assistant diagnostics and outreach campaign reports are dashboard operations; set semanticRequest.dashboardOperation to contact_analysis, contact_import_review, operation_status, assistant_diagnostics or campaign_report. Use action=question and the appropriate specialist. Analysis creates only a derived preview; import review opens the existing explicit confirmation page. These operations do not require generating an ICP or lead search and cannot send, import or change runtime settings. Set none for sends, CRM edits, paid analytics or unrelated work. Do not use a read-only operation to discard a requested mutation; for a compound request requiring work preserve that work and use none.
@@ -207,7 +208,18 @@ export function routeExplicitAgentMention(result: RouterOutput, latestUserText: 
 }
 
 /** Validate model references against owned state, without re-reading user words. */
+/** campaign_prepare narrows Outreach to import-audience tools. When the user has
+ * already selected leads for this campaign, outreach must be prepared for those
+ * leads instead, with Outreach's full toolset (which still includes imports). */
+function preferSelectedLeadRecipients(result: RouterOutput, state: AgentState): RouterOutput {
+  if (result.semanticRequest?.dashboardOperation !== 'campaign_prepare' || result.needsClarification
+    || result.excludedAgents.includes('outreach') || normalizeReviewedLeadIds(state.selectedLeadIds).length === 0) return result;
+  return { ...result, semanticRequest: { ...result.semanticRequest, dashboardOperation: 'none' },
+    intent: 'task', mode: 'hire_agent', hiredAgents: ['outreach'], nextAgent: 'outreach', navigationTarget: null };
+}
+
 export function groundRouterDecision(result: RouterOutput, state: AgentState): RouterOutput {
+  result = preferSelectedLeadRecipients(result, state);
   if (result.semanticRequest?.contentOperation !== 'revise_review' || result.needsClarification) return result;
   const id = result.semanticRequest.generationReviewId;
   const review = state.savedToolActions?.find(item => item.widgetId === id

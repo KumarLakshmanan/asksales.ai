@@ -55,7 +55,8 @@ describe('action response grounding', () => {
     expect(response).toContain('What start/end dates and timezone');
     expect(response).toContain('Confirm the supplied destination');
     expect(response).toContain('draft-only restrictions');
-    expect(response).toContain('No new review card is confirmed');
+    // A model answer states it in its own words; the recorded-facts summary uses plain wording.
+    expect(response).toMatch(/No new review card is confirmed|Nothing was sent, published, activated or spent in this step\./);
     expect(response).not.toMatch(/could not verify|Recorded current action statuses|SECRET_|UNTRUSTED_TOOL_PROSE/);
   };
 
@@ -70,7 +71,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(runState, 'Your campaign is live.', liveReadinessReceipts());
     expectReadinessQuestions(result);
     expect(result).toContain('No matching saved creative was returned');
-    expect(result).toContain('Saved campaigns lookup completed; no identified campaigns returned');
+    expect(result).toContain('No saved campaigns were found.');
     expect(result).toContain('ID 12345, INR, selected in saved settings');
     expect(result).toContain('QA Alternate');
     expect(result).toContain('ID 54321, INR');
@@ -137,7 +138,7 @@ describe('action response grounding', () => {
     expect(result).toContain('tracking and schedule');
     expect(result).toContain('supplied campaign brief');
     expect(result).toContain('draft-only restrictions');
-    expect(result).toContain('No new review card is confirmed');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
     expect(result).not.toMatch(/could not verify|Recorded current action statuses|suggest_switch_agents|Your ads are live|SECRET_|UNTRUSTED_TOOL_PROSE/);
   });
 
@@ -197,7 +198,7 @@ describe('action response grounding', () => {
     ]);
     expect(result).toContain('linkedin: not connected');
     expect(result).toContain('Settings → Integrations');
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
     expect(result).not.toContain('UNTRUSTED_TOOL_PROSE');
     expect(result).not.toContain('SECRET');
   });
@@ -229,7 +230,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'Connected.', [receipt('check_integration_status', {
       output: { platform: 'linkedin', connected, message: 'connected', nested: { connected: true } },
     })]);
-    expect(result).toContain('connection status was not verified');
+    expect(result).toContain('their status could not be confirmed');
     expect(result).not.toContain('linkedin: connected');
     expect(result).not.toContain('linkedin: not connected');
   });
@@ -240,7 +241,7 @@ describe('action response grounding', () => {
       output: { platform: 'linkedin', connected: true },
     })]);
     expect(result).toContain('does not establish account eligibility or approval');
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
     expect(result).not.toContain('Published.');
   });
 
@@ -279,7 +280,7 @@ describe('action response grounding', () => {
     expect(result).toContain('Business profiles: 1 returned; #8 "Growth Lab" (industry: "SaaS")');
     expect(result).toContain('Business profile #8 "Growth Lab"; industry: "SaaS"');
     expect(result).not.toContain('could not verify');
-    expect(result).toContain('do not confirm sending, publishing, ad activation, or spend');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
   });
 
   it('summarizes saved asset IDs and local status on audit failure without trusting nested or provider fields', async () => {
@@ -305,7 +306,7 @@ describe('action response grounding', () => {
     ]);
     expect(result).toContain('Brand toolkits: 1 returned; #11 "Growth Lab"');
     expect(result).not.toContain(draft);
-    expect(result).toContain('do not confirm sending, publishing, ad activation, or spend');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
   });
 
   it('does not turn failed or mixed mutation receipts into a read-only success summary', async () => {
@@ -422,7 +423,7 @@ describe('action response grounding', () => {
       receipt('query_content_assets', { success: true, output: { assets: [{ id: 49 }] } }),
       receipt('check_integration_status', { success: true }),
     ]);
-    expect(result).toContain('No new review card is confirmed');
+    expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
     expect(result).not.toContain('Recorded current action statuses');
   });
 

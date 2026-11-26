@@ -129,7 +129,7 @@ describe('recorded-facts fallback keeps the user language', () => {
     localize.mockResolvedValue('படித்தவை: 0 leads.');
     const reply = await groundAgentResponse(state(tamil), 'Draft', leadsReceipt);
     expect(detectLanguage).toHaveBeenCalledWith(7, tamil);
-    expect((localize.mock.calls[0] as any)[0].text).toContain('Read-only lookups completed');
+    expect((localize.mock.calls[0] as any)[0].text).toContain('Here is what I checked:');
     expect(reply).toBe('படித்தவை: 0 leads.');
   });
 
@@ -137,13 +137,13 @@ describe('recorded-facts fallback keeps the user language', () => {
     completion.mockResolvedValue({ success: false });
     detectLanguage.mockResolvedValue({ code: 'ta', name: 'Tamil', confidence: 0.99 });
     localize.mockResolvedValue(null);
-    expect(await groundAgentResponse(state(tamil), 'Draft', leadsReceipt)).toContain('Read-only lookups completed');
+    expect(await groundAgentResponse(state(tamil), 'Draft', leadsReceipt)).toContain('Here is what I checked:');
   });
 
   it('does not translate for an English message', async () => {
     completion.mockResolvedValue({ success: false });
     detectLanguage.mockResolvedValue(null);
-    expect(await groundAgentResponse(state('How many leads can we email now?'), 'Draft', leadsReceipt)).toContain('Read-only lookups completed');
+    expect(await groundAgentResponse(state('How many leads can we email now?'), 'Draft', leadsReceipt)).toContain('Here is what I checked:');
     expect(localize).not.toHaveBeenCalled();
   });
 });

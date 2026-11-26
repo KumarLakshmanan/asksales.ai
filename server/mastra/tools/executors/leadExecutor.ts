@@ -2860,10 +2860,13 @@ async function executeLeadWorkflowOnce(
       || outcome === 'succeeded_empty'
       || outcome === 'partial_success';
     const terminalError = outcome === 'failed'
-      ? failedResults
+      ? failedResults.length === 1
+        ? failedResults[0].error || 'The lead search could not run, so no leads were saved.'
+        : failedResults
           .map(result => {
-            const source = result.platform || result.workflow || 'unknown';
-            return `${source}: ${result.error || 'Provider workflow failed before any leads were saved'}`;
+            // Workflow IDs such as linkedin_company_search, read as words.
+            const source = String(result.platform || result.workflow || 'Lead search').replace(/[_-]+/g, ' ');
+            return `${source}: ${result.error || 'The lead search could not run, so no leads were saved.'}`;
           })
           .join('; ')
       : undefined;

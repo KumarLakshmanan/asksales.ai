@@ -7,6 +7,7 @@ import { AGENT_NAMES as AGENT_NAMES_MAP } from "@/lib/agent-personas";
 import { ToolCallChip } from "@/components/conversation/ToolCallChip";
 import { useCopyToClipboard } from "@/components/ui/copy-button";
 import { toUserFacingError } from "../../../../shared/userFacingError";
+import { readableToolName } from "@/lib/readableToolName";
 
 /** Agent display names */
 const AGENT_NAMES = AGENT_NAMES_MAP;
@@ -75,7 +76,7 @@ export function ToolExecutionCard({
   const copied = copyStatus === "copied";
 
   const agentLabel = AGENT_NAMES[agentType] || agentType;
-  const toolLabel = TOOL_DISPLAY_NAMES[toolName] || toolName.replace(/_/g, " ");
+  const toolLabel = TOOL_DISPLAY_NAMES[toolName] || readableToolName(toolName);
   const toolOutput = meta.toolOutput as Record<string, unknown> | undefined;
 
   if (isResult) {

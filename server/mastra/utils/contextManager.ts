@@ -484,6 +484,11 @@ export function buildSupervisorContext(state: AgentState): string {
     parts.push(`Pending approval: ${state.pendingApproval.toolName || 'unknown'} (${state.pendingApproval.message || 'awaiting user response'})`);
   }
 
+  const selectedLeadCount = Array.isArray(state.selectedLeadIds) ? state.selectedLeadIds.length : 0;
+  if (selectedLeadCount > 0) {
+    parts.push(`Selected outreach recipients: ${selectedLeadCount} lead${selectedLeadCount === 1 ? '' : 's'} chosen for this campaign (lead review ${state.leadReviewApproved ? 'approved' : 'not yet approved'})`);
+  }
+
   // Recent tool actions
   const recentTools = (state.toolResults || []).slice(-3);
   if (recentTools.length > 0) {

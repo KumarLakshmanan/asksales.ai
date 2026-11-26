@@ -4,6 +4,7 @@ import { ToolCallChip } from "@/components/conversation/ToolCallChip";
 import { collapseToolExecutionMessages } from "@/lib/tool-message-pairing";
 import type { ConversationActivityStep } from "@/components/conversation/types";
 import { AGENT_AVATAR_INFO, getPersona } from "@/lib/agent-personas";
+import { readableToolName } from "@/lib/readableToolName";
 
 /** Tool execution log entry */
 export interface ToolLogEntry {
@@ -144,7 +145,7 @@ export function ChatThinkingBubble({
 
   const steps: ConversationActivityStep[] = deduplicatedLogs.map((log) => {
     const agentLabel = log.agentType ? (AGENT_INFO[log.agentType]?.name || log.agentType) : null;
-    const toolLabel = TOOL_DISPLAY_NAMES[log.toolName] || log.toolName.replace(/_/g, " ");
+    const toolLabel = TOOL_DISPLAY_NAMES[log.toolName] || readableToolName(log.toolName);
     const argsDisplay = log.args ? formatToolArgs(log.args) : null;
     return {
       id: log.id,

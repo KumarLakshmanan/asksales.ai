@@ -91,7 +91,7 @@ import {
   createConversationWorkflowAction,
   setConversationWorkflowActionStatus,
 } from '../models/conversationWorkflow/functions.js';
-import { workflowAfterRecipientSelection, isCurrentIcpRevisionApproved, type ConversationWorkflowStage, type ConversationWorkflowStatus } from '../models/conversationWorkflow/stateMachine.js';
+import { workflowAfterRecipientSelection, isCurrentIcpRevisionApproved, InvalidWorkflowTransitionError, type ConversationWorkflowStage, type ConversationWorkflowStatus } from '../models/conversationWorkflow/stateMachine.js';
 import { isRecord as isPlainRecord } from '../../shared/records.js';
 
 // Re-export for backward compatibility (graph.ts/index.ts imports from here)
@@ -313,13 +313,34 @@ export async function recordConfirmedLeadStrategy(input: {
     originalRequest: input.originalRequest,
     stage: 'agent_selection',
   });
-  run = await transitionConversationWorkflowRun({
+  const toLeadStrategy = () => transitionConversationWorkflowRun({
     runId: run.id,
     userId: input.userId,
     threadId: input.threadId,
     toStage: 'lead_strategy_awaiting_approval',
     status: 'awaiting_approval',
   });
+  try {
+    run = await toLeadStrategy();
+  } catch (error) {
+    if (!(error instanceof InvalidWorkflowTransitionError)) throw error;
+    // The campaign moved on (for example to outreach) before this new lead
+    // search, such as a retry after a failed provider run. Go back through
+    // agent selection, the only route the workflow allows from those stages.
+    try {
+      await transitionConversationWorkflowRun({
+        runId: run.id,
+        userId: input.userId,
+        threadId: input.threadId,
+        toStage: 'agent_selection',
+        status: 'awaiting_input',
+      });
+    } catch (hopError) {
+      if (!(hopError instanceof InvalidWorkflowTransitionError)) throw hopError;
+      throw new Error('Finish or cancel the current campaign step before starting a new lead search.');
+    }
+    run = await toLeadStrategy();
+  }
   const selection = await createLeadStrategySelection({
     runId: run.id,
     userId: input.userId,

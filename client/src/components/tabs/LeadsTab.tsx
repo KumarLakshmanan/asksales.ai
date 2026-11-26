@@ -10,6 +10,7 @@ import { LeadDetailSheet } from "@/components/LeadDetailSheet";
 import { type ActivityLogEntry } from "@/components/WorkflowActivityLog";
 import { type Lead } from "@/models/lead";
 import { isLeadOutreachLocked } from "@/lib/leadReviewGate";
+import { readableToolName } from "@/lib/readableToolName";
 import { leadEmptyState, normalizeLeadExecutionSummary } from '@/lib/lead-execution-summary';
 import { filterLeadsByPlatform, leadPlatformLabel, matchesLeadPlatform as matchPlatform } from '@/lib/lead-platform';
 import { Button } from "@/components/ui/button";
@@ -965,7 +966,8 @@ export default function LeadsTab({ threadId, executionId, onSendMessage }: Leads
  data: {
  workflowId: reviewedInput?.workflowId || workflowId,
  platform: reviewedInput?.platform || workflowId,
- message: `Regenerate the reviewed lead inputs using only ${workflowId}. Reuse the same ICP, geography, industry, and provider-specific targeting, enforce a global cap of exactly ${reviewedTotal} lead${reviewedTotal === 1 ? '' : 's'}, and show the exact provider parameters for review. Do not execute yet, substitute a broad provider, or create duplicate leads.`,
+ // The strategy is bound by workflowId above; this text is shown in the chat.
+ message: `Regenerate the reviewed lead inputs using only ${readableToolName(reviewedInput?.workflowId || workflowId)}. Reuse the same ICP, geography, industry, and provider-specific targeting, enforce a global cap of exactly ${reviewedTotal} lead${reviewedTotal === 1 ? '' : 's'}, and show the exact provider parameters for review. Do not execute yet, substitute a broad provider, or create duplicate leads.`,
  },
  });
  if (response.error) throw new Error(response.error);

@@ -180,7 +180,7 @@ export async function handleLeadWorkflowApproval(
       ? hasReviewableLeads
         ? `${result.output?.message || 'Lead generation finished.'}\n\nReview the exact persisted records in the Leads tab. Outreach stays locked until you explicitly approve the reviewed lead set.`
         : `${result.output?.message || 'Lead generation finished without any matching leads.'}\n\nNo outreach handoff is available because there are no persisted lead IDs to review.`
-      : `Hmm, there was an issue with the lead search: ${result.error}. Let me know if you'd like to try again.`;
+      : `${String(result.error || 'The lead search could not run.').replace(/\.+\s*$/, '')}. Let me know if you'd like to try again.`;
 
     if (result.success) {
       webSocketEmitter.emit(Number(state.userId), 'open_tab', {

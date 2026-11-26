@@ -251,6 +251,22 @@ function actionFacts(state: AgentState, results: ToolCallResult[]): Fact[] {
   return facts;
 }
 
+/** Plain wording for read-only checks that have no detailed summary below.
+ * Customers never see tool names. */
+const READ_ONLY_CHECK_LABELS: Record<string, string> = {
+  get_outreach_preparation_options: 'I checked your connected sending accounts and contact lists.',
+  get_prepared_outreach: 'I checked your prepared outreach draft.',
+  query_outreach_campaigns: 'I checked your saved outreach campaigns.',
+  query_campaign_customers: 'I checked the customers in this campaign.',
+  query_campaign_history: 'I checked this campaign\'s history.',
+  preview_outreach_retries: 'I checked which messages can be retried.',
+  get_outreach_retry_preview: 'I checked which messages can be retried.',
+  get_campaign_export: 'I checked your campaign export.',
+  query_icp_profiles: 'I checked your saved customer profiles.',
+  query_ad_campaigns: 'I checked your saved ad campaigns.',
+  check_integration_status: 'I checked your connected accounts.',
+};
+
 function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | null {
   const current = facts.filter(fact => fact.scope === 'current');
   // A suggestion only offers navigation. It must not discard successful reads,
@@ -278,7 +294,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
     return `${title}: ${items.length} returned${listed.length ? `; ${listed.join('; ')}` : ''}${items.length > 10 ? '; showing the first 10' : ''}.`;
   };
 
-  const lines = ['Read-only lookups completed:'];
+  const lines = ['Here is what I checked:'];
   for (const [index, fact] of facts.entries()) {
     if (fact.scope !== 'current' || fact.state !== 'query_succeeded') continue;
     const output = object(object(results[index]?.result).output);
@@ -293,11 +309,11 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         break;
       }
       case 'analytics_query':
-        lines.push(fact.analytics ? describeAnalyticsEvidence(fact.analytics) : 'Analytics lookup completed; metric details were not verified.');
+        lines.push(fact.analytics ? describeAnalyticsEvidence(fact.analytics) : 'I checked your analytics, but the figures could not be confirmed.');
         break;
       case 'check_integration_status': {
         const integration = fact.integrationStatus;
-        lines.push(!integration ? 'Integration lookup completed; connection status was not verified.'
+        lines.push(!integration ? 'I checked your connected accounts, but their status could not be confirmed.'
           : integration.connected
             ? `${integration.platform}: connected according to the integration lookup. This does not establish account eligibility or approval to send or publish.`
             : `${integration.platform}: not connected. Connect it in Settings → Integrations before sending or publishing through this platform.`);
@@ -313,7 +329,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         const count = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
         const total = count(output.total);
         const where = `${output.filtered === true ? 'matching this lookup ' : ''}${output.scope === 'all' ? 'across your account' : 'in this campaign conversation'}`;
-        lines.push(total === null ? 'Lead lookup completed; counts were not returned.'
+        lines.push(total === null ? 'I checked your leads, but the counts were not available.'
           : `Leads ${where}: ${total}${count(output.withEmail) !== null ? `; ${count(output.withEmail)} with an email address` : ''}${count(output.withPhone) !== null ? `; ${count(output.withPhone)} with a phone number` : ''}.`);
         break;
       }
@@ -353,7 +369,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         break;
       case 'get_brandtoolkit': {
         const itemId = id(output.id);
-        lines.push(itemId ? `Brand toolkit #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.voiceType) ? `; voice: ${label(output.voiceType)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'Brand toolkit lookup completed; no toolkit details returned.');
+        lines.push(itemId ? `Brand toolkit #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.voiceType) ? `; voice: ${label(output.voiceType)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No brand toolkit details were found.');
         break;
       }
       case 'get_businessprofiles':
@@ -364,7 +380,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         break;
       case 'get_businessprofile': {
         const itemId = id(output.id);
-        lines.push(itemId ? `Business profile #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.industry) ? `; industry: ${label(output.industry)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'Business profile lookup completed; no profile details returned.');
+        lines.push(itemId ? `Business profile #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.industry) ? `; industry: ${label(output.industry)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No business profile details were found.');
         break;
       }
       case 'query_content_assets': {
@@ -372,14 +388,14 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         const titles = new Map(rows(output.assets).map(row => [id(row.id), label(row.title)]));
         lines.push(records.length ? `Saved content assets: ${records.slice(0, 10).map(record =>
           `#${record.id}${titles.get(record.id) ? ` ${titles.get(record.id)}` : ''}${record.storedStatus ? ` (stored status: ${record.storedStatus})` : ''}`,
-        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'Saved content assets lookup completed; no identified assets returned.');
+        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'No saved content was found.');
         break;
       }
       case 'query_ad_campaigns': {
         const records = fact.retrievedRecords ?? [];
         lines.push(records.length ? `Saved campaigns: ${records.slice(0, 10).map(record =>
           `campaign #${record.id}${record.storedStatus ? ` (stored status: ${record.storedStatus})` : ''}`,
-        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'Saved campaigns lookup completed; no identified campaigns returned.');
+        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'No saved campaigns were found.');
         break;
       }
       case 'estimate_lead_search_cost': {
@@ -392,7 +408,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         break;
       }
       default:
-        lines.push(`${fact.toolName.replace(/[^a-z0-9_]/gi, '').slice(0, 80) || 'Query'}: lookup completed.`);
+        lines.push(READ_ONLY_CHECK_LABELS[fact.toolName] || 'I checked your saved campaign details.');
     }
   }
   // Preparation guidance does not depend on offering another agent. A plain
@@ -415,7 +431,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
       'Keep the supplied campaign brief and draft-only restrictions. These preparation steps do not authorize publishing or spend.',
     ].join('\n'));
   }
-  lines.push('No new review card is confirmed for this turn. These local read-only results do not confirm sending, publishing, ad activation, or spend.');
+  lines.push('Nothing was sent, published, activated or spent in this step.');
   return lines.join('\n\n');
 }
 

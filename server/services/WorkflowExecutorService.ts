@@ -40,6 +40,7 @@ import {
   getExecutionById,
 } from '../models/workflowLogs/functions';
 import { logger } from '../utils/logger.js';
+import { leadSearchFailureMessage } from './leadSearchFailureMessage.js';
 import { trackGeneratedOutput } from './StorageTrackingHooks.js';
 import { newUsageContext, withUsageContext } from './insights/UsageContext.js';
 import { getRechargeRate, getUsageRate } from '../models/creditPricing/functions.js';
@@ -1268,11 +1269,11 @@ export class WorkflowExecutorService {
       const providerPartial = providerRuns.some((run) => run.status === 'partial_success');
       if ((context.errors.length > 0 || providerFailed || providerCancelled) && savedLeadCount === 0) {
         const firstError = context.errors[0];
-        throw new Error(
-          providerCancelled
-            ? 'Workflow cancelled by user'
-            : `Workflow failed before any leads were saved${firstError ? ` (${firstError.nodeId}: ${firstError.error})` : ''}`,
-        );
+        if (!providerCancelled && firstError) {
+          // Node IDs and provider errors are for admins; the user sees a plain reason.
+          logger.warn({ executionId, nodeId: firstError.nodeId, error: firstError.error }, '[WorkflowExecutor] Lead search failed before saving leads');
+        }
+        throw new Error(providerCancelled ? 'Workflow cancelled by user' : leadSearchFailureMessage(firstError?.error));
       }
 
       const workflowOutcome = context.errors.length > 0 || providerFailed || providerCancelled || providerPartial

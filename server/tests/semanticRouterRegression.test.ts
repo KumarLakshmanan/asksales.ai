@@ -132,6 +132,18 @@ describe('model-only intent detection', () => {
     input.savedToolActions[0].status = 'active'; input.savedToolActions[0].userId = 999;
     expect(groundRouterDecision(revise, input).needsClarification).toBe(true);
   });
+  it('prepares outreach for selected leads instead of narrowing Outreach to import audiences', () => {
+    const prepare = normalizeRouterDecision(decision({ action: 'new_task', semanticRequest: semanticRequest({ dashboardOperation: 'campaign_prepare' }) }));
+    const withSelection = { ...state('Prepare email outreach for my 3 selected leads. Use exactly these lead IDs: 4, 5, 6.'), selectedLeadIds: [4, 5, 6] };
+    expect(groundRouterDecision(prepare, withSelection)).toMatchObject({
+      hiredAgents: ['outreach'], nextAgent: 'outreach', semanticRequest: { dashboardOperation: 'none' },
+    });
+    // Without a selection, an import-audience preparation keeps its narrowed tools.
+    expect(groundRouterDecision(prepare, state('Prepare outreach for the March import.')).semanticRequest?.dashboardOperation).toBe('campaign_prepare');
+    // Clarification still wins.
+    const clarify = { ...prepare, needsClarification: true };
+    expect(groundRouterDecision(clarify, withSelection).semanticRequest?.dashboardOperation).toBe('campaign_prepare');
+  });
   it('requires the complete structured semantic result from live responses', () => {
     const incomplete = { ...decision() }; delete incomplete.semanticRequest;
     expect(() => parseRouterResponse(JSON.stringify(incomplete))).toThrow('Invalid routing response format');

@@ -63,7 +63,7 @@ describe('lead generation review contract', () => {
   it('regenerates the exact failed workflow with a persisted numeric cap before retrying', () => {
     expect(leadsSource).toContain('handleRetry(platformData.platform)');
     expect(leadsSource).toContain('/api/workflows/existing-inputs/${threadId}');
-    expect(leadsSource).toContain('Regenerate the reviewed lead inputs using only ${workflowId}');
+    expect(leadsSource).toContain('Regenerate the reviewed lead inputs using only ${readableToolName(reviewedInput?.workflowId || workflowId)}');
     expect(leadsSource).toContain('global cap of exactly ${reviewedTotal} lead');
     expect(leadsSource).toContain('Retry requires a reviewed cap');
     expect(leadsSource).toContain("action: 'LEAD_AGENT_USE_WORKFLOW'");
