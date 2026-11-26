@@ -31,6 +31,7 @@ import {
   formatScore,
   InlineError,
   Loading,
+  Pager,
   safeCitationUrl,
   SEO_GROUP_LABELS,
   seoRuleLabel,
@@ -676,24 +677,12 @@ export function SeoView({ projectId }: { projectId: number }) {
                   {total ? page * PAGE_SIZE + 1 : 0}–{Math.min((page + 1) * PAGE_SIZE, total)} of{' '}
                   {total} {tab === 'issues' ? `groups · ${filtered.length} findings` : 'pages'}
                 </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={page === 0}
-                    onClick={() => setPage((value) => value - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={(page + 1) * PAGE_SIZE >= total}
-                    onClick={() => setPage((value) => value + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+                <Pager
+                  page={page}
+                  total={total}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPage}
+                />
               </div>
             </div>
             {selected && showEvidence && (

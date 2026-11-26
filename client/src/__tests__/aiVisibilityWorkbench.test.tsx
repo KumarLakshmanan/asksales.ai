@@ -1234,6 +1234,133 @@ describe('Cross-section roles and GEO evidence filters', () => {
     expect(screen.getByText('No observations match these filters.')).toBeInTheDocument();
   });
 
+  it('pages through GEO prompts with Previous and Next', async () => {
+    const prompts = Array.from({ length: 45 }, (_, index) => ({
+      id: index + 1,
+      prompt: `GEO question ${index + 1}`,
+      intent: 'discovery',
+      isGeneric: true,
+      locale: 'en-IN',
+    }));
+    mocks.api.prompts.mockResolvedValue({
+      audit,
+      prompts,
+      runs: prompts.map((prompt) => ({ ...observedRun, id: 100 + prompt.id, promptId: prompt.id })),
+    });
+    wrap(<GeoView projectId={7} />);
+    await screen.findByText('45 matching prompts');
+    expect(screen.getByText('GEO question 1')).toBeInTheDocument();
+    expect(screen.queryByText('GEO question 21')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('GEO question 21')).toBeInTheDocument();
+    expect(screen.queryByText('GEO question 1')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('GEO question 41')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    expect(screen.getByText('Page 3 of 3')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByText('GEO question 21')).toBeInTheDocument();
+  });
+
+  it('hides Previous and Next when every GEO prompt fits on one page', async () => {
+    const prompts = Array.from({ length: 4 }, (_, index) => ({
+      id: index + 1,
+      prompt: `GEO question ${index + 1}`,
+      intent: 'discovery',
+      isGeneric: true,
+      locale: 'en-IN',
+    }));
+    mocks.api.prompts.mockResolvedValue({
+      audit,
+      prompts,
+      runs: prompts.map((prompt) => ({ ...observedRun, id: 100 + prompt.id, promptId: prompt.id })),
+    });
+    wrap(<GeoView projectId={7} />);
+    await screen.findByText('4 matching prompts');
+    expect(screen.getByText('GEO question 4')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+  });
+
+  it('offers earlier analyses with the same settings even after the configuration revision moved', async () => {
+    // Saving settings or adding a competitor raises the revision without changing the market asked.
+    const current = {
+      ...audit,
+      inputSnapshot: { project: { ...project, brandAliases: ['Example', 'Example Co'] } },
+    };
+    const earlier = {
+      ...audit,
+      id: 9,
+      createdAt: '2026-08-20T00:00:00Z',
+      inputSnapshot: {
+        project: { ...project, configurationRevision: 1, brandAliases: ['example co', 'Example'] },
+      },
+    };
+    const otherLanguage = {
+      ...current,
+      id: 8,
+      createdAt: '2026-08-10T00:00:00Z',
+      inputSnapshot: { project: { ...current.inputSnapshot.project, locale: 'ta-IN' } },
+    };
+    const question = { intent: 'discovery', isGeneric: true, locale: 'en-IN' };
+    mocks.api.listAudits.mockResolvedValue({ audits: [current, earlier, otherLanguage] });
+    mocks.api.prompts.mockImplementation(async (_projectId: number, _kind: string, auditId?: number) =>
+      auditId === 9
+        ? {
+            audit: earlier,
+            prompts: [{ ...question, id: 91, prompt: 'Which service solves my problem?' }],
+            runs: [{ ...observedRun, id: 901, promptId: 91 }],
+          }
+        : {
+            audit: current,
+            prompts: [
+              { ...question, id: 1, prompt: 'Which service solves my problem?' },
+              { ...question, id: 2, prompt: 'Which resort should I book?' },
+            ],
+            runs: [
+              { ...observedRun, promptId: 1 },
+              { ...observedRun, id: 32, promptId: 2 },
+            ],
+          },
+    );
+    wrap(<GeoView projectId={7} />);
+    await userEvent.click(await screen.findByText('Compare compatible measurements'));
+    const select = await screen.findByLabelText('Compare with');
+    expect(within(select).getByRole('option', { name: /^#9 ·/ })).toBeInTheDocument();
+    expect(within(select).queryByRole('option', { name: /^#8 ·/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/^#8 ·.*: different language$/)).toBeInTheDocument();
+    await userEvent.selectOptions(select, '9');
+    expect(
+      await screen.findByText(/1 of 2 questions were also asked in the earlier analysis/),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/^Previous:/).filter((node) => node.tagName === 'SPAN')).toHaveLength(1);
+  });
+
+  it('explains an empty comparison when the earlier analysis asked different questions', async () => {
+    const earlier = { ...audit, id: 9, createdAt: '2026-08-20T00:00:00Z' };
+    const question = { intent: 'recommendation', isGeneric: true, locale: 'en-IN' };
+    mocks.api.listAudits.mockResolvedValue({ audits: [audit, earlier] });
+    mocks.api.prompts.mockImplementation(async (_projectId: number, _kind: string, auditId?: number) =>
+      auditId === 9
+        ? {
+            audit: earlier,
+            prompts: [{ ...question, id: 91, prompt: 'Which providers should I consider?' }],
+            runs: [{ ...observedRun, id: 901, promptId: 91 }],
+          }
+        : {
+            audit,
+            prompts: [{ ...question, id: 1, prompt: 'Which providers of resort stays should I consider?' }],
+            runs: [{ ...observedRun, promptId: 1 }],
+          },
+    );
+    wrap(<GeoView projectId={7} />);
+    await userEvent.click(await screen.findByText('Compare compatible measurements'));
+    await userEvent.selectOptions(await screen.findByLabelText('Compare with'), '9');
+    expect(
+      await screen.findByText(/None of these questions were asked in the earlier analysis/),
+    ).toHaveTextContent('business category');
+  });
+
   it('says why no earlier analysis can be compared instead of an empty list', async () => {
     // Saved before analyses recorded their settings, so it can't be compared.
     const older = { ...audit, id: 1, inputSnapshot: {}, createdAt: '2026-08-13T00:00:00Z' };
@@ -1248,6 +1375,7 @@ describe('Cross-section roles and GEO evidence filters', () => {
     expect(
       await screen.findByText(/None of the 1 other completed analysis can be compared with this one\./),
     ).toHaveTextContent('Run another analysis with the same settings to compare.');
+    expect(screen.getByText(/^#1 ·.*: its settings were not recorded$/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Compare with')).not.toBeInTheDocument();
   });
 });

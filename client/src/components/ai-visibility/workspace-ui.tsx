@@ -255,6 +255,42 @@ export function Empty({ message }: { message: string }) {
     </div>
   );
 }
+/**
+ * Previous/Next for a list shown `pageSize` rows at a time. Renders nothing when every row fits
+ * on one page, so two disabled buttons never suggest there is more to see.
+ */
+export function Pager({
+  page,
+  total,
+  pageSize = 20,
+  onPageChange,
+}: {
+  page: number;
+  total: number;
+  pageSize?: number;
+  onPageChange: (page: number) => void;
+}) {
+  const pages = Math.ceil(total / pageSize);
+  if (pages <= 1) return null;
+  return (
+    <nav aria-label="Pagination" className="flex items-center gap-2">
+      <span className="text-muted-foreground">
+        Page {page + 1} of {pages}
+      </span>
+      <Button size="sm" variant="outline" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
+        Previous
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={page + 1 >= pages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Next
+      </Button>
+    </nav>
+  );
+}
 export function InlineError({
   message,
   onRetry,

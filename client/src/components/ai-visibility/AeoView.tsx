@@ -10,7 +10,14 @@ import { useState } from 'react';
 import { Evidence } from './SeoView';
 import { useDetailFocus } from './use-detail-focus';
 import { refreshVisibility, useMeasurement } from './workspace-context';
-import { Empty, InlineError, Loading, statusBadge, websiteWorkspacePath } from './workspace-ui';
+import {
+  Empty,
+  InlineError,
+  Loading,
+  Pager,
+  statusBadge,
+  websiteWorkspacePath,
+} from './workspace-ui';
 
 type Question = {
   id: number;
@@ -324,24 +331,7 @@ export function AeoView({ projectId }: { projectId: number }) {
             )}
             <div className="mt-4 flex items-center justify-between text-xs">
               <span>{filtered.length} matching questions</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={page === 0}
-                  onClick={() => setPage((value) => value - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={(page + 1) * 20 >= filtered.length}
-                  onClick={() => setPage((value) => value + 1)}
-                >
-                  Next
-                </Button>
-              </div>
+              <Pager page={page} total={filtered.length} onPageChange={setPage} />
             </div>
           </div>
           {selected && (

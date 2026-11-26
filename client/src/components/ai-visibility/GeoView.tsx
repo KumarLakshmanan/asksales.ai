@@ -12,18 +12,45 @@ import { useMemo, useState } from 'react';
 import { PromptRunObservation } from './PromptRunObservation';
 import { useDetailFocus } from './use-detail-focus';
 import { useMeasurement } from './workspace-context';
-import { Empty, InlineError, Loading, providerDisplayName, statusBadge } from './workspace-ui';
+import {
+  Empty,
+  InlineError,
+  Loading,
+  Pager,
+  providerDisplayName,
+  statusBadge,
+} from './workspace-ui';
 
-export function compatibleMeasurements(a?: AiVisibilityAudit | null, b?: AiVisibilityAudit | null) {
+const text = (value: unknown) =>
+  typeof value === 'string' ? value.trim().toLowerCase() : value == null ? '' : String(value);
+const aliases = (value: unknown) =>
+  JSON.stringify((Array.isArray(value) ? value : []).map(text).filter(Boolean).sort());
+/**
+ * The settings that decide who is asked about which brand, where. Category, business type and
+ * custom prompts only change which questions are asked, and rows already match on exact prompt
+ * text. The configuration revision is left out on purpose: it also moves on unrelated edits
+ * (competitors, AEO questions, saving unchanged settings), which hid every earlier analysis.
+ */
+const COMPARED_SETTINGS = [
+  { key: 'country', label: 'country', value: text },
+  { key: 'locale', label: 'language', value: text },
+  { key: 'targetGeography', label: 'region', value: text },
+  { key: 'name', label: 'brand name', value: text },
+  { key: 'brandAliases', label: 'brand aliases', value: aliases },
+] as const;
+
+/** Why two analyses can't be compared, or null when they can. */
+export function measurementDifference(a?: AiVisibilityAudit | null, b?: AiVisibilityAudit | null) {
   const left = a?.inputSnapshot?.project,
     right = b?.inputSnapshot?.project;
-  return Boolean(
-    left &&
-    right &&
-    ['country', 'locale', 'targetGeography', 'configurationRevision'].every(
-      (key) => left[key as keyof typeof left] === right[key as keyof typeof right],
-    ),
-  );
+  if (!left || !right) return 'its settings were not recorded';
+  const differing = COMPARED_SETTINGS.filter(
+    ({ key, value }) => value(left[key]) !== value(right[key]),
+  ).map(({ label }) => label);
+  return differing.length ? `different ${differing.join(', ')}` : null;
+}
+export function compatibleMeasurements(a?: AiVisibilityAudit | null, b?: AiVisibilityAudit | null) {
+  return Boolean(a && b) && measurementDifference(a, b) === null;
 }
 function measured(run: ProviderPromptRun) {
   return (
@@ -72,6 +99,20 @@ export function GeoView({ projectId }: { projectId: number }) {
   const otherCompleted = otherCompletedAudits.length;
   const compatibleAudits = otherCompletedAudits.filter((audit) =>
     compatibleMeasurements(query.data?.audit, audit),
+  );
+  const earlierPromptText = new Set(comparison.data?.prompts.map((item) => item.prompt));
+  const sharedPrompts = prompts.filter((item) => earlierPromptText.has(item.prompt)).length;
+  const excludedAudits = otherCompletedAudits
+    .map((audit) => ({ audit, reason: measurementDifference(query.data?.audit, audit) }))
+    .filter((item): item is { audit: AiVisibilityAudit; reason: string } => Boolean(item.reason));
+  const excludedList = excludedAudits.length > 0 && (
+    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+      {excludedAudits.map(({ audit, reason }) => (
+        <li key={audit.id}>
+          #{audit.id} · {new Date(audit.createdAt).toLocaleString()}: {reason}
+        </li>
+      ))}
+    </ul>
   );
   const filtered = useMemo(
     () =>
@@ -266,12 +307,15 @@ export function GeoView({ projectId }: { projectId: number }) {
             onRetry={() => audits.refetch()}
           />
         ) : audits.isSuccess && !compatibleAudits.length ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            {otherCompleted
-              ? `None of the ${otherCompleted} other completed ${otherCompleted === 1 ? 'analysis' : 'analyses'} can be compared with this one. They used a different country, language, region or settings, or were run before settings were recorded.`
-              : 'There is no other completed analysis yet.'}{' '}
-            Run another analysis with the same settings to compare.
-          </p>
+          <div className="mt-3 text-sm text-muted-foreground">
+            <p>
+              {otherCompleted
+                ? `None of the ${otherCompleted} other completed ${otherCompleted === 1 ? 'analysis' : 'analyses'} can be compared with this one.`
+                : 'There is no other completed analysis yet.'}{' '}
+              Run another analysis with the same settings to compare.
+            </p>
+            {excludedList}
+          </div>
         ) : (
           <>
             <label className="mt-3 block text-sm">
@@ -290,9 +334,14 @@ export function GeoView({ projectId }: { projectId: number }) {
               </select>
             </label>
             <p className="mt-2 text-xs text-muted-foreground">
-              Only measurements with the same geography, locale and configuration revision can be
-              compared. Rows match exact prompt text and provider. Coverage changes remain visible.
+              Only analyses with the same country, language, region, brand name and brand aliases can be
+              compared.
+              Rows match exact prompt text and provider. Coverage changes remain visible.
             </p>
+            {excludedAudits.length > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">Not comparable:</p>
+            )}
+            {excludedList}
           </>
         )}
         {comparisonId &&
@@ -306,12 +355,19 @@ export function GeoView({ projectId }: { projectId: number }) {
           ) : !compatible ? (
             <p>These measurements are not compatible.</p>
           ) : (
-            <p className="mt-2 text-sm">
-              Previous: {comparison.data?.runs.filter((run) => run.status === 'completed').length}/
-              {comparison.data?.runs.filter((run) => run.status !== 'excluded').length} successful
-              observations. Current: {successful.length}/{expectedRuns.length}. Historical scores
-              predate any labeled corrections.
-            </p>
+            <>
+              <p className="mt-2 text-sm">
+                Previous: {comparison.data?.runs.filter((run) => run.status === 'completed').length}/
+                {comparison.data?.runs.filter((run) => run.status !== 'excluded').length} successful
+                observations. Current: {successful.length}/{expectedRuns.length}. Historical scores
+                predate any labeled corrections.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {sharedPrompts
+                  ? `${sharedPrompts} of ${prompts.length} questions were also asked in the earlier analysis, so only those rows show a previous result.`
+                  : 'None of these questions were asked in the earlier analysis, usually because the business category, business type or custom prompts changed, so no row shows a previous result.'}
+              </p>
+            </>
           ))}
       </details>
       <div className={`grid gap-5 ${selected ? 'lg:grid-cols-[minmax(0,1fr)_420px]' : ''}`}>
@@ -403,24 +459,7 @@ export function GeoView({ projectId }: { projectId: number }) {
           )}
           <div className="mt-4 flex items-center justify-between gap-2 text-xs">
             <span>{filtered.length} matching prompts</span>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={page === 0}
-                onClick={() => setPage((value) => value - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={(page + 1) * 20 >= filtered.length}
-                onClick={() => setPage((value) => value + 1)}
-              >
-                Next
-              </Button>
-            </div>
+            <Pager page={page} total={filtered.length} onPageChange={setPage} />
           </div>
         </div>
         {selected && (

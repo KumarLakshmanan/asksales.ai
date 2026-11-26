@@ -10,6 +10,7 @@ import {
 import { createHash, randomBytes } from 'node:crypto';
 import { and, desc, eq, gt, lte, inArray, isNull, sql, getTableColumns } from 'drizzle-orm';
 import { buildSeoSiteSummary, measurementRuleVersion } from './SeoSiteSummary.js';
+import { projectSettingsChanged } from './projectSettings.js';
 import {
   alertRecommendationIds,
   isWithdrawnGapFix,
@@ -679,12 +680,9 @@ export class AiVisibilityService {
   }
 
   async updateProject(userId: number, projectId: number, input: Partial<ProjectInput>) {
-    await this.getProject(userId, projectId);
+    const current = await this.getProject(userId, projectId);
     await assertRelatedOwnership(userId, input.businessProfileId, input.brandToolkitId);
-    const update: Record<string, unknown> = {
-      updatedAt: new Date(),
-      configurationRevision: sql`${aiVisibilityProjectsTable.configurationRevision} + 1`,
-    };
+    const update: Record<string, unknown> = {};
     if (input.geoPrompts !== undefined) update.geoPrompts = input.geoPrompts;
     if (input.name !== undefined) update.name = input.name.trim();
     if (input.domain !== undefined) update.domain = normalizeProjectDomain(input.domain);
@@ -697,9 +695,14 @@ export class AiVisibilityService {
       update.targetGeography = input.targetGeography?.trim() || null;
     if (input.businessProfileId !== undefined) update.businessProfileId = input.businessProfileId;
     if (input.brandToolkitId !== undefined) update.brandToolkitId = input.brandToolkitId;
+    if (!projectSettingsChanged(current, update)) return current;
     const [project] = await db
       .update(aiVisibilityProjectsTable)
-      .set(update)
+      .set({
+        ...update,
+        updatedAt: new Date(),
+        configurationRevision: sql`${aiVisibilityProjectsTable.configurationRevision} + 1`,
+      })
       .where(
         and(
           eq(aiVisibilityProjectsTable.id, projectId),
