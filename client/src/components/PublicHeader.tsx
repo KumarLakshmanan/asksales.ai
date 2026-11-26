@@ -60,17 +60,17 @@ export default function PublicHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[var(--layer-header)] border-b border-border bg-background/95 backdrop-blur-lg">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 sm:h-18 sm:px-8 lg:px-12">
-        <Link href="/" className="flex items-center gap-2.5" aria-label={`${BRAND_NAME} home`}>
-          <img src="/logos/asksales_logo.svg" alt="" className="h-8 w-8 object-contain" />
-          <span className="text-base font-semibold tracking-tight">{BRAND_NAME}</span>
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-8 lg:px-6 xl:px-12">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label={`${BRAND_NAME} home`}>
+          <img src="/logos/asksales_logo.svg" alt="" className="h-8 w-8 shrink-0 object-contain" />
+          <span className="whitespace-nowrap text-base font-semibold tracking-tight">{BRAND_NAME}</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Public navigation">
+        <nav className="hidden items-center gap-0.5 lg:flex xl:gap-1" aria-label="Public navigation">
           {linksBeforeCompare.map(([label, href]) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
-              <Link key={href} href={href} className={`rounded-md px-3 py-2 text-sm transition-colors ${active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}>
+              <Link key={href} href={href} className={`whitespace-nowrap rounded-md px-2.5 py-2 text-sm transition-colors xl:px-3 ${active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}>
                 {label}
               </Link>
             );
@@ -83,7 +83,7 @@ export default function PublicHeader() {
               onClick={() => setCompareOpen((open) => !open)}
               aria-expanded={compareOpen}
               aria-controls="public-compare-menu"
-              className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${pathname.startsWith("/compare") ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm transition-colors xl:px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${pathname.startsWith("/compare") ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
             >
               Compare <ChevronDown className={`h-4 w-4 transition-transform ${compareOpen ? "rotate-180" : ""}`} />
             </button>
@@ -99,10 +99,10 @@ export default function PublicHeader() {
               </div>
             )}
           </div>
-          <Link href="/contact" className={`rounded-md px-3 py-2 text-sm transition-colors ${pathname.startsWith("/contact") ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}>Contact</Link>
+          <Link href="/contact" className={`whitespace-nowrap rounded-md px-2.5 py-2 text-sm transition-colors xl:px-3 ${pathname.startsWith("/contact") ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}>Contact</Link>
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
           {mounted && (
             <button type="button" onClick={toggleTheme} className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Toggle color theme">
               {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -131,24 +131,24 @@ export default function PublicHeader() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
-              <Link href="/login?mode=register" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Create workspace</Link>
+              <Link href="/login" className="whitespace-nowrap rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground xl:px-3">Sign in</Link>
+              <Link href="/login?mode=register" className="whitespace-nowrap rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 xl:px-4">Create workspace</Link>
             </>
           )}
         </div>
 
-        <button type="button" onClick={() => setMobileOpen((open) => !open)} className="flex h-10 w-10 items-center justify-center rounded-md border border-border lg:hidden" aria-label={mobileOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileOpen}>
+        <button type="button" onClick={() => setMobileOpen((open) => !open)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border lg:hidden" aria-label={mobileOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileOpen}>
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {mobileOpen && (
-        <div className="fixed inset-x-0 top-16 z-[var(--layer-navigation)] min-h-[calc(100dvh-4rem)] border-t border-border bg-background p-5 lg:hidden">
+        <div className="fixed inset-x-0 top-16 z-[var(--layer-navigation)] h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border bg-background p-5 lg:hidden">
           <nav className="divide-y divide-border border-y border-border">
             {linksBeforeCompare.map(([label, href]) => <Link key={href} href={href} className="flex min-h-12 items-center justify-between py-3 text-base font-medium">{label}<span className="font-mono text-xs text-muted-foreground">→</span></Link>)}
             <div className="py-3">
               <Link href="/compare" className="flex min-h-10 items-center justify-between text-base font-medium">Compare<span className="font-mono text-xs text-muted-foreground">→</span></Link>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 pb-1 pt-2">
+              <div className="grid grid-cols-1 gap-x-4 gap-y-1 pb-1 pt-2 min-[400px]:grid-cols-2">
                 {comparisonLinks.map(({ name, slug }) => <Link key={slug} href={`/compare/${slug}`} className="min-h-11 py-2 text-sm text-muted-foreground hover:text-foreground">vs {name}</Link>)}
               </div>
             </div>
