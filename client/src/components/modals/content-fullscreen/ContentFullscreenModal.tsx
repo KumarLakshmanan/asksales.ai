@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { uniqueMediaUrls } from "@/lib/contentMedia";
+import { hashtagsMissingFromCaption } from "../../../../../shared/socialCaption";
 import type { ContentFullscreenModalProps, MediaItem, ParsedContent, ContentType } from "./types";
 import { formatDate, getPlatformColor, stripHtml } from "./utils";
 import EmailContentRenderer from "./EmailContentRenderer";
@@ -193,14 +194,13 @@ export default function ContentFullscreenModal({
           .filter(Boolean)
           .join("\n\n");
         break;
-      case "social_post":
-        textToCopy = [
-          parsedContent.content || parsedContent.caption || parsedContent.body,
-          parsedContent.hashtags?.map((h: string) => `#${h.replace(/^#+/, "")}`).join(" "),
-        ]
+      case "social_post": {
+        const caption = String(parsedContent.content || parsedContent.caption || parsedContent.body || "");
+        textToCopy = [caption, hashtagsMissingFromCaption(caption, parsedContent.hashtags).join(" ")]
           .filter(Boolean)
           .join("\n\n");
         break;
+      }
       case "ad_copy":
         textToCopy = [
           parsedContent.headline,

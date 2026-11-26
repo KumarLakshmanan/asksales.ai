@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { ContentRendererProps } from "./types";
 import { getPlatformColor } from "./utils";
+import { hashtagsMissingFromCaption } from "../../../../../shared/socialCaption";
 
 export default function SocialPostContentRenderer({
   parsedContent,
@@ -9,9 +10,8 @@ export default function SocialPostContentRenderer({
   channel,
 }: ContentRendererProps) {
   const postContent = parsedContent.content || parsedContent.caption || parsedContent.body || content;
-  const hashtags = (parsedContent.hashtags || []).map((h: string) =>
-    typeof h === "string" ? h.replace(/^#+/, "") : h
-  );
+  // The caption often already ends with these tags; show each one only once.
+  const hashtags = hashtagsMissingFromCaption(String(postContent || ""), parsedContent.hashtags);
   const displayPlatform = platform || parsedContent.platform || channel;
 
   return (
@@ -37,7 +37,7 @@ export default function SocialPostContentRenderer({
             <div className="flex flex-wrap gap-1 mt-3">
               {hashtags.map((tag: string, i: number) => (
                 <span key={i} className="text-sm text-blue-500">
-                  #{tag}
+                  {tag}
                 </span>
               ))}
             </div>
