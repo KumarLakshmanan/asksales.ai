@@ -27,7 +27,8 @@ export async function presentScrapingDetails<T extends ScrapingRow>(
   const failed = rows.filter(row => FAILED.has(String(row.status || '').toLowerCase()));
   const noProvider = failed.length > 0 && await providerUnavailable(failed.map(row => row.platform));
   return rows.map((row) => {
-    if (!FAILED.has(String(row.status || '').toLowerCase())) return sanitizeErrorFields(row);
+    // Only the error text changes; rebuilding the row would turn its Date fields into {}.
+    if (!FAILED.has(String(row.status || '').toLowerCase())) return row.error ? { ...row, error: sanitizeErrorFields({ error: row.error }).error } : row;
     const error = noProvider
       ? LEAD_PROVIDER_UNAVAILABLE_MESSAGE
       : plainLeadSearchError(row.error);

@@ -72,6 +72,8 @@ export function describeCampaignStatus(run: CampaignRunSnapshot | null | undefin
 
 export function campaignNextStepButtons(run: CampaignRunSnapshot | null | undefined): ActionButton[] {
   if (!run) return [];
+  // "Open leads" only helps when the failed step was the lead search.
+  if (run.stage === 'needs_attention' && !leadSearchProblem(run)) return [];
   return (STAGE_BUTTONS[run.stage] || []).map(({ label, tabType }) => ({
     id: `next_step_${tabType}`,
     label,

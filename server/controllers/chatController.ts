@@ -700,7 +700,8 @@ export async function getChatThreadDetailsHandler(req: Request, res: Response) {
     // Resolve module access first: it uses its own pooled connections and must
     // not run while the transaction below holds one.
     const crmEnabled = await threadReportingCrmEnabled(userId);
-    const cohort = threadLeadIds(userId, business, threadId);
+    // Display only: the same leads the summary counts, including ones selected for this campaign.
+    const cohort = reportingThreadLeadIds(userId, business, threadId);
     // Every read below runs sequentially on one connection, so a page load
     // takes one pooled connection and one tenant-scope setup.
     const { leadsResult, outreachResult, contentAssetsResult, icpResult, summary } = await db.transaction(async (tx: typeof db) => {

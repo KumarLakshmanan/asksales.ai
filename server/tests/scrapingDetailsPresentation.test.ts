@@ -21,6 +21,14 @@ describe('lead search rows shown in the Leads tab', () => {
     expect(row.retryAvailable).toBe(true);
   });
 
+  it('keeps dates and other fields of rows that did not fail', async () => {
+    const startedAt = new Date('2026-11-01T10:00:00Z');
+    const [row] = await presentScrapingDetails([{ platform: 'linkedin', status: 'completed', error: null, startedAt }], async () => false);
+    expect(row.startedAt).toBe(startedAt);
+    const [failedRow] = await presentScrapingDetails([{ platform: 'linkedin', status: 'failed', error: 'x', startedAt }], async () => false);
+    expect(failedRow.startedAt).toBe(startedAt);
+  });
+
   it('does not check providers when nothing failed', async () => {
     const check = jest.fn(async () => true);
     const rows = await presentScrapingDetails([{ platform: 'linkedin', status: 'completed', error: null }], check);

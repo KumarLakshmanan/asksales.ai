@@ -23,5 +23,6 @@ describe('campaign status for the Coordinator', () => {
     expect(describeCampaignStatus(null)).toBe('');
     expect(campaignNextStepButtons(null)).toEqual([]);
     expect(campaignNextStepButtons({ stage: 'lead_executing', status: 'running' })).toEqual([]);
+    expect(campaignNextStepButtons({ stage: 'needs_attention', status: 'failed', context: {} })).toEqual([]);
   });
 });

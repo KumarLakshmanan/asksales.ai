@@ -395,7 +395,10 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
       }
       case 'query_ad_campaigns': {
         const records = fact.retrievedRecords ?? [];
-        lines.push(records.length ? `Saved campaigns: ${countByStatus(records)}.` : 'No saved campaigns were found.');
+        const names = new Map(rows(output.campaigns).map(row => [id(row.campaignId), label(row.name)]));
+        lines.push(records.length ? `Saved campaigns: ${records.slice(0, 10).map(record =>
+          `${named(record.id, names.get(record.id) ?? null)}${record.storedStatus ? ` (${record.storedStatus})` : ''}`,
+        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'No saved campaigns were found.');
         break;
       }
       case 'estimate_lead_search_cost': {
@@ -485,8 +488,8 @@ function factualFallback(facts: Fact[], results: ToolCallResult[], reason: 'reje
   // One short, plain summary. It never claims a send, publish or spend the
   // receipts do not show, and it does not repeat the same caveat several times.
   const lines = [reason === 'unchecked'
-    ? 'Here is what the system recorded for this step.'
-    : 'Here is what actually happened in this step.'];
+    ? "I couldn't check my full answer just now. Here is what the system recorded for this step."
+    : "I couldn't confirm parts of my answer. Here is what actually happened in this step."];
   lines.push(...generated);
   const newReview = current.some(fact => fact.state === 'review_ready');
   if (newReview) lines.push('A review card is ready. Nothing runs until you confirm it.');

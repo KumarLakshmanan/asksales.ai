@@ -262,7 +262,11 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'Unsupported launch claim.', [
       receipt('query_ad_campaigns', { output: { campaigns: [{ campaignId: 24, localStatus: 'draft', lastRecordedProviderStatus: 'active', content: { campaignId: 99 } }] } }),
     ]);
-    expect(result).toContain('Saved campaigns: 1 campaign (draft)');
+    const withName = await groundAgentResponse(state(), 'Unsupported launch claim.', [
+      receipt('query_ad_campaigns', { output: { campaigns: [{ campaignId: 24, name: 'Diwali offer', localStatus: 'draft' }] } }),
+    ]);
+    expect(withName).toContain('Saved campaigns: "Diwali offer" (draft)');
+    expect(result).toContain('Saved campaigns: #24 (draft)');
     expect(result).not.toContain('#99');
     expect(result).not.toContain('status: active');
   });
