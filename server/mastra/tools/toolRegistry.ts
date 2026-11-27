@@ -246,6 +246,12 @@ export const toolMetadata: Record<string, ToolMeta> = {
     requiresApproval: false,
   },
 
+  create_budget_plan: {
+    name: 'create_budget_plan', effect: 'write', concurrencySafe: false,
+    description: "Create and save a channel budget plan for this campaign's customer profile, shown in the Performance Marketing tab. A plan only; never creates, launches or funds ads.",
+    agents: ['performance_marketing'], requiresApproval: false,
+  },
+
   // Data Query Tools
   stop_ads: {
     name: 'stop_ads', description: 'Request explicit confirmation to stop an exact saved paid campaign on selected platforms. Queued or gated does not mean provider-confirmed paused.',
@@ -370,7 +376,7 @@ export const agentToolMapping: Record<AgentType, string[]> = {
     'check_integration_status',
   ],
   outreach: ['create_campaign_export','get_campaign_export','query_campaign_customers','query_campaign_history','preview_outreach_retries','get_outreach_retry_preview','get_prepared_outreach','get_outreach_preparation_options','prepare_outreach_campaign','list_contact_workbooks','analyze_contact_files','get_dashboard_operation','review_contact_import','query_assistant_diagnostics','analytics_query', 'list_proposal_templates', 'list_proposal_catalog', 'list_proposals', 'create_proposal_draft', 'refine_proposal_draft', 'add_proposal_catalog_items', 'create_proposal_revision', 'send_proposal', 'send_outreach_messages', 'tasks_completed', 'suggest_switch_agents', 'crawl_website', 'create_crm_reminder', 'update_pipeline_status', 'query_leads', 'query_content_assets', 'query_outreach_campaigns', 'check_integration_status', 'publish_social_post'],
-  performance_marketing: ['research_ad_creatives', 'suggest_ad_creative_briefs', 'get_ad_creative_research', 'generate_ad', 'publish_ads', 'publish_meta_ads', 'publish_google_ads', 'stop_ads', 'analytics_query', 'tasks_completed', 'suggest_switch_agents', 'crawl_website', 'query_leads', 'query_ad_campaigns', 'query_outreach_campaigns', 'query_content_assets', 'check_integration_status'],
+  performance_marketing: ['research_ad_creatives', 'suggest_ad_creative_briefs', 'get_ad_creative_research', 'generate_ad', 'publish_ads', 'publish_meta_ads', 'publish_google_ads', 'stop_ads', 'analytics_query', 'create_budget_plan', 'tasks_completed', 'suggest_switch_agents', 'crawl_website', 'query_leads', 'query_ad_campaigns', 'query_outreach_campaigns', 'query_content_assets', 'check_integration_status'],
 };
 
 // Check if tool requires approval

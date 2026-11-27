@@ -114,6 +114,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 }
 
+/** Same as useWebSocket, but null outside a WebSocketProvider (tests, standalone pages). */
+export function useOptionalWebSocket() {
+  return useContext(WebSocketContext) ?? null;
+}
+
 export function useWebSocket() {
   const context = useContext(WebSocketContext);
   if (!context) {

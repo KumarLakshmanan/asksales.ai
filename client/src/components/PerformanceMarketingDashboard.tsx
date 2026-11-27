@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import { useOptionalWebSocket } from '@/contexts/WebSocketContext';
 
 interface BudgetPlanResponse {
   budget_plan: BudgetPlan;
@@ -136,6 +137,15 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
   const [currency, setCurrency] = useState<string>('INR');
   const [generatedBudgetPlan, setGeneratedBudgetPlan] = useState<BudgetPlan | null>(null);
   const [savedPlanDate, setSavedPlanDate] = useState<string | null>(null);
+  // Bumped when Sarah saves a plan from chat, so an open tab shows it at once.
+  const [savedPlanVersion, setSavedPlanVersion] = useState(0);
+  const webSocket = useOptionalWebSocket();
+  useEffect(() => {
+    if (!webSocket) return;
+    return webSocket.subscribe('budget_plan_saved', (event) => {
+      if (Number(event.icpId) === icpId) setSavedPlanVersion(version => version + 1);
+    });
+  }, [webSocket, icpId]);
 
   // Campaign Builder State
   const [campaignPlatform, setCampaignPlatform] = useState<string>('google');
@@ -194,7 +204,7 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
       }
     })();
     return () => { cancelled = true; };
-  }, [icpId]);
+  }, [icpId, savedPlanVersion]);
 
   const handleGenerateBudgetPlan = async () => {
     if (totalBudget <= 0) {

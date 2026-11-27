@@ -29,6 +29,7 @@ import { queryLeadsTool, queryContentAssetsTool, queryOutreachCampaignsTool } fr
 import { checkIntegrationStatusTool } from '../tools/integrationTools.js';
 import { queryAdCampaignsTool } from '../tools/adCampaignQuery.js';
 import { stopAdsTool } from '../tools/stopAdsTool.js';
+import { createBudgetPlanTool } from '../tools/budgetPlanTool.js';
 import { buildAgentContext } from '../utils/contextManager.js';
 import { buildPipelineStatusPrompt } from '../utils/pipelinePrompt.js';
 import { getToolDescriptionsForAgent } from '../tools/toolRegistry.js';
@@ -68,6 +69,7 @@ CRITICAL RULES:
 - Preserve an exact requested primary-copy CTA in cta_text, separate from the platform's cta_type button. Carry tone nuances and exclusions verbatim in content_instructions. Include landing_url and explicit include_image_prompt/include_video_prompt=false when media prompts are excluded, alongside auto_generate_image/auto_generate_video=false.
 - Organic Facebook or Instagram posts belong to Content Studio. Offer a switch to the content_studio agent and do not treat an organic post as a paid campaign creative or call an ads publishing tool for it.
 - For analytics/metrics/performance queries → use analytics_query tool (types: 'campaign', 'lead', 'outreach', 'overview').
+- When the user asks for a budget plan, or to save one, call create_budget_plan with the total budget, days and currency they gave. It saves the plan to the Performance Marketing tab and never launches or funds ads. Do not write a budget table in chat instead, and never say a plan cannot be saved.
 - When the user names a time period for paid campaign results ("this month", "last 7 days", "last month"), set filters.period (this_month, last_7_days, last_month, …); for specific dates set filters.date_range { start, end } as YYYY-MM-DD. Without either, the figures are lifetime totals; say so. To compare platforms, read each campaign's platform from the result.
 - Provide clear summaries with key metrics, highlight trends, suggest optimizations.
 
@@ -198,6 +200,7 @@ class PerformanceAgent extends BaseAgent {
       publish_meta_ads: publishMetaAdsTool,
       publish_google_ads: publishGoogleAdsTool,
       analytics_query: analyticsQueryTool,
+      create_budget_plan: createBudgetPlanTool,
       tasks_completed: tasksCompletedTool,
       suggest_switch_agents: suggestSwitchAgentsTool,
       crawl_website: crawlWebsiteTool,
