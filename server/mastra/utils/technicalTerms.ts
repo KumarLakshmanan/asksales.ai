@@ -24,6 +24,9 @@ const TOOL_LABELS: Record<string, string> = {
   get_prepared_outreach: 'the outreach draft',
   publish_ads: 'the ad publish',
   save_business_profile: 'the business profile update',
+  // Room tools are created outside the campaign tool registry.
+  check_room_availability: 'the room availability check',
+  book_room: 'the room booking',
 };
 
 const LEADING_VERBS = /^(?:get|list|query|read|execute|run|create|generate|prepare|update|save|preview|analyze|analyse|estimate|search|find|fetch|check|load|show|start|submit|request)_/;
@@ -54,6 +57,9 @@ function workflowLabels(): Map<string, string> {
       const ids = [file.slice(0, -5), workflow.workflow_id].filter((id): id is string => typeof id === 'string' && /[_/~]/.test(id));
       for (const id of ids) if (!labels.has(id)) labels.set(id, title);
       for (const node of Array.isArray(workflow.nodes) ? workflow.nodes : []) {
+        // Step IDs such as google_maps_search appear in run errors too.
+        const nodeId = typeof node?.id === 'string' && node.id.includes('_') ? node.id : null;
+        if (nodeId && !labels.has(nodeId)) labels.set(nodeId, node?.type === 'actor' ? title : 'saving the results');
         const actorId = node?.type === 'actor' ? node?.data?.actorId : null;
         if (typeof actorId !== 'string' || !actorId.includes('/')) continue;
         for (const id of [actorId, actorId.replace('/', '~')]) if (!labels.has(id)) labels.set(id, title);
@@ -81,19 +87,13 @@ function compile() {
 }
 
 const APIFY_KEY = /\bApify(?:'s)?(?: API)? (?:key|token|credential)(s?)\b/g;
-const THE_APIFY = /\b(the|an?) Apify\b/gi;
-const BARE_APIFY = /\bApify\b(?!\.[a-z])/g;
-
 export function scrubTechnicalTerms(content: string): string {
   if (typeof content !== 'string' || !content) return content;
   const { pattern, labels } = compile();
   return content
     .replace(pattern, (_match, term: string) => labels.get(term) || term)
-    .replace(APIFY_KEY, (_m, plural: string) => `lead data provider key${plural}`)
-    .replace(THE_APIFY, (_m, article: string) => (
-      /^the$/i.test(article) ? `${article} lead data provider` : `${article[0] === 'A' ? 'A' : 'a'} lead data provider`
-    ))
-    .replace(BARE_APIFY, 'the lead data provider');
+    // Customers see the Apify name on billing pages, so only key wording changes.
+    .replace(APIFY_KEY, (_m, plural: string) => `lead data provider key${plural}`);
 }
 
 registerTechnicalTermScrubber(scrubTechnicalTerms);

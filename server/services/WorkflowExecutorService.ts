@@ -337,7 +337,8 @@ export class WorkflowExecutorService {
     }
 
     // No API key available
-    throw new Error('No Apify API key available. Please add your Apify token in Settings → Integrations → Apify');
+    // Matches the credential wording leadSearchFailureMessage turns into plain words.
+    throw new Error('No Apify API key available for this search. An admin needs to add one under API Integrations.');
   }
 
   /**
