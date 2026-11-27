@@ -5,6 +5,7 @@ import { eq, desc, and, isNull, isNull as drizzleIsNull, lt, or, asc, sql } from
 import { webSocketEmitter } from "../../services/agents/WebSocketEmitter";
 import { countTokens } from "../../utils/tokenCounter";
 import { sanitizeErrorFields, sanitizeAssistantContent } from "../../../shared/userFacingError.js";
+import "../../mastra/utils/technicalTerms.js";
 import { readMessageApprovalReference, type ApprovalActionReference } from '../../mastra/approvalActions.js';
 import type { ActionButton } from '../../mastra/state.js';
 import { isRecord } from "../../../shared/records.js";
@@ -16,7 +17,7 @@ export function presentStoredMessage(message: ChatMessageRecord): ChatMessageRec
   if (message.role !== 'assistant') return message;
   return {
     ...message,
-    content: sanitizeAssistantContent(message.content),
+    content: sanitizeAssistantContent(message.content, message.metadata),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: message.metadata ? sanitizeErrorFields(message.metadata as Record<string, any>) : message.metadata,
   };
@@ -136,7 +137,7 @@ export async function createChatMessage(message: InsertChatMessage): Promise<Cha
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existingMeta = sanitizeErrorFields((message.metadata as Record<string, any>) || {});
   const safeContent = message.role === 'assistant'
-    ? sanitizeAssistantContent(message.content)
+    ? sanitizeAssistantContent(message.content, message.metadata)
     : message.content;
   const enrichedMessage = {
     ...message,

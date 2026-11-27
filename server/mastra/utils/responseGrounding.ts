@@ -3,6 +3,7 @@ import type { AgentState, AgentType } from '../state.js';
 import type { ToolCallResult } from './toolCallingLoop.js';
 import { createCompletionWithProviderFallback } from './providerCompletion.js';
 import { withPromiseTimeout } from '../../utils/promiseTimeout.js';
+import { humanizeToolName } from './technicalTerms.js';
 import { logger } from '../../utils/logger.js';
 import { detectMessageLanguage, localizeGovernedReply } from '../../services/agents/orchestration/ReplyLanguage.js';
 import { readOnlyCampaignTools } from '../tools/readOnlyCampaignTools.js';
@@ -486,7 +487,7 @@ function factualFallback(facts: Fact[], results: ToolCallResult[], reason: 'reje
     lines.push('Nothing was sent or published. Tell me what to change, or ask for the next step.');
   } else if (receipts.length) {
     lines.push('Recorded current action statuses: ' + receipts.slice(0, 8).map(fact =>
-      `${fact.toolName.replace(/[^a-z0-9_]/gi, '').slice(0, 80) || 'tool'}: ${fact.state.replace(/_/g, ' ')}`,
+      `${humanizeToolName(fact.toolName)}: ${fact.state.replace(/_/g, ' ')}`,
     ).join('; ') + '.');
     lines.push('These statuses do not establish downstream delivery or activation. Check the recorded action details before retrying; completed or queued work has not been undone.');
   } else {

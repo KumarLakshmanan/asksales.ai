@@ -1,4 +1,15 @@
-import { createLeadAgent, leadChannelLabel, leadStrategyChannelsChanged } from '../mastra/agents/leadAgent.js';
+import { jest } from '@jest/globals';
+
+// These tests cover how strategies are presented, so every search has a key.
+jest.unstable_mockModule('../services/apifyCredentialResolver.js', () => ({
+  findLeadActorsWithoutKey: async () => new Set(),
+  resolveApifyCredential: async () => ({ apiKey: "test", source: "admin", keyInfo: null }),
+  LEAD_PROVIDER_UNAVAILABLE_MESSAGE: 'not connected',
+  LeadProviderUnavailableError: class extends Error {},
+}));
+
+const { createLeadAgent, leadChannelLabel, leadStrategyChannelsChanged } = await import('../mastra/agents/leadAgent.js');
+const { listWorkflowsForChannels, resolveCatalogWorkflowIds } = await import('../mastra/tools/executors/leadExecutor.js');
 
 it('does not present executed inputs as a newly generated review', async () => {
   const agent = createLeadAgent() as any;
@@ -10,7 +21,6 @@ it('does not present executed inputs as a newly generated review', async () => {
   expect(prompt).toContain('historical inputs from an executed search');
   expect(prompt).not.toContain('These inputs are ready.');
 });
-import { listWorkflowsForChannels, resolveCatalogWorkflowIds } from '../mastra/tools/executors/leadExecutor.js';
 
 describe('authoritative strategy presentation', () => {
   it('requires a fresh bound strategy choice when requested channels replace the confirmed set', () => {

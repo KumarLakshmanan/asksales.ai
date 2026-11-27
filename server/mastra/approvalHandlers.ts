@@ -14,6 +14,7 @@ import { executePublishMetaAds, executePublishGoogleAds } from './tools/executor
 import { executePublishSocialPost } from './tools/executors/contentExecutor.js';
 import { webSocketEmitter } from '../services/agents/WebSocketEmitter.js';
 import { createChatMessage } from '../models/chatMessages/functions.js';
+import { userFacingReason } from '../../shared/userFacingError.js';
 import { TAB_TYPES, TAB_LABELS } from './tabConfig.js';
 import { isRateLimitError } from '../services/agents/LLMProviderFactory.js';
 import { logger } from '../utils/logger.js';
@@ -138,7 +139,7 @@ export async function handleLeadWorkflowApproval(
     // Persist tool result
     try {
       const durationMs = Date.now() - leadToolStartTime;
-      const resultContent = `🔧 execute_lead_workflow → ${result.success ? '✅' : '❌'} (${durationMs}ms)${result.error ? ` Error: ${result.error}` : ''}`;
+      const resultContent = `🔧 execute_lead_workflow → ${result.success ? '✅' : '❌'} (${durationMs}ms)${result.error ? ` ${userFacingReason(result.error)}.` : ''}`;
       await createChatMessage({
         userId: Number(state.userId),
         threadId: Number(state.threadId),
@@ -214,7 +215,7 @@ export async function handleLeadWorkflowApproval(
       throw error;
     }
     return {
-      messages: [{ role: 'assistant', content: `The lead search encountered an error: ${error.message}. Would you like me to try a different platform?` }],
+      messages: [{ role: 'assistant', content: `The lead search couldn't finish: ${userFacingReason(error)}. Would you like me to try a different platform?` }],
       requiresApproval: false,
       pendingApproval: null,
     };
@@ -265,7 +266,7 @@ export async function handleOutreachApproval(
 
     const message = result.success
       ? `✅ Outreach queued successfully. ${result.output?.message || ''}\n\nI'll track each recipient through sent, delivered, and failed states. Would you like me to prepare a follow-up sequence?`
-      : `There was an issue sending the messages: ${result.error}. Would you like me to try again?`;
+      : `There was an issue sending the messages: ${userFacingReason(result.error)}. Would you like me to try again?`;
 
     return {
       messages: [{ role: 'assistant', content: message }],
@@ -281,7 +282,7 @@ export async function handleOutreachApproval(
       throw error;
     }
     return {
-      messages: [{ role: 'assistant', content: `The outreach encountered an error: ${error.message}. Would you like me to try a different approach?` }],
+      messages: [{ role: 'assistant', content: `The outreach encountered an error: ${userFacingReason(error)}. Would you like me to try a different approach?` }],
       requiresApproval: false,
       pendingApproval: null,
     };
@@ -385,7 +386,7 @@ export async function handleAdsApproval(
 
     const message = result.success
       ? `✅ Meta campaign launch queued.\n\n${result.output?.message || ''}\n\nI'll report active only after Meta confirms activation.`
-      : `There was an issue publishing to Meta Ads: ${result.error}. Would you like me to try again or check the campaign settings?`;
+      : `There was an issue publishing to Meta Ads: ${userFacingReason(result.error)}. Would you like me to try again or check the campaign settings?`;
 
     return {
       messages: [{ role: 'assistant', content: message }],
@@ -401,7 +402,7 @@ export async function handleAdsApproval(
       throw error;
     }
     return {
-      messages: [{ role: 'assistant', content: `The campaign publish encountered an error: ${error.message}. Would you like me to troubleshoot this?` }],
+      messages: [{ role: 'assistant', content: `The campaign publish encountered an error: ${userFacingReason(error)}. Would you like me to troubleshoot this?` }],
       requiresApproval: false,
       pendingApproval: null,
     };
@@ -443,7 +444,7 @@ export async function handleGoogleAdsApproval(
 
     const message = result.success
       ? `✅ Google campaign launch queued.\n\n${result.output?.message || ''}\n\nI'll report active only after Google confirms activation.`
-      : `There was an issue publishing to Google Ads: ${result.error}. Would you like me to try again or check settings?`;
+      : `There was an issue publishing to Google Ads: ${userFacingReason(result.error)}. Would you like me to try again or check settings?`;
 
     return {
       messages: [{ role: 'assistant', content: message }],
@@ -459,7 +460,7 @@ export async function handleGoogleAdsApproval(
       throw error;
     }
     return {
-      messages: [{ role: 'assistant', content: `The Google Ads campaign publish encountered an error: ${error.message}.` }],
+      messages: [{ role: 'assistant', content: `The Google Ads campaign publish encountered an error: ${userFacingReason(error)}.` }],
       requiresApproval: false,
       pendingApproval: null,
     };
@@ -521,7 +522,7 @@ export async function handlePublishSocialPostApproval(
 
     const message = result.success
       ? `${result.output?.message || '🚀 Post published successfully!'}`
-      : `There was an issue publishing the post: ${result.error}. Would you like me to try again?`;
+      : `There was an issue publishing the post: ${userFacingReason(result.error)}. Would you like me to try again?`;
 
     return {
       messages: [{ role: 'assistant', content: message }],
@@ -537,7 +538,7 @@ export async function handlePublishSocialPostApproval(
       throw error;
     }
     return {
-      messages: [{ role: 'assistant', content: `The post publishing encountered an error: ${error.message}.` }],
+      messages: [{ role: 'assistant', content: `The post publishing encountered an error: ${userFacingReason(error)}.` }],
       requiresApproval: false,
       pendingApproval: null,
     };

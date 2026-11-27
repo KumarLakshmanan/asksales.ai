@@ -69,18 +69,44 @@ export function toUserFacingError(
   return text.length > 2_000 ? `${text.slice(0, 1_997)}...` : text;
 }
 
+/** A user-facing error for the middle of a sentence, without its own full stop. */
+export function userFacingReason(value: unknown, fallback = 'something went wrong on our side'): string {
+  return toUserFacingError(value, fallback).replace(/[.!\s]+$/, '');
+}
+
 // A serialized Zod issue list embedded in prose, e.g.
 // "❌ Email template was not generated. [{"expected":"string","code":"invalid_type",...}]".
 const SERIALIZED_ISSUE_LIST = /\[\s*\{\s*"(?:expected|code|origin|path|message)"\s*:[\s\S]*?\}\s*\]/g;
 const ISSUE_CODE = /"code"\s*:\s*"[a-z_]+"/;
 
+// The server registers one that swaps its own internal names (tool names,
+// workflow and actor IDs) for plain words. Shared code cannot list them.
+let technicalTermScrubber: ((content: string) => string) | null = null;
+
+export function registerTechnicalTermScrubber(scrubber: (content: string) => string): void {
+  technicalTermScrubber = scrubber;
+}
+
+/** Tool call/result receipts are paired by the app using the tool name in them. */
+export function isToolReceiptMetadata(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object') return false;
+  const record = metadata as Record<string, unknown>;
+  return record.isToolCall === true || record.isToolResult === true;
+}
+
 /** Chat content can contain full catalogs and reports, not just short errors. */
-export function sanitizeAssistantContent(content: string): string {
+export function sanitizeAssistantContent(content: string, metadata?: unknown): string {
   if (typeof content !== 'string') return content;
   if (isProviderInfrastructureError(content)) return AI_SERVICE_UNAVAILABLE_MESSAGE;
-  return content.replace(SERIALIZED_ISSUE_LIST, (issues) => (
+  const withoutIssueLists = content.replace(SERIALIZED_ISSUE_LIST, (issues) => (
     ISSUE_CODE.test(issues) ? 'Generation did not complete.' : issues
   ));
+  if (!technicalTermScrubber || isToolReceiptMetadata(metadata)) return withoutIssueLists;
+  try {
+    return technicalTermScrubber(withoutIssueLists);
+  } catch {
+    return withoutIssueLists;
+  }
 }
 
 /** Sanitize error-bearing fields without changing successful tool output. */

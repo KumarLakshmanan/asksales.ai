@@ -32,6 +32,7 @@ import { logger } from '../utils/logger.js';
 import { randomUUID } from 'node:crypto';
 import { normalizeReviewedLeadIds } from './leadReview.js';
 import { isCurrentIcpRevisionApproved } from '../models/conversationWorkflow/stateMachine.js';
+import { toUserFacingError, userFacingReason } from '../../shared/userFacingError.js';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -1447,7 +1448,7 @@ export async function processMessage(
     // Provider retries belong inside an individual completion. Re-running this
     // orchestration loop could repeat tools or advance an unapproved review.
 
-    emitter.emitProgressStep(userId, threadId, 'error', `Error: ${error.message}`, 'orchestrator');
+    emitter.emitProgressStep(userId, threadId, 'error', toUserFacingError(error), 'orchestrator');
 
     return {
       ...state,
@@ -1573,7 +1574,7 @@ export async function switchAgent(
       workflowOutcome: 'failed',
       messages: [
         ...normalizedMessages,
-        { role: 'assistant' as const, content: `I couldn't switch to ${targetAgent}. Error: ${error.message}` },
+        { role: 'assistant' as const, content: `I couldn't hand this to ${getDisplayName(targetAgent)}: ${userFacingReason(error)}.` },
       ],
     } as AgentState;
   }

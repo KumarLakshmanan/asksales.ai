@@ -40,7 +40,8 @@ import {
   transitionConversationWorkflowRun,
 } from '../models/conversationWorkflow/functions.js';
 import { isRecord as isPlainRecord } from '../../shared/records.js';
-import { toUserFacingError } from '../../shared/userFacingError.js';
+import { toUserFacingError, userFacingReason } from '../../shared/userFacingError.js';
+import { humanizeToolName } from '../mastra/utils/technicalTerms.js';
 
 function parsePositiveId(value: unknown): number | undefined {
   if (typeof value !== 'string' || !/^\d+$/.test(value)) return undefined;
@@ -193,7 +194,7 @@ const getFriendlyToolResultMessage = (toolName: string, success: boolean, result
     // Content validation errors are written for the user ("The Instagram post
     // exceeds the 2,200-character limit ... split it into separate posts").
     if (contentLabel) return `❌ ${contentLabel} was not generated. ${toUserFacingError(result?.error, 'Generation did not complete.')}`;
-    return `❌ Failed to execute ${toolName.replace(/_/g, ' ')}: ${result?.error || 'Unknown error'}`;
+    return `❌ I couldn't finish ${humanizeToolName(toolName)}: ${userFacingReason(result?.error)}.`;
   }
   if (contentLabel && typeof result?.output?.message === 'string' && result.output.message.trim()) {
     return `✅ ${result.output.message.replace(/^\p{Extended_Pictographic}️?\s*/u, '')}`;

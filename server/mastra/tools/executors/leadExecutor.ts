@@ -34,6 +34,7 @@ import {
   FacebookCompetitorPageUrlsRequiredError,
 } from './leadRequestConstraints.js';
 import { toNumber } from './executorValues.js';
+import { userFacingReason } from '../../../../shared/userFacingError.js';
 import { findLeadActorsWithoutKey, LeadProviderUnavailableError } from '../../../services/apifyCredentialResolver.js';
 
 export const stoppedThreads = new Set<number>();
@@ -2961,7 +2962,7 @@ async function executeLeadWorkflowOnce(
       try {
         const { createChatMessage } = await import('../../../models/chatMessages/functions');
         const { webSocketEmitter } = await import('../../../services/agents/WebSocketEmitter');
-        const errorMsg = `❌ **Lead generation failed**: ${error.message}`;
+        const errorMsg = `The lead search couldn't finish: ${userFacingReason(error)}.`;
         await createChatMessage({
           userId: userIdForError,
           threadId: threadIdForError,

@@ -322,7 +322,7 @@ describe('action response grounding', () => {
       receipt('send_outreach_messages', { success: false }, false),
     ]);
     expect(mixed).toContain('could not verify');
-    expect(mixed).toContain('send_outreach_messages: failed');
+    expect(mixed).toContain('the outreach send: failed');
     expect(mixed).not.toContain('I sent the campaign');
   });
 
@@ -436,7 +436,7 @@ describe('action response grounding', () => {
   it('rejects a failed widget attempt used to claim a prepared review', async () => {
     audit([claim()]);
     const result = await groundAgentResponse(state(), 'The review was prepared.', [receipt('publish_ads', { success: false }, false)]);
-    expect(result).toContain('publish_ads: failed');
+    expect(result).toContain('the ad publish: failed');
     expect(result).not.toContain('The review was prepared.');
   });
 
@@ -444,7 +444,7 @@ describe('action response grounding', () => {
     audit([claim()]);
     const result = await groundAgentResponse(state(), 'A card is ready.', [receipt('publish_ads', { success: true, pendingWidget: true })]);
     expect(result).toContain('No new review card is confirmed');
-    expect(result).toContain('publish_ads: tool succeeded');
+    expect(result).toContain('the ad publish: tool succeeded');
   });
 
   it('preserves a grounded current pending review without claiming execution', async () => {
@@ -516,7 +516,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state({ widgetContinuation: {
       widgetId: 50, toolName: 'publish_ads', success: true,
     } }), 'I generated your ad content.', []);
-    expect(result).toContain('publish_ads: tool succeeded');
+    expect(result).toContain('the ad publish: tool succeeded');
     expect(result).not.toContain('I generated');
   });
 
@@ -525,7 +525,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'Publishing completed.', [receipt('publish_ads', {
       success: true, output: { status: 'queued', campaignId: 9 },
     })]);
-    expect(result).toContain('publish_ads: queued');
+    expect(result).toContain('the ad publish: queued');
     expect(result).toContain('completed or queued work has not been undone');
   });
 
@@ -540,7 +540,7 @@ describe('action response grounding', () => {
   it('does not deny a real non-widget successful operation on audit failure', async () => {
     completion.mockRejectedValue(new Error('unavailable'));
     const result = await groundAgentResponse(state(), 'I performed work.', [receipt('save_business_profile', { success: true })]);
-    expect(result).toContain('save_business_profile: tool succeeded');
+    expect(result).toContain('the business profile update: tool succeeded');
     expect(result).not.toContain('No action');
     expect(result).not.toContain('Nothing was');
     expect(result).toContain('Check the recorded action details before retrying');

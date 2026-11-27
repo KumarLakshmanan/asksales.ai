@@ -11,6 +11,7 @@ import type { WebSocketProgressEvent } from './types';
 import { logger } from '../../utils/logger.js';
 import { getDisplayName } from '../../mastra/agentPersonas';
 import { sanitizeAssistantContent, sanitizeErrorFields, toUserFacingError } from '../../../shared/userFacingError.js';
+import '../../mastra/utils/technicalTerms.js';
 
 interface TrackedClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -419,7 +420,7 @@ export class WebSocketEmitter {
       ...message,
       metadata: sanitizeErrorFields(message.metadata),
       ...(message.role === 'assistant' && message.content
-        ? { content: sanitizeAssistantContent(message.content) }
+        ? { content: sanitizeAssistantContent(message.content, message.metadata) }
         : {}),
     };
     const event = {
@@ -455,7 +456,7 @@ export class WebSocketEmitter {
   ): void {
     const safeResponse = {
       ...response,
-      content: sanitizeAssistantContent(response.content),
+      content: sanitizeAssistantContent(response.content, response.metadata),
       metadata: sanitizeErrorFields(response.metadata),
     };
     const event = {
@@ -515,7 +516,7 @@ export class WebSocketEmitter {
     }
   ): void {
     const safeChunk = chunk.role === 'assistant'
-      ? sanitizeAssistantContent(chunk.chunk)
+      ? sanitizeAssistantContent(chunk.chunk, chunk.metadata)
       : chunk.chunk;
     const event = {
       event_type: 'chat_response_chunk',
