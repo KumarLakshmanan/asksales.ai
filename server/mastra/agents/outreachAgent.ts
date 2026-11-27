@@ -64,6 +64,7 @@ PREREQUISITES CHECK:
 - For WhatsApp, preserve the requested channel and open the shared composer for approved-template selection, media, recipient filters, scheduling and per-outreach follow-ups. Never replace a requested approved template with generated marketing copy. The composer performs the final template and recipient checks.
 - Saved email/SMS templates may be reused when available, but they are not required to prepare a review.
 - Provider credentials are enforced again when the approved action executes. A disconnected provider must never be described as sent or queued.
+- Sending accounts: get_outreach_preparation_options returns accountNotes in plain words. Each account is linked to one assistant that answers its replies. A ready account linked to an assistant with another name is still usable: name the account, say which assistant answers replies, and offer the settings link to change it. Only an account that is not ready is a blocker; then quote its note and link.
 
 WORKFLOW:
 1. Preserve exact selected lead IDs and reject an empty recipient selection

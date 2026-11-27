@@ -5,6 +5,7 @@ import {INBOX_CHANNELS} from '../../../shared/outreachInbox.js';
 import {preparedOutreachSchema,prepareOutreach,getPreparedOutreach} from '../../services/outreach/PreparedOutreachService.js';
 import {operationRequestKeySchema} from '../../services/operations/ContactAnalysisValidation.js';
 import {runDashboardTool, toolContext as contextFrom} from './dashboardOperationTools.js';
+import {sendingAccountNotes} from '../utils/sendingAccountNotes.js';
 const resultSchema=z.object({success:z.boolean(),toolName:z.string(),output:z.unknown().optional(),error:z.string().optional()});
 export const getPreparedOutreachTool=createTool({
   id:'get_prepared_outreach',description:'Read an exact owned prepared outreach draft, its selected audience/account/template/follow-up timings, saved launch receipt and dashboard links. Never sends or changes the draft. A saved launch receipt is submission history; use campaign reporting for current delivery counts.',
@@ -23,7 +24,8 @@ export const getOutreachPreparationOptionsTool=createTool({
         input.channel==='whatsapp' && input.providerAccountId ? getCreationTemplates(context.userId,input.providerAccountId) : []]);
       const audiences=[...sources.crmImports.map(batch=>({source:'crm',importId:batch.id,name:batch.fileName,count:batch.count})),
         ...sources.campaigns.flatMap(campaign=>campaign.uploads.map(batch=>({source:'campaign',importId:batch.id,name:batch.fileName,count:batch.count})))];
-      return {options,audiences:audiences.slice(0,50),templates:templates.slice(0,50),truncated:{audiences:audiences.length>50,templates:templates.length>50},
+      // accountNotes explain each account in plain words, including which assistant answers its replies.
+      return {options,accountNotes:sendingAccountNotes(options.accounts as Parameters<typeof sendingAccountNotes>[0]),audiences:audiences.slice(0,50),templates:templates.slice(0,50),truncated:{audiences:audiences.length>50,templates:templates.length>50},
         card:{title:'Outreach preparation options',status:'ready',actions:[{label:'Prepare outreach',href:'/dashboard/outreach/prepare'}]}};
     });
   },

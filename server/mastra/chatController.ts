@@ -665,8 +665,11 @@ export async function processMessageDirect(
     const owned = await getChatThreadById(Number(providedThreadId));
     if (!owned || owned.userId !== userId) return { message: null, response: null, threadId: 0, error: 'Thread not found', code: 404 };
   }
-  return conversationRequests.run({ userId, kind: providedThreadId ? 'campaign' : 'campaign_init', conversationId: Number(providedThreadId || 0),
+  const result = await conversationRequests.run({ userId, kind: providedThreadId ? 'campaign' : 'campaign_init', conversationId: Number(providedThreadId || 0),
     requestId: requestId || randomUUID(), input: { content, businessProfileId, attachments, routeToAgent } }, execute);
+  // Shown under the reply so the user can see what each answer cost.
+  const { attachTurnCredits } = await import('../services/turnCredits.js');
+  return attachTurnCredits(userId, requestId, result);
 }
 
 async function processMessageDirectUncoordinated(

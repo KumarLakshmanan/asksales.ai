@@ -36,6 +36,14 @@ const chatMarkdownComponents: Components = {
   tr: ({ node: _node, ...props }) => <tr {...props} className="last:[&>td]:border-b-0" />,
 };
 
+/** " · 11 credits" after the reply time, when the server recorded what the reply cost. */
+export function replyCreditsLabel(creditsUsed: unknown): string {
+  const credits = Number(creditsUsed);
+  if (!Number.isFinite(credits) || credits <= 0) return "";
+  const shown = Number.isInteger(credits) ? String(credits) : credits.toFixed(credits < 1 ? 2 : 1);
+  return ` · ${shown} ${credits === 1 ? "credit" : "credits"}`;
+}
+
 function formatTime(timestamp: number): string {
   if (!timestamp) return '';
   return formatTimeIST(timestamp);
@@ -320,7 +328,7 @@ export default function MessageBubble({
         role="assistant"
         surface="campaign"
         name={agentName}
-        timestamp={formatTime(message.timestamp)}
+        timestamp={`${formatTime(message.timestamp)}${replyCreditsLabel(message.metadata?.creditsUsed)}`}
         avatar={avatarSrc}
         initials={agentInitials}
         accentColor={agentRingColors[effectiveAgentType] || "#b48cf2"}
