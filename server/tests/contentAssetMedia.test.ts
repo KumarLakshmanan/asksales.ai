@@ -26,6 +26,12 @@ describe('content asset media lifecycle', () => {
     expect(urls).not.toContain('https://example.com is mentioned in copy');
   });
 
+  it('does not treat raw base64 image data as a storage path', () => {
+    const jpegBase64 = '/9j/4AAQSkZJRgABAQ' + 'A'.repeat(20000);
+    const urls = collectContentAssetMediaUrls({ content: jpegBase64, imageUrl: '/api/uploads/1/image/generated.jpg' });
+    expect([...urls]).toEqual(['/api/uploads/1/image/generated.jpg']);
+  });
+
   it('only reports media no longer referenced anywhere on the updated asset', () => {
     const removed = findRemovedContentAssetMediaUrls(
       {

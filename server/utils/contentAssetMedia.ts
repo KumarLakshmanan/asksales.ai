@@ -20,9 +20,14 @@ export function canonicalMediaUrl(value: string): string {
   return value.trim().split(/[?#]/, 1)[0];
 }
 
+// Longer values are never storage paths (managed storage rejects them); raw
+// base64 image data such as "/9j/4AAQ..." must not be mistaken for one.
+const MAX_MEDIA_REFERENCE_LENGTH = 8192;
+
 function isMediaReference(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   const trimmed = value.trim();
+  if (trimmed.length > MAX_MEDIA_REFERENCE_LENGTH) return false;
   return trimmed.startsWith('/') || /^https?:\/\//i.test(trimmed);
 }
 

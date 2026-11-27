@@ -799,7 +799,9 @@ export async function executeGenerateImage(
       const savedAsset = await createGeneratedAsset('image', imageUrl, {
         type: 'image',
         title: input.for_content_type && input.for_content_type !== 'general' ? `Image for ${input.for_content_type.replace('_', ' ')}` : 'Generated Image',
-        content: imageData || '',
+        // Store the durable URL. Raw JPEG base64 starts with "/9j/", so saving it
+        // as content made it look like a storage path and failed the save.
+        content: imageUrl || imageData || '',
         imageUrl: imageUrl || undefined,
         channel: input.for_content_type && input.for_content_type !== 'general' ? input.for_content_type : 'content_studio',
         status: 'draft',
@@ -948,7 +950,7 @@ async function executeGenerateImageDirect(
       const savedAsset = await createGeneratedAsset('image', imageUrl, {
         type: 'image',
         title: forContentType && forContentType !== 'general' ? `Image for ${forContentType.replace('_', ' ')}` : 'Generated Image',
-        content: result.imageData || '',
+        content: imageUrl || result.imageData || '',
         imageUrl: imageUrl,
         channel: forContentType && forContentType !== 'general' ? forContentType : 'content_studio',
         status: 'draft',
@@ -1378,7 +1380,7 @@ export async function executeGenerateImageFromImage(
       const transformedAsset = await ContentAssetModel.create({
         type: 'image',
         title: input.for_content_type && input.for_content_type !== 'general' ? `Transformed Image for ${input.for_content_type.replace('_', ' ')}` : 'Transformed Image',
-        content: result.imageData || '',
+        content: imageUrl || result.imageData || '',
         imageUrl: imageUrl,
         channel: input.for_content_type && input.for_content_type !== 'general' ? input.for_content_type : 'content_studio',
         status: 'draft',
