@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ContentRendererProps } from "./types";
 import { getPlatformColor } from "./utils";
 import { hashtagsMissingFromCaption } from "../../../../../shared/socialCaption";
+import { brandInitial, useCachedBrandName } from "@/hooks/use-cached-brand-name";
 
 export default function SocialPostContentRenderer({
   parsedContent,
@@ -13,17 +14,17 @@ export default function SocialPostContentRenderer({
   // The caption often already ends with these tags; show each one only once.
   const hashtags = hashtagsMissingFromCaption(String(postContent || ""), parsedContent.hashtags);
   const displayPlatform = platform || parsedContent.platform || channel;
+  const brandName = useCachedBrandName();
 
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-xl border bg-white text-gray-900">
         <div className="p-3 flex items-center gap-3 border-b">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-            Y
+            {brandInitial(brandName)}
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-sm">Your Brand</p>
-            <p className="text-xs text-gray-500">@yourbrand</p>
+            <p className="font-semibold text-sm">{brandName}</p>
           </div>
           {displayPlatform && (
             <Badge className={`text-xs ${getPlatformColor(displayPlatform)}`}>

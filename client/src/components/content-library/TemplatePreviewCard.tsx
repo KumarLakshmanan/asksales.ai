@@ -59,7 +59,10 @@ function cleanText(value: string) {
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/[#*>`~]/g, "")
+    // Drop markdown heading marks but keep hashtags such as #marketing.
+    .replace(/(^|\s)#{1,6}(?=\s)/g, "$1")
+    .replace(/#(?![\p{L}\p{N}_])/gu, "")
+    .replace(/[*>`~]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }

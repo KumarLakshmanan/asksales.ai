@@ -54,6 +54,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { usePaginatedContentTemplates } from "@/hooks/use-paginated-content-templates";
 import { SocialPublisher } from "@/components/social-publishing/SocialPublisher";
 import { readLibraryDraft, updateLibraryDraft } from "@/lib/libraryDraft";
+import { useCachedBrandName } from "@/hooks/use-cached-brand-name";
 
 interface SocialTemplate {
   id: number;
@@ -138,6 +139,8 @@ export default function SocialTemplatesPage() {
 
   // previewPlatform controls which platform's UI style the cards render in (not a filter)
   const [previewPlatform, setPreviewPlatform] = useState<string>("instagram");
+  const brandName = useCachedBrandName();
+  const brandHandle = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "");
   const [searchQuery, setSearchQuery] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<SocialTemplate | null>(null);
@@ -555,8 +558,8 @@ export default function SocialTemplatesPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 mb-1">
-                            <span className="font-bold text-sm">Your Brand</span>
-                            <span className="text-muted-foreground text-sm">@yourbrand · now</span>
+                            <span className="font-bold text-sm">{brandName}</span>
+                            <span className="text-muted-foreground text-sm">now</span>
                           </div>
                           <p className="text-sm whitespace-pre-wrap leading-relaxed">{content}</p>
                           <div className="flex items-center justify-between mt-3 text-muted-foreground text-xs">
@@ -579,8 +582,8 @@ export default function SocialTemplatesPage() {
                             <Linkedin className="h-6 w-6" />
                           </div>
                           <div>
-                            <p className="font-semibold text-sm">Your Brand</p>
-                            <p className="text-xs text-muted-foreground">Company · 1,234 followers</p>
+                            <p className="font-semibold text-sm">{brandName}</p>
+                            <p className="text-xs text-muted-foreground">Company page</p>
                             <p className="text-xs text-muted-foreground flex items-center gap-1">Just now · <Globe className="h-3 w-3" /></p>
                           </div>
                         </div>
@@ -604,7 +607,7 @@ export default function SocialTemplatesPage() {
                             <Instagram className="h-4 w-4 text-pink-500" />
                           </div>
                         </div>
-                        <span className="font-semibold text-sm">yourbrand</span>
+                        <span className="font-semibold text-sm">{brandHandle || "yourbrand"}</span>
                         <MoreHorizontal className="h-4 w-4 text-muted-foreground ml-auto" />
                       </div>
                       <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
@@ -618,7 +621,7 @@ export default function SocialTemplatesPage() {
                           <Bookmark className="h-5 w-5 ml-auto" />
                         </div>
                         <p className="text-sm">
-                          <span className="font-semibold">yourbrand</span>{" "}
+                          <span className="font-semibold">{brandHandle || "yourbrand"}</span>{" "}
                           <span className="whitespace-pre-wrap">{content}</span>
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">View all comments</p>
@@ -635,7 +638,7 @@ export default function SocialTemplatesPage() {
                           <Facebook className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold">Your Brand</p>
+                          <p className="text-sm font-semibold">{brandName}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             Just now · <Globe className="h-3 w-3" />
                           </p>
