@@ -6,7 +6,7 @@ import {
   type BrandToolkitRecord,
 } from '../../models/brandToolkits/schema.js';
 
-export type BrandContextSelection = 'requested' | 'default';
+export type BrandContextSelection = 'requested' | 'default' | 'business_match';
 
 export interface ContentBrandProvenance {
   schemaVersion: 1;
@@ -52,6 +52,47 @@ export class ContentBrandContextError extends Error {
     super(message);
     this.name = 'ContentBrandContextError';
   }
+}
+
+// Words that say nothing about which brand a name refers to.
+const GENERIC_NAME_WORDS = new Set([
+  'ai', 'app', 'apps', 'co', 'company', 'corp', 'digital', 'global', 'group', 'inc', 'io', 'lab', 'labs',
+  'limited', 'llc', 'llp', 'ltd', 'private', 'pvt', 'solutions', 'tech', 'technologies', 'technology', 'the',
+]);
+
+function websiteHost(value: string | null | undefined): string | null {
+  const raw = value?.trim();
+  if (!raw) return null;
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).hostname.replace(/^www\./, '').toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+function brandNameKeys(value: string | null | undefined): string[] {
+  return (value || '').toLowerCase().split(/[^a-z0-9]+/).filter(word => word.length >= 3 && !GENERIC_NAME_WORDS.has(word));
+}
+
+type ToolkitCandidate = Pick<BrandToolkitRecord, 'name' | 'website' | 'isDefault' | 'isActive' | 'isApproved'>;
+type BusinessIdentity = Partial<Pick<CompanySettings, 'name' | 'businessName' | 'companyName' | 'website'>>;
+
+/**
+ * With no toolkit chosen for the conversation, use the one that belongs to the
+ * selected business (same website, or the same distinctive brand name) instead
+ * of an account default made for another brand. The default stays the answer
+ * when it matches, when nothing matches, or when several toolkits match.
+ */
+export function toolkitForBusiness<T extends ToolkitCandidate>(toolkits: readonly T[], business: BusinessIdentity): { toolkit: T | undefined; matched: boolean } {
+  const fallback = toolkits.find(toolkit => toolkit.isDefault === true);
+  const host = websiteHost(business.website);
+  const keys = new Set([business.businessName, business.companyName, business.name].flatMap(brandNameKeys));
+  const matches = (toolkit: T) => Boolean(host && websiteHost(toolkit.website) === host)
+    || brandNameKeys(toolkit.name).some(key => keys.has(key));
+  if (fallback && matches(fallback)) return { toolkit: fallback, matched: false };
+  const eligible = toolkits.filter(toolkit => toolkit.isActive !== false && toolkit.isApproved === true && matches(toolkit));
+  if (eligible.length === 1) return { toolkit: eligible[0], matched: true };
+  return { toolkit: fallback, matched: false };
 }
 
 function iso(value: Date | null | undefined): string | null {
@@ -151,14 +192,14 @@ export async function resolveContentBrandContext(
             eq(brandToolkitsTable.id, requestedToolkitId),
             eq(brandToolkitsTable.userId, userId),
           )
-        : and(
-            eq(brandToolkitsTable.userId, userId),
-            eq(brandToolkitsTable.isDefault, true),
-          ),
+        : eq(brandToolkitsTable.userId, userId),
     )
     .orderBy(desc(brandToolkitsTable.isDefault), desc(brandToolkitsTable.updatedAt))
-    .limit(1);
-  const brandToolkit = toolkitRows[0];
+    .limit(requestedToolkitId ? 1 : 50);
+  const chosen = requestedToolkitId
+    ? { toolkit: toolkitRows[0], matched: false }
+    : toolkitForBusiness(toolkitRows, businessProfile);
+  const brandToolkit = chosen.toolkit;
   if (!brandToolkit) {
     throw new ContentBrandContextError(
       requestedToolkitId ? 'BRAND_TOOLKIT_NOT_FOUND' : 'BRAND_TOOLKIT_REQUIRED',
@@ -200,7 +241,7 @@ export async function resolveContentBrandContext(
       brandToolkit: {
         id: brandToolkit.id,
         version: brandToolkit.version,
-        selection: requestedToolkitId ? 'requested' : 'default',
+        selection: requestedToolkitId ? 'requested' : chosen.matched ? 'business_match' : 'default',
         isApproved: brandToolkit.isApproved,
         updatedAt: iso(brandToolkit.updatedAt) || new Date(0).toISOString(),
         isDefault: brandToolkit.isDefault === true,
