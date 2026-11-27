@@ -6,7 +6,8 @@
 import { LLMProviderFactory } from './LLMProviderFactory';
 import { ContentTextGenerationError } from '../content/ContentTextGenerationError.js';
 import { db } from '../../models/db';
-import { sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { icpProfilesTable } from '../../models/icpData/schema.js';
 import type { ICPProfile } from '../ICPGenerationService';
 import { createMetaAdsService, type MetaCredentials } from '../ads/MetaAdsService';
 import { logger } from '../../utils/logger.js';
@@ -109,6 +110,21 @@ function normalizeCtaValue(cta: string | undefined): string {
   if (/^[A-Z_]+$/.test(upper) && upper.length > 1) return upper;
   logger.warn({ cta }, '[PerformanceMarketingAgent] Unknown CTA, defaulting to LEARN_MORE');
   return 'LEARN_MORE';
+}
+
+/**
+ * Load an ICP through the typed table so its fields are camelCased
+ * (userId, targetAudience, ...). A raw `SELECT *` returns snake_case
+ * columns, which left `icp.userId` undefined and failed every plan.
+ */
+export async function loadPlanningIcp(icpId: unknown, ownerUserId?: number): Promise<ICPProfile | null> {
+  const id = Number(icpId);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const where = ownerUserId === undefined
+    ? eq(icpProfilesTable.id, id)
+    : and(eq(icpProfilesTable.id, id), eq(icpProfilesTable.userId, ownerUserId));
+  const [row] = await db.select().from(icpProfilesTable).where(where).limit(1);
+  return (row as unknown as ICPProfile | undefined) ?? null;
 }
 
 export interface BudgetPlan {
@@ -519,14 +535,10 @@ Return JSON:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const campaign = campaignResult.rows[0] as any;
 
-      const icpResult = await db.execute(sql`
-        SELECT * FROM icp_profiles WHERE id = ${campaign.icp_id}
-      `);
-      if (icpResult.rows.length === 0) {
+      const icp = await loadPlanningIcp(campaign.icp_id);
+      if (!icp) {
         throw new Error(`ICP ${campaign.icp_id} not found`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const icp = icpResult.rows[0] as any;
 
       const llmProvider = icp.userId ? await LLMProviderFactory.createProviderForUser(icp.userId) : null;
       if (!llmProvider) throw new Error('No LLM provider configured for this user. Please configure OpenAI or OpenRouter in Settings > Integrations.');

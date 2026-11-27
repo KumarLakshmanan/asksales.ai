@@ -13,7 +13,7 @@ import { businessOwnerUserId } from '../tenancy/businessContext.js';
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger.js';
 import { respondToGenerationFailure } from '../services/content/ContentTextGenerationError.js';
-import { PerformanceMarketingAgent } from '../services/agents/PerformanceMarketingAgent';
+import { PerformanceMarketingAgent, loadPlanningIcp } from '../services/agents/PerformanceMarketingAgent';
 import { db } from '../models/db';
 import { sql } from 'drizzle-orm';
 import { getMetaAdsCreds } from '../models/metaPageConnections/functions';
@@ -325,16 +325,10 @@ export async function generateBudgetPlan(req: Request, res: Response) {
     }
 
     // Fetch ICP from database
-    const icpResult = await db.execute(sql`
-      SELECT * FROM icp_profiles WHERE id = ${icp_id} AND user_id = ${userId}
-    `);
-
-    if (icpResult.rows.length === 0) {
+    const icp = await loadPlanningIcp(icp_id, userId);
+    if (!icp) {
       return res.status(404).json({ error: 'ICP not found' });
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const icp = icpResult.rows[0] as any;
 
     // Generate budget plan
     const budgetPlan = await performanceMarketingAgent.generateBudgetPlan(icp, total_budget, duration_days, currency);
@@ -377,16 +371,10 @@ export async function generateCampaign(req: Request, res: Response) {
     }
 
     // Fetch ICP from database
-    const icpResult = await db.execute(sql`
-      SELECT * FROM icp_profiles WHERE id = ${icp_id} AND user_id = ${userId}
-    `);
-
-    if (icpResult.rows.length === 0) {
+    const icp = await loadPlanningIcp(icp_id, userId);
+    if (!icp) {
       return res.status(404).json({ error: 'ICP not found' });
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const icp = icpResult.rows[0] as any;
 
     // Generate ad campaign
     const adCampaign = await performanceMarketingAgent.generateAdCampaign(icp, platform, budget, duration_days, currency);
