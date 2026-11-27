@@ -39,7 +39,7 @@ describe('lead search retry after the campaign moved to outreach', () => {
       .mockRejectedValueOnce(new InvalidWorkflowTransitionError('outreach_ready', 'lead_strategy_awaiting_approval'))
       .mockResolvedValue({ id: 'run-1' });
     await expect(retry()).resolves.toBe(false);
-    expect(transition.mock.calls.map(([call]) => call.toStage)).toEqual([
+    expect(transition.mock.calls.map(([call]) => (call as { toStage: string }).toStage)).toEqual([
       'lead_strategy_awaiting_approval', 'agent_selection', 'lead_strategy_awaiting_approval', 'lead_inputs_generating',
     ]);
     expect(createSelection).toHaveBeenCalledWith(expect.objectContaining({ workflowIds: ['linkedin_company_search'] }));
