@@ -211,13 +211,13 @@ export function CampaignDashboardView({ threadId, campaignName: _campaignName }:
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Performance at a glance</h2>
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <InsightMetricCard label="Leads found" value={stats.leadsEnriched} detail={`${stats.contentAssetsCount} content assets`} icon={<Users className="h-4 w-4" />} />
+        <InsightMetricCard label="Campaign leads" value={stats.leadsEnriched} detail="Found or selected for this campaign" icon={<Users className="h-4 w-4" />} />
         <InsightMetricCard label="Outreach coverage" value={`${stats.outreachRate}%`} detail={`${stats.leadsOutreached} contacted`} icon={<Send className="h-4 w-4" />} tone="primary" />
         <InsightMetricCard label="Engaged leads" value={stats.engagedLeads} detail="Contacts with recorded opens, reads, or replies" icon={<Target className="h-4 w-4" />} tone="warning" />
         <InsightMetricCard label="Recorded CRM wins" value={stats.converted ?? "—"} detail={stats.converted === null ? "CRM reporting requires CRM access" : "First lifetime wins among linked CRM contacts"} icon={<TrendingUp className="h-4 w-4" />} tone="success" />
       </div>
 
-      <p className="text-sm text-muted-foreground">Totals and charts cover the complete linked cohort. The table previews up to 50 leads; filters apply to displayed rows. CRM wins use recorded stage-change events, count merged contacts once, and do not prove campaign attribution. Historical wins without activity evidence are unavailable.</p>
+      <p className="text-sm text-muted-foreground">Totals cover every lead in this campaign; the table shows the first 50. CRM wins are recorded deal-stage changes and do not prove the campaign caused them.</p>
 
       <RecommendationCard
         title={recommendation.title}

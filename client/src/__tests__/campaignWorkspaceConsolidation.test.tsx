@@ -51,7 +51,7 @@ describe('campaign workspaces use canonical creation flows', () => {
   });
   it('lists campaign tickets and creates a linked ticket through the full routing form', async () => {
     render(<SupportTab threadId="12" />);
-    await screen.findByText('No tickets yet');
+    await screen.findByText('No customer tickets yet');
     expect(mocks.get).toHaveBeenCalledWith('/api/support?page=1&limit=20&chatThreadId=12');
     fireEvent.click(screen.getAllByRole('button', { name: 'New Ticket' })[0]);
     expect(screen.getByRole('combobox', { name: 'Assign new ticket to support team' })).toBeVisible();

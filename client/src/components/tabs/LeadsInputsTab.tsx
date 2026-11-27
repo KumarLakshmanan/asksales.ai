@@ -399,8 +399,13 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-medium">No platforms configured</p>
-          <p className="text-xs text-muted-foreground mt-1">Configure platforms in your ICP profile</p>
+          <p className="text-sm font-medium">No lead sources chosen yet</p>
+          <p className="text-xs text-muted-foreground mt-1">Pick where to find leads (for example LinkedIn or Google Maps) and the agent prepares the search.</p>
+          {onSendMessage && (
+            <Button size="sm" variant="outline" className="mt-4" onClick={() => onSendMessage('Suggest where to find leads for this campaign and prepare the search settings for my review. Do not run the search yet.', 'Set up the lead search')}>
+              Set up the lead search
+            </Button>
+          )}
         </div>
       </div>
     );

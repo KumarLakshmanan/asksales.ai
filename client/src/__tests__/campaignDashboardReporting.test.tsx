@@ -28,10 +28,10 @@ describe('campaign reporting contract', () => {
     render(<CampaignDashboardView threadId={42} />);
     await screen.findByText('Lead preview (1 of 500)');
     expect(screen.getByText('500', { selector: 'p' })).toBeVisible();
-    expect(screen.getByText('101 content assets')).toBeVisible();
+    expect(screen.getByText('Found or selected for this campaign')).toBeVisible();
     expect(screen.getByText('0%')).toBeVisible(); // One contacted lead out of 500, rounded.
     expect(screen.getByText('Recorded CRM wins')).toBeVisible();
-    expect(screen.getByText(/Historical wins without activity evidence are unavailable/)).toBeVisible();
+    expect(screen.getByText(/do not prove the campaign caused them/)).toBeVisible();
     expect(screen.getAllByTestId('chart').map(element => element.getAttribute('data-values'))).toContain(JSON.stringify([{ name: 'email', outreach: 500, replied: 1 }]));
     expect(screen.getAllByTestId('chart').map(element => element.getAttribute('data-values'))).toContain(JSON.stringify([{ name: 'new', value: 400, color: '#3b82f6' }, { name: 'custom_qualified', value: 100, color: '#3b82f6' }]));
     expect(screen.queryByText('Conversion')).toBeNull();

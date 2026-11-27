@@ -13,6 +13,7 @@ import { normalizeUploadUrl } from "@/lib/utils";
 import { buildContentMedia } from "@/lib/contentMedia";
 import { captionFromSocialAsset } from "@/lib/socialPublishing";
 import { getStringValue } from "@/components/content-cards/cardValues";
+import { useCachedBrandName } from "@/hooks/use-cached-brand-name";
 
 interface SocialPostContent {
   content?: string;
@@ -149,6 +150,8 @@ export default function SocialPostCard({
     }
   };
 
+  const brandName = useCachedBrandName();
+
   // Parse content if it's a JSON string
   const parsedContent: SocialPostContent = (() => {
     try {
@@ -178,7 +181,8 @@ export default function SocialPostCard({
 
   const getPlatformLabel = (p: string | undefined) => {
     if (p?.toLowerCase() === 'all') return 'All Platforms';
-    return p;
+    const names: Record<string, string> = { linkedin: 'LinkedIn', facebook: 'Facebook', instagram: 'Instagram', twitter: 'X', x: 'X', tiktok: 'TikTok', youtube: 'YouTube' };
+    return p ? names[p.toLowerCase()] || p : p;
   };
 
   // Platform-specific engagement bar rendering
@@ -207,7 +211,7 @@ export default function SocialPostCard({
       <div className="flex items-center gap-3 border-b bg-card/95 p-3.5">
         <div className={`flex h-10 w-10 items-center justify-center rounded-2xl shadow-sm ${iconClass}`}><Icon className="h-[18px] w-[18px]" /></div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Connected account preview</p>
+          <p className="truncate text-sm font-semibold">{brandName}</p>
           <p className="text-xs text-muted-foreground">{platformLabel} · Ready for review</p>
         </div>
         <Badge variant="outline" className="rounded-full bg-background text-[10px]">Draft</Badge>

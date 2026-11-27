@@ -107,7 +107,7 @@ export default function SupportTab({ threadId }: SupportTabProps) {
         </div>
         <Button size="sm" className="h-8 px-3 rounded-lg text-xs gap-1.5"
           onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-3.5 w-3.5" /> New Ticket
+          <Plus className="h-3.5 w-3.5" /> New ticket
         </Button>
       </div>
 
@@ -166,9 +166,9 @@ export default function SupportTab({ threadId }: SupportTabProps) {
             <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
               <LifeBuoy className="w-5 h-5 text-muted-foreground/40" />
             </div>
-            <p className="text-sm font-medium">No tickets yet</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-[220px]">
-              Create a support ticket to get help from our team.
+            <p className="text-sm font-medium">No customer tickets yet</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-[240px]">
+              Log a customer's issue from this campaign so your support team can track and answer it.
             </p>
             <Button size="sm" variant="outline" className="h-8 px-3 rounded-lg text-xs gap-1.5 border-border/60"
               onClick={() => setShowCreateDialog(true)}>

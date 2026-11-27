@@ -1,6 +1,7 @@
 import { Target, Save, X, Pencil } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback } from "react";
+import { icpSummaryFields } from "@/lib/icpSummaryFields";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,8 @@ interface ICPTabProps {
   businessId?: number;
   onFitScoreUpdate?: (fitScore: number) => void;
   onStartLeadGeneration?: () => void;
-  onSendMessage?: (message: string) => void;
+  /** The second argument is the short label the chat shows instead of the full instruction. */
+  onSendMessage?: (message: string, displayContent?: string) => void;
 }
 
 interface Lead {
@@ -332,8 +334,13 @@ export default function ICPTab({
         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
           <Target className="w-6 h-6 text-primary/50" />
         </div>
-        <p className="text-sm font-medium">No Profile Data</p>
-        <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed">Start a conversation to define your Ideal Customer Profile.</p>
+        <p className="text-sm font-medium">No customer profile yet</p>
+        <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed">Describe who you sell to and the agent drafts your ideal customer profile for you to review.</p>
+        {onSendMessage && (
+          <Button size="sm" className="mt-4" onClick={() => onSendMessage("Help me create an ideal customer profile for this campaign.", "Create my ideal customer profile")}>
+            Create the profile
+          </Button>
+        )}
       </div>
     );
   }
@@ -528,7 +535,21 @@ export default function ICPTab({
             {hasValue(displayICP?.summary) && (
               <div className="border border-border/40 bg-card rounded-xl p-4 shadow-sm">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Summary</p>
-                <p className="text-xs text-foreground leading-relaxed">{displayICP?.summary}</p>
+                {(() => {
+                  const fields = icpSummaryFields(displayICP?.summary);
+                  return fields ? (
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+                      {fields.map((field) => (
+                        <Fragment key={field.label}>
+                          <dt className="text-muted-foreground">{field.label}</dt>
+                          <dd className="text-foreground leading-relaxed">{field.value}</dd>
+                        </Fragment>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className="text-xs text-foreground leading-relaxed">{displayICP?.summary}</p>
+                  );
+                })()}
               </div>
             )}
 
