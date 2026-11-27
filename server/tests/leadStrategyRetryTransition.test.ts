@@ -49,7 +49,7 @@ describe('lead search retry after the campaign moved to outreach', () => {
     transition
       .mockRejectedValueOnce(new InvalidWorkflowTransitionError('outreach_running', 'lead_strategy_awaiting_approval'))
       .mockRejectedValueOnce(new InvalidWorkflowTransitionError('outreach_running', 'agent_selection'));
-    await expect(retry()).rejects.toThrow('Finish or cancel the current campaign step before starting a new lead search.');
+    await expect(retry()).rejects.toThrow('Your messages are being sent. Wait for sending to finish before changing this campaign.');
     expect(createSelection).not.toHaveBeenCalled();
   });
 

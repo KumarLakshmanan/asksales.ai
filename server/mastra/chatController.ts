@@ -75,6 +75,7 @@ import {
 } from '../services/ConversationAttachmentService.js';
 import { extractExplicitLeadIds } from './leadSelection.js';
 import { sanitizeAssistantContent, sanitizeErrorFields, toUserFacingError } from '../../shared/userFacingError.js';
+import './utils/technicalTerms.js';
 import { WidgetStateModel } from '../models/widgetStates/functions.js';
 import { getCompletedLeadOutreachGate } from './leadReview.js';
 import { buildCampaignActionStatus, type PendingExecutionApprovalLedger } from './campaignActionStatus.js';
@@ -282,6 +283,15 @@ async function scoreAgentsForApprovedIcp(userId: number, threadId: number, state
   }
 }
 
+/** Chat endpoints answer with words the user can act on, never internal error text. */
+function sendChatFailure(res: Response, error: unknown, fallback: string) {
+  if (error instanceof InvalidWorkflowTransitionError) {
+    logger.info({ detail: error.detail }, '[ChatController] Campaign step change refused');
+    return res.status(409).json({ error: error.message, code: 'CAMPAIGN_STEP_LOCKED' });
+  }
+  return res.status(500).json({ error: toUserFacingError(error, fallback) });
+}
+
 export async function recordConfirmedLeadStrategy(input: {
   userId: number;
   threadId: number;
@@ -336,8 +346,8 @@ export async function recordConfirmedLeadStrategy(input: {
         status: 'awaiting_input',
       });
     } catch (hopError) {
-      if (!(hopError instanceof InvalidWorkflowTransitionError)) throw hopError;
-      throw new Error('Finish or cancel the current campaign step before starting a new lead search.');
+      // Its message tells the user which step is holding the campaign.
+      throw hopError;
     }
     run = await toLeadStrategy();
   }
@@ -1621,7 +1631,7 @@ export async function langGraphMessageHandler(req: Request, res: Response) {
   } catch (error: any) {
     logger.error({ err: error }, '[chatController] Error processing message');
     if (error instanceof ConversationRequestError) return res.status(error.statusCode).json({ success: false, error: error.message, code: error.code });
-    res.status(500).json({ error: error.message || 'Failed to process message' });
+    sendChatFailure(res, error, 'Your message could not be processed. Please try again.');
   }
 }
 
@@ -1879,7 +1889,7 @@ export async function langGraphApproveHandler(req: Request, res: Response) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error({ err: error }, '[chatController] Error handling approval');
-    res.status(500).json({ error: error.message || 'Failed to handle approval' });
+    sendChatFailure(res, error, 'That approval could not be completed. Please try again.');
   }
 }
 
@@ -1961,7 +1971,7 @@ export async function langGraphSwitchAgentHandler(req: Request, res: Response) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error({ err: error }, '[chatController] Error switching agent');
-    res.status(500).json({ error: error.message || 'Failed to switch agent' });
+    sendChatFailure(res, error, 'Could not switch to that agent. Please try again.');
   } finally {
     releaseMutex?.();
   }
@@ -2561,6 +2571,6 @@ export async function langGraphActionHandler(req: Request, res: Response) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error({ err: error }, '[chatController] Error handling action');
-    res.status(500).json({ error: error.message || 'Failed to handle action' });
+    sendChatFailure(res, error, 'That action could not be completed. Please try again.');
   }
 }

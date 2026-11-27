@@ -62,10 +62,44 @@ const transitions: Record<ConversationWorkflowStage, ReadonlySet<ConversationWor
   cancelled: new Set(),
 };
 
+/**
+ * What the user is told when a campaign step cannot change from `from`.
+ * Steps that are sending, searching or publishing stay locked on purpose so a
+ * change of direction can never cause duplicate sends or spend.
+ */
+export function campaignStepLockedMessage(from: ConversationWorkflowStage): string {
+  switch (from) {
+    case 'lead_executing':
+      return 'The lead search is still running. Wait for it to finish, then you can change the next step.';
+    case 'outreach_running':
+      return 'Your messages are being sent. Wait for sending to finish before changing this campaign.';
+    case 'ad_publishing':
+      return 'Your ad is being published. Wait for publishing to finish before changing this campaign.';
+    case 'completed':
+    case 'cancelled':
+      return 'This campaign is finished. Start a new campaign to keep going.';
+    case 'outreach_awaiting_approval':
+      return 'An outreach review is waiting for you. Approve or cancel it first, then you can change direction.';
+    case 'ad_awaiting_approval':
+    case 'ad_draft':
+      return 'An ad review is open. Finish or cancel it first, then you can change direction.';
+    default:
+      return 'Finish or cancel the current campaign step, then try again.';
+  }
+}
+
+/** Its message is written for the user; `detail` keeps the stage names for logs. */
 export class InvalidWorkflowTransitionError extends Error {
+  readonly from: ConversationWorkflowStage;
+  readonly to: ConversationWorkflowStage;
+  readonly detail: string;
+
   constructor(from: ConversationWorkflowStage, to: ConversationWorkflowStage) {
-    super(`Invalid conversation workflow transition: ${from} -> ${to}`);
+    super(campaignStepLockedMessage(from));
     this.name = 'InvalidWorkflowTransitionError';
+    this.from = from;
+    this.to = to;
+    this.detail = `Invalid conversation workflow transition: ${from} -> ${to}`;
   }
 }
 
