@@ -22,6 +22,8 @@ import { LLMProviderResponseError } from '../../services/agents/LLMProviderError
 import { webSocketEmitter } from '../../services/agents/WebSocketEmitter.js';
 import { createChatMessage } from '../../models/chatMessages/functions.js';
 import { logger } from '../../utils/logger.js';
+import { userFacingReason } from '../../../shared/userFacingError.js';
+import { humanizeToolName } from './technicalTerms.js';
 import { toolMetadata, type ToolContext } from '../tools/toolRegistry.js';
 import { toolHasWidget, getWidgetTypeForTool } from '../../shared/toolWidgetMap.js';
 import { WidgetStateModel } from '../../models/widgetStates/functions.js';
@@ -76,7 +78,19 @@ export interface ToolLoopResult {
   outcome?: 'gated' | 'timed_out' | 'failed' | 'cancelled';
   /** Only server-authored status receipts may bypass model-claim grounding. */
   responseSource?: 'model' | 'server';
-  stopReason?: 'deadline' | 'call_limit' | 'iteration_limit' | 'cancelled' | 'invalid_tool_calls';
+  stopReason?: 'deadline' | 'call_limit' | 'iteration_limit' | 'cancelled' | 'invalid_tool_calls' | 'repeated_failure';
+}
+
+/** Same step, same error, twice in one turn: a third try will not help. */
+export function findRepeatedFailure(results: Array<{ toolName: string; success: boolean; error?: string }>): { toolName: string; error: string } | null {
+  const seen = new Set<string>();
+  for (const result of results) {
+    if (result.success || !result.error) continue;
+    const key = `${result.toolName}|${String(result.error).toLowerCase().replace(/\d+/g, "#").replace(/\s+/g, " ").trim()}`;
+    if (seen.has(key)) return { toolName: result.toolName, error: result.error };
+    seen.add(key);
+  }
+  return null;
 }
 
 class ToolLoopStop extends Error {
@@ -1096,6 +1110,14 @@ export async function runToolCallingLoop(opts: ToolLoopOptions): Promise<ToolLoo
     if (pendingApprovalToolNames.length > 0) {
       finalText = pendingApprovalMessage + deferredNote;
       responseSource = 'server';
+      break;
+    }
+
+    const repeatedFailure = findRepeatedFailure(allToolResults);
+    if (repeatedFailure) {
+      stop(new ToolLoopStop('failed', 'repeated_failure',
+        `I tried ${humanizeToolName(repeatedFailure.toolName)} twice and it failed the same way both times: ${userFacingReason(repeatedFailure.error)}. `
+        + "I've stopped retrying it so nothing runs twice. Tell me what to change, or ask me to try again later."));
       break;
     }
 
