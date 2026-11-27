@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from '@jest/globals';
 import { scrubTechnicalTerms } from '../mastra/utils/technicalTerms.js';
-import { sanitizeAssistantContent } from '../../shared/userFacingError.js';
+import { sanitizeAssistantContent, sanitizeErrorFields } from '../../shared/userFacingError.js';
 
 const workflowDir = new URL('../data/workflows/', import.meta.url);
 const workflows = readdirSync(workflowDir).filter(name => name.endsWith('.json'))
@@ -51,6 +51,13 @@ describe('internal names never reach the chat', () => {
     const text = 'Hi {{first_name}}, see https://example.com/get_campaign_export?utm_source=mail and report_final.pdf. apify.com is fine.';
     expect(scrubTechnicalTerms(text)).toBe(text);
     expect(scrubTechnicalTerms('Your LinkedIn leads are ready.')).toBe('Your LinkedIn leads are ready.');
+  });
+
+  it('cleans the error a tool card shows, which comes from the receipt details', () => {
+    const metadata = sanitizeErrorFields({ isToolResult: true, toolName: 'execute_lead_workflow',
+      error: 'linkedin_company_search: Actor execution failed: No Apify API key available.' });
+    expect(metadata.toolName).toBe('execute_lead_workflow');
+    expect(metadata.error).toBe('LinkedIn Company Search: Actor execution failed: No lead data provider key available.');
   });
 
   it('keeps tool call receipts intact because the app pairs them by name', () => {

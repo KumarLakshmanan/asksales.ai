@@ -87,6 +87,15 @@ export function registerTechnicalTermScrubber(scrubber: (content: string) => str
   technicalTermScrubber = scrubber;
 }
 
+function scrubTechnicalTerms(text: string): string {
+  if (!technicalTermScrubber) return text;
+  try {
+    return technicalTermScrubber(text);
+  } catch {
+    return text;
+  }
+}
+
 /** Tool call/result receipts are paired by the app using the tool name in them. */
 export function isToolReceiptMetadata(metadata: unknown): boolean {
   if (!metadata || typeof metadata !== 'object') return false;
@@ -101,12 +110,7 @@ export function sanitizeAssistantContent(content: string, metadata?: unknown): s
   const withoutIssueLists = content.replace(SERIALIZED_ISSUE_LIST, (issues) => (
     ISSUE_CODE.test(issues) ? 'Generation did not complete.' : issues
   ));
-  if (!technicalTermScrubber || isToolReceiptMetadata(metadata)) return withoutIssueLists;
-  try {
-    return technicalTermScrubber(withoutIssueLists);
-  } catch {
-    return withoutIssueLists;
-  }
+  return isToolReceiptMetadata(metadata) ? withoutIssueLists : scrubTechnicalTerms(withoutIssueLists);
 }
 
 /** Sanitize error-bearing fields without changing successful tool output. */
@@ -124,7 +128,7 @@ export function sanitizeErrorFields<T>(value: T, seen = new WeakSet<object>()): 
     const normalizedKey = key.toLowerCase();
     const hasErrorValue = child != null && String(child).trim().length > 0;
     sanitized[key] = ERROR_FIELD_NAMES.has(normalizedKey) && hasErrorValue
-      ? toUserFacingError(child)
+      ? scrubTechnicalTerms(toUserFacingError(child))
       : sanitizeErrorFields(child, seen);
   }
   return sanitized as T;
