@@ -33,6 +33,24 @@ describe("ContentCreatorShell", () => {
     expect(generate).toHaveBeenCalledOnce();
   });
 
+  it('says what is missing instead of showing a dead button outside Compose', async () => {
+    const generate = vi.fn();
+    render(
+      <ContentCreatorShell><ContentCreatorBody recentCount={1}>
+        <ContentCreatorComposer>
+          <label>Post description<textarea /></label>
+          <button data-creator-action disabled data-creator-missing="Describe what the post should be about to generate it." onClick={generate}>Generate Post</button>
+        </ContentCreatorComposer>
+        <ContentCreatorStage preview={<p>Preview</p>}><p>Saved posts</p></ContentCreatorStage>
+      </ContentCreatorBody></ContentCreatorShell>,
+    );
+    await userEvent.click(screen.getByRole('tab', { name: 'Recent (1)' }));
+    expect(screen.getByText('Describe what the post should be about to generate it.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Go to Compose' }));
+    expect(screen.getByRole('tab', { name: 'Compose' })).toHaveAttribute('aria-selected', 'true');
+    expect(generate).not.toHaveBeenCalled();
+  });
+
   it("switches between compose, live preview, and recent results", async () => {
     const user = userEvent.setup();
     const generate = vi.fn();

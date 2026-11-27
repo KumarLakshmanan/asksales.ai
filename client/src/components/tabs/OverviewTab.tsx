@@ -54,7 +54,14 @@ interface WorkflowExecution {
   is_paused: boolean;
   started_at: string;
   completed_at: string | null;
+  /** Plain reason, only for a search that did not finish. */
+  error_message?: string | null;
 }
+
+const SEARCH_STATUS: Record<string, string> = {
+  completed: 'Finished', running: 'Running', pending: 'Waiting', queued: 'Waiting',
+  error: 'Did not finish', failed: 'Did not finish', cancelled: 'Stopped', stopped: 'Stopped',
+};
 
 interface OverviewData {
   thread: {
@@ -203,7 +210,7 @@ export default function OverviewTab({ threadId }: OverviewTabProps) {
         <div className={styles.stats}>
           <StatCard icon={<Target className="text-primary" />} label="Leads" value={data.stats.leadsCount} />
           <StatCard icon={<Send className="text-primary" />} label="Outreach" value={data.stats.outreachCount} />
-          <StatCard icon={<Search className="text-primary" />} label="Scraping" value={data.stats.scrapingCount} />
+          <StatCard icon={<Search className="text-primary" />} label="Lead searches" value={data.stats.scrapingCount} />
         </div>
 
         <div className={styles.overviewGrid}>
@@ -301,7 +308,7 @@ export default function OverviewTab({ threadId }: OverviewTabProps) {
                     <div className="w-8 h-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
                       <Workflow className="h-3.5 w-3.5 text-primary" />
                     </div>
-                    Workflow Executions
+                    Lead searches
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 divide-y divide-border/40">
@@ -312,11 +319,12 @@ export default function OverviewTab({ threadId }: OverviewTabProps) {
                         <Badge variant={
                           wf.status === 'completed' ? 'default' :
                           wf.status === 'running' ? 'secondary' :
-                          wf.status === 'error' ? 'destructive' : 'outline'
+                          wf.status === 'error' || wf.status === 'failed' ? 'destructive' : 'outline'
                         } className="h-5 px-2 text-xs rounded-md border-none shadow-md">
-                          {wf.is_paused ? 'Paused' : wf.status}
+                          {wf.is_paused ? 'Paused' : SEARCH_STATUS[wf.status] || wf.status}
                         </Badge>
                       </div>
+                      {wf.error_message && <p className="text-xs leading-5 text-muted-foreground">{wf.error_message}</p>}
                       {(wf.total_leads_generated > 0 || wf.total_leads_expected > 0) && (
                         <div className="space-y-2">
                           <div className="w-full h-1.5 rounded-full bg-background border border-border/20 overflow-hidden p-0.5">

@@ -678,12 +678,16 @@ export default function AdCreator() {
               loading={isGenerating}
               loadingText="Generating..."
               disabled={isEnhancing || !prompt.trim()}
+              data-creator-missing={!prompt.trim() ? "Describe the product or offer to generate ad copy." : undefined}
               className="h-11 w-full"
               size="lg"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Ad Copy
             </Button>
+            {!prompt.trim() && !isGenerating && (
+              <p className="text-xs text-muted-foreground">Describe the product or offer to generate ad copy.</p>
+            )}
             </div>
             )}
           </div>

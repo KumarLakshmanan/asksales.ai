@@ -72,7 +72,8 @@ export function ContentCreatorBody({ children, recentCount = 0 }: React.PropsWit
   const { threadId } = useCreatorScope();
   const bodyRef = React.useRef<HTMLDivElement>(null);
   const actionRef = React.useRef<HTMLButtonElement | null>(null);
-  const [mobileAction, setMobileAction] = React.useState<{ label: string; disabled: boolean } | null>(null);
+  // `missing` is set by an action that is disabled because Compose is incomplete (not because it is busy).
+  const [mobileAction, setMobileAction] = React.useState<{ label: string; disabled: boolean; missing: string | null } | null>(null);
   const tabs: Array<{ id: CreatorView; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: "compose", label: "Compose", icon: PenLine },
     { id: "preview", label: "Preview", icon: Eye },
@@ -87,10 +88,10 @@ export function ContentCreatorBody({ children, recentCount = 0 }: React.PropsWit
       const action = body.querySelector<HTMLButtonElement>("[data-creator-action]");
       actionRef.current = action;
       const nextAction = action
-        ? { label: action.textContent?.trim() || "Continue", disabled: action.disabled }
+        ? { label: action.textContent?.trim() || "Continue", disabled: action.disabled, missing: action.disabled ? action.dataset.creatorMissing || null : null }
         : null;
       setMobileAction((current) => (
-        current?.label === nextAction?.label && current?.disabled === nextAction?.disabled
+        current?.label === nextAction?.label && current?.disabled === nextAction?.disabled && current?.missing === nextAction?.missing
           ? current
           : nextAction
       ));
@@ -100,7 +101,7 @@ export function ContentCreatorBody({ children, recentCount = 0 }: React.PropsWit
     const observer = new MutationObserver(syncAction);
     observer.observe(body, {
       attributes: true,
-      attributeFilter: ["disabled"],
+      attributeFilter: ["disabled", "data-creator-missing"],
       characterData: true,
       childList: true,
       subtree: true,
@@ -128,12 +129,25 @@ export function ContentCreatorBody({ children, recentCount = 0 }: React.PropsWit
           </button>
         ))}
       </div>
+      {!wide && view !== "compose" && mobileAction?.missing && (
+        <p className={cn("shrink-0 px-4 text-xs text-muted-foreground", threadId ? "order-last -mb-2 mt-3" : "")}>
+          {mobileAction.missing}
+        </p>
+      )}
       {!wide && view !== "compose" && mobileAction && (
         <button
           type="button"
           data-creator-action-proxy
-          disabled={mobileAction.disabled}
-          onClick={() => actionRef.current?.click()}
+          // An action missing its details sends the user to Compose to fill them in.
+          disabled={mobileAction.disabled && !mobileAction.missing}
+          onClick={() => {
+            if (mobileAction.missing) {
+              setView("compose");
+              requestAnimationFrame(() => bodyRef.current?.querySelector<HTMLElement>("textarea, input:not([type=hidden])")?.focus());
+              return;
+            }
+            actionRef.current?.click();
+          }}
           className={cn(
             "flex h-11 shrink-0 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50",
             // Campaign creators share the viewport with chat. Reserve space in
@@ -141,7 +155,7 @@ export function ContentCreatorBody({ children, recentCount = 0 }: React.PropsWit
             threadId ? "order-last mx-4 mb-4 mt-3" : "fixed inset-x-4 bottom-4 z-[var(--layer-header)]",
           )}
         >
-          {mobileAction.label}
+          {mobileAction.missing ? "Go to Compose" : mobileAction.label}
         </button>
       )}
       {children}

@@ -325,7 +325,7 @@ export default function CampaignsTab({ icpId, threadId }: CampaignsTabProps) {
             <p className="text-sm font-semibold">Campaigns</p>
             {lastRefreshed && (
               <p className="text-xs text-muted-foreground">
-                Updated {lastRefreshed.toLocaleTimeString()}{useCache ? ' (cached)' : ''}
+                Updated {lastRefreshed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </p>
             )}
           </div>
@@ -398,11 +398,11 @@ export default function CampaignsTab({ icpId, threadId }: CampaignsTabProps) {
                 <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
                   <Target className="w-5 h-5 text-muted-foreground/40" />
                 </div>
-                <p className="text-sm font-medium">No campaigns found</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">No Meta campaigns have been published yet.</p>
+                <p className="text-sm font-medium">No ads published yet</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Facebook and Instagram ads you publish appear here with their results.</p>
                 <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg text-xs gap-1.5 border-border/60"
                   onClick={() => window.location.href = '/dashboard/marketing/campaigns'}>
-                  <ExternalLink className="w-3.5 h-3.5" /> Go to Campaigns
+                  <ExternalLink className="w-3.5 h-3.5" /> Open ad campaigns
                 </Button>
               </div>
             ) : (

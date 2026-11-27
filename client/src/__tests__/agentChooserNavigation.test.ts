@@ -32,6 +32,6 @@ describe('agent chooser visibility', () => {
     if (existing) {
       expect(context.switchTab).toHaveBeenCalledWith('agents-1');
       expect(context.addTab).not.toHaveBeenCalled();
-    } else expect(context.addTab).toHaveBeenCalledWith('agentchoose', 'Choose Agent', true);
+    } else expect(context.addTab).toHaveBeenCalledWith('agentchoose', 'Agents', true);
   });
 });

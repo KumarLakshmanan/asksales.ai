@@ -143,6 +143,7 @@ export default function ChromeTabs({
               tabIndex={activeTab === tab.id || (!activeTab && index === 0) ? 0 : -1}
               onClick={() => onTabClick(tab.id)}
               onKeyDown={(event) => handleTabKeyDown(event, index)}
+              title={tab.label}
               className="min-w-0 flex-1 truncate rounded px-2 py-1 text-left text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
             >
               {tab.label}

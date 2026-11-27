@@ -1,4 +1,4 @@
-import { leadSearchFailureMessage } from './leadSearchFailureMessage.js';
+import { plainLeadSearchError } from './leadSearchFailureMessage.js';
 import { LEAD_PROVIDER_UNAVAILABLE_MESSAGE } from './apifyCredentialResolver.js';
 import { sanitizeErrorFields } from '../../shared/userFacingError.js';
 
@@ -28,10 +28,9 @@ export async function presentScrapingDetails<T extends ScrapingRow>(
   const noProvider = failed.length > 0 && await providerUnavailable(failed.map(row => row.platform));
   return rows.map((row) => {
     if (!FAILED.has(String(row.status || '').toLowerCase())) return sanitizeErrorFields(row);
-    const raw = String(row.error || '');
     const error = noProvider
       ? LEAD_PROVIDER_UNAVAILABLE_MESSAGE
-      : raw.startsWith('The lead search could not run') ? raw : leadSearchFailureMessage(raw);
+      : plainLeadSearchError(row.error);
     return { ...row, error, retryAvailable: !noProvider };
   });
 }

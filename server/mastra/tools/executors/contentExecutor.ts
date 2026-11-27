@@ -1583,6 +1583,17 @@ type SocialPostInput = Parameters<typeof executeGenerateSocialMediaPost>[0];
 
 /** Reviewed rules applied to every generated social post, plus one targeted
  * provider rewrite for a post that breaks them (usually length). */
+const SOCIAL_PLATFORM_NAMES: Record<string, string> = {
+  linkedin: 'LinkedIn', facebook: 'Facebook', instagram: 'Instagram', twitter: 'X', x: 'X',
+  tiktok: 'TikTok', youtube: 'YouTube', pinterest: 'Pinterest', threads: 'Threads',
+};
+
+/** "linkedin" -> "LinkedIn", for titles the user reads. */
+export function socialPlatformName(platform: string): string {
+  const key = String(platform || '').trim().toLowerCase();
+  return SOCIAL_PLATFORM_NAMES[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Social');
+}
+
 function socialPostRules(input: SocialPostInput, context: ToolContext, userId: number, validationPlatform: string) {
   const includeCta = input.include_cta !== false;
   const limit = socialCharacterLimit('social', validationPlatform);
@@ -1718,7 +1729,7 @@ Return raw JSON only: {"posts":[{"day":number,"title":"max 50 chars","caption":s
   if (first) {
     webSocketEmitter.emit(userIdNum, 'open_tab', {
       thread_id: threadIdNum, tabType: TAB_TYPES.SOCIAL_POST_PREVIEW,
-      tabLabel: `${isUniversal ? 'Universal' : platform} plan (${saved.length} posts)`,
+      tabLabel: `${isUniversal ? 'Universal' : socialPlatformName(platform)} plan (${saved.length} ${saved.length === 1 ? 'post' : 'posts'})`,
       data: { post: first, platform, generatedImages: [], generatedVideos: [], isUniversal, posts: saved },
     });
   }

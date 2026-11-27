@@ -30,6 +30,14 @@ describe('agent team hiring', () => {
     expect(screen.queryByRole('button', { name: /Assembling Team|Hire Team & Start Workflow/ })).not.toBeInTheDocument();
   });
 
+  it('marks agents already working on this campaign', () => {
+    render(<AgentChooseTab activeAgents={['lead-generation']} />);
+    expect(screen.getAllByText('On this campaign')).toHaveLength(1);
+    expect(screen.getByText('Continue with Marcus')).toBeInTheDocument();
+    expect(screen.getByText('Start Emily')).toBeInTheDocument();
+    expect(screen.queryByText('Deliverables')).not.toBeInTheDocument();
+  });
+
   it('keeps the selection and unlocks an explicit retry after a failed request', async () => {
     let reject!: (error: Error) => void;
     const hire = vi.fn().mockImplementationOnce(() => new Promise<void>((_, rej) => { reject = rej; })).mockResolvedValueOnce(undefined);

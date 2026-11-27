@@ -50,8 +50,10 @@ export const TAB_LABELS: Readonly<Record<TabType, string>> = {
   [TAB_TYPES.OUTREACH]: 'Outreach',
   [TAB_TYPES.ANALYTICS]: 'Analytics',
   [TAB_TYPES.CAMPAIGNS]: 'Campaigns',
-  [TAB_TYPES.ADS]: 'Ads',
-  [TAB_TYPES.LEAD_CONFIG]: 'Lead Config',
+  // The Ads tab opens the ad copy writer.
+  [TAB_TYPES.ADS]: 'Ad Copy',
+  // Lead Config was merged into Search Settings; old saved tabs open there.
+  [TAB_TYPES.LEAD_CONFIG]: 'Search Settings',
   [TAB_TYPES.CONTENT_STUDIO]: 'Content Studio',
   [TAB_TYPES.PERFORMANCE_MARKETING]: 'Performance Marketing',
   [TAB_TYPES.CONTENT_PREVIEW]: 'Content Preview',
@@ -77,7 +79,8 @@ export const TAB_LABELS: Readonly<Record<TabType, string>> = {
 
 export const LEGACY_TAB_ALIASES: Readonly<Record<string, TabType>> = {
   leadInputs: TAB_TYPES.LEAD_INPUTS,
-  'lead-config': TAB_TYPES.LEAD_CONFIG,
+  leadconfig: TAB_TYPES.LEAD_INPUTS,
+  'lead-config': TAB_TYPES.LEAD_INPUTS,
   contentstudio: TAB_TYPES.CONTENT_STUDIO,
 };
 

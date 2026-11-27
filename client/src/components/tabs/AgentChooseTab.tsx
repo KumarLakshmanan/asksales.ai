@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, CheckCircle2, Loader2, Sparkles, Target, Users, Megaphone, Play, AlertCircle, Briefcase, Clock, ArrowRight, Zap, Plus } from 'lucide-react';
+import { Check, CheckCircle2, Loader2, Sparkles, Target, Users, Megaphone, Play, AlertCircle, Clock, ArrowRight, Zap, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { useAgent } from '@/contexts/AgentContext';
@@ -141,6 +141,8 @@ interface AgentChooseTabProps {
   onAgentSelect?: (agentId: string | null) => void;
   onHireAgent?: (agentId: string, commandName: string) => void | Promise<void>;
   onHireMultipleAgents?: (agentIds: string[], agentNames: string[]) => void | Promise<void>;
+  /** Agent types that have already worked in this campaign, e.g. "lead_generation". */
+  activeAgents?: string[];
 }
 
 interface AgentExecution {
@@ -166,7 +168,9 @@ export default function AgentChooseTab({
   onAgentSelect,
   onHireAgent,
   onHireMultipleAgents,
+  activeAgents = [],
 }: AgentChooseTabProps) {
+  const activeAgentIds = new Set(activeAgents.map(type => type.replace(/_/g, '-')));
   const [loadingAgent, setLoadingAgent] = useState<string | null>(null);
   const [_startedAgents, setStartedAgents] = useState<Set<string>>(new Set());
   const hiringRef = useRef<Set<string>>(new Set());
@@ -538,7 +542,7 @@ export default function AgentChooseTab({
             <Users className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Hire Agent</p>
+            <p className="text-sm font-semibold">Hire agents</p>
             <p className="text-xs text-muted-foreground">Select specialized agents</p>
           </div>
         </div>
@@ -697,6 +701,11 @@ export default function AgentChooseTab({
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <h3 className={cn("text-sm font-semibold leading-none", getNameColor(agent.id))}>{agent.name}</h3>
+                        {activeAgentIds.has(agent.id) && (
+                          <Badge variant="outline" className="h-4 rounded px-1 text-[10px] font-medium text-emerald-700 border-emerald-500/30 bg-emerald-500/5 dark:text-emerald-400">
+                            On this campaign
+                          </Badge>
+                        )}
                         {score !== undefined && score > 0 && (
                           <Badge
                             className="text-[10px] font-medium px-1 py-0.5 rounded border"
@@ -716,22 +725,13 @@ export default function AgentChooseTab({
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-card border border-border/40 group-hover:bg-card/60 transition-colors">
-                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center border border-primary/10">
-                        <Briefcase className="w-2.5 h-2.5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Deliverables</p>
-                        <p className="text-xs font-semibold">{agent.deliverables.split(' ')[0]}</p>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-1 gap-1.5">
                     <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-card border border-border/40 group-hover:bg-card/60 transition-colors">
                       <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center border border-primary/10">
                         <Clock className="w-2.5 h-2.5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Cycle</p>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Typical time per task</p>
                         <p className="text-xs font-semibold">{agent.estimatedTime}</p>
                       </div>
                     </div>
@@ -802,6 +802,7 @@ export default function AgentChooseTab({
                       {execution?.status === 'running' ? 'Syncing...' :
                         selectedAgent?.id === agent.id && execution?.status === 'completed' ? 'Synced' :
                           execution?.status === 'error' ? 'Retry' :
+                            activeAgentIds.has(agent.id) ? `Continue with ${agent.name.split(' ')[0]}` :
                             `Start ${agent.name.split(' ')[0]}`}
                     </span>
                     {!isLoading && execution?.status !== 'running' && execution?.status !== 'completed' && (

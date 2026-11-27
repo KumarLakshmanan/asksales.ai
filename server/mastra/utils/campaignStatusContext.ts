@@ -6,7 +6,7 @@
  * an imported audience when leads were already selected.
  */
 import type { ActionButton } from '../state.js';
-import { leadSearchFailureMessage } from '../../services/leadSearchFailureMessage.js';
+import { plainLeadSearchError } from '../../services/leadSearchFailureMessage.js';
 import { logger } from '../../utils/logger.js';
 
 export interface CampaignRunSnapshot {
@@ -48,7 +48,7 @@ const STAGE_BUTTONS: Record<string, Array<{ label: string; tabType: string }>> =
 function leadSearchProblem(run: CampaignRunSnapshot): string | null {
   const raw = run.context?.leadGenerationError;
   if (run.stage !== 'needs_attention' || typeof raw !== 'string' || !raw.trim()) return null;
-  return leadSearchFailureMessage(raw);
+  return plainLeadSearchError(raw);
 }
 
 export function describeCampaignStatus(run: CampaignRunSnapshot | null | undefined, selectedLeadCount = 0): string {

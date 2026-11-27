@@ -1,5 +1,6 @@
 import { threadReporting, threadReportingCrmEnabled } from '../services/ThreadReportingService.js';
 import { reportingThreadLeadIds, threadLeadIds } from '../services/threadLeadCohort.js';
+import { plainLeadSearchError } from '../services/leadSearchFailureMessage.js';
 import { businessOwnerUserId, requireBusinessScope } from '../tenancy/businessContext.js';
 import { isPostgresIntegerId } from '../utils/postgresIntegerId.js';
 import type { Request, Response } from "express";
@@ -933,7 +934,7 @@ export async function getChatThreadOverviewHandler(req: Request, res: Response) 
       // Workflow activity executions
       () => tx.execute(sql`
         SELECT id, workflow_name, platforms, status, total_leads_expected, total_leads_generated,
-               platforms_completed, platforms_total, is_paused, started_at, completed_at
+               platforms_completed, platforms_total, is_paused, started_at, completed_at, error_message
         FROM workflow_activity_executions
         WHERE thread_id = ${threadId} AND user_id = ${userId}
         ORDER BY started_at DESC
@@ -1208,7 +1209,11 @@ export async function getChatThreadOverviewHandler(req: Request, res: Response) 
       },
       icp: icpProfile || null,
       activeAgents: Array.from(activeAgents.values()),
-      workflowExecutions: workflowExecResult.rows,
+      // A failed search shows why in plain words; provider and step names stay in the logs.
+      workflowExecutions: workflowExecResult.rows.map((row: Record<string, unknown>) => ({
+        ...row,
+        error_message: ['failed', 'error'].includes(String(row.status)) ? plainLeadSearchError(row.error_message as string | null) : null,
+      })),
       timeline: timelineEvents,
     });
   } catch (error) {

@@ -7,6 +7,7 @@ import {
   getTabLabel,
   normalizeTabType,
 } from "@/lib/tabConfig";
+import { displayTabLabel } from "@/lib/tabDisplayLabel";
 
 import { type ActionUpdate, type LiveSignal } from "@/components/ActionSnapshotPanel";
 import api from "@/lib/api";
@@ -319,7 +320,7 @@ export function useInlineWidgets(
     const newTabId = `${normalizedTabType}-${Date.now()}`;
     const newTab: Tab = {
       id: newTabId,
-      label: normalizedLabel || getTabLabel(normalizedTabType) || normalizedTabType,
+      label: displayTabLabel(normalizedTabType, normalizedLabel),
       type: normalizedTabType,
       closeable: normalizedTabType !== 'overview',
     };
@@ -400,13 +401,8 @@ export function useInlineWidgets(
   }, [tabsLoaded, currentThreadId, addTab]);
 
   const handleAddTabFromButton = useCallback(async () => {
-    const searchTabCount = tabsRef.current.filter(t => t.type === 'search').length;
-    await addTab(
-      'search',
-      searchTabCount > 0 ? `Search ${searchTabCount + 1}` : 'Search',
-      true,
-      true,
-    );
+    // Reuse the open picker instead of adding "Search 2", "Search 3", ...
+    await addTab('search', 'Search', true, false);
   }, [addTab]);
 
   const switchTab = useCallback(async (tabId: string) => {

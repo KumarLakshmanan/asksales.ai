@@ -102,8 +102,9 @@ describe("Conversation visual pane navigation", () => {
     const onAddTab = vi.fn();
     const { container } = render(<SearchTab onAddTab={onAddTab} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Lead Config/i }));
-    expect(onAddTab).toHaveBeenCalledWith("leadconfig");
+    fireEvent.click(screen.getByRole("button", { name: /Search Settings/i }));
+    expect(onAddTab).toHaveBeenCalledWith("lead-inputs");
+    expect(screen.queryByRole("button", { name: /Lead Config/i })).not.toBeInTheDocument();
 
     for (const label of ["CRM", "Support", "Proposals"]) {
       expect(screen.getByRole("button", { name: new RegExp(label, "i") })).toBeInTheDocument();

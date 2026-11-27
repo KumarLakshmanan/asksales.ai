@@ -2,26 +2,26 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Plus, BarChart3, Users, MessageSquare, TrendingUp, IndianRupee,
-  Search as SearchIcon, Sparkles, Zap, FileText, Settings,
+  Search as SearchIcon, Sparkles, Zap, FileText,
   Image, Mail, Share2, Megaphone, MessageCircle, Newspaper,
   LayoutDashboard, ChevronDown, ChevronUp, Video, Headphones, Handshake, ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTabLabel } from "@/lib/tabConfig";
 
 interface SearchTabProps {
   onAddTab?: (tabType: string) => void;
 }
 
 const availableTabs = [
-  { id: "icp", name: "ICP", description: "View your Ideal Customer Profile", icon: Users, color: "bg-blue-500" },
-  { id: "agentchoose", name: "Agent Choose", description: "Select and hire specialized agents", icon: Zap, color: "bg-purple-500" },
-  { id: "lead-inputs", name: "Lead Inputs", description: "Review and customize lead generation inputs", icon: FileText, color: "bg-cyan-500" },
+  { id: "icp", name: getTabLabel("icp"), description: "View your Ideal Customer Profile", icon: Users, color: "bg-blue-500" },
+  { id: "agentchoose", name: getTabLabel("agentchoose"), description: "Choose and hire specialist agents", icon: Zap, color: "bg-purple-500" },
+  { id: "lead-inputs", name: getTabLabel("lead-inputs"), description: "Review and change the lead search settings", icon: FileText, color: "bg-cyan-500" },
   { id: "leads", name: "Leads", description: "Manage and track your leads", icon: Users, color: "bg-emerald-500" },
   { id: "outreach", name: "Outreach", description: "Outreach campaigns and engagement", icon: MessageSquare, color: "bg-orange-500" },
-  { id: "performancemarketing", name: "Performance & Analytics", description: "Performance metrics, analytics, and insights", icon: BarChart3, color: "bg-indigo-500" },
+  { id: "performancemarketing", name: getTabLabel("performancemarketing"), description: "Budget plans, paid campaigns and results", icon: BarChart3, color: "bg-indigo-500" },
   { id: "campaigns", name: "Campaigns", description: "Marketing campaign management", icon: TrendingUp, color: "bg-violet-500" },
-  { id: "ads", name: "Ads", description: "Advertising performance tracking", icon: IndianRupee, color: "bg-yellow-500" },
-  { id: "leadconfig", name: "Lead Config", description: "Configure lead generation settings", icon: Settings, color: "bg-slate-500" },
+  { id: "ads", name: getTabLabel("ads"), description: "Write ad copy for paid campaigns", icon: IndianRupee, color: "bg-yellow-500" },
   { id: "content-studio", name: "Content Studio", description: "Create and manage all content types", icon: Sparkles, color: "bg-fuchsia-500" },
   { id: "crm", name: "CRM", description: "Manage customer relationships and pipeline activity", icon: Handshake, color: "bg-sky-500" },
   { id: "support", name: "Support", description: "Review and manage customer support conversations", icon: Headphones, color: "bg-rose-500" },

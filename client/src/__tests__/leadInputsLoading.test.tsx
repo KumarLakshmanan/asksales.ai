@@ -11,10 +11,10 @@ describe('saved lead search-input loading', () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => (url.includes('sub-workflows') ? {} : { hasExistingInputs: true, inputs: [{ platform: 'linkedin', inputs: { query: 'hotel' } }] }) as never);
     const approve = vi.fn();
     const { rerender } = render(<SearchSettingsTab {...props} threadId={1} approvalAvailable onApproval={approve} />);
-    expect(await screen.findByRole('button', { name: 'Approve & Run Search' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Run search' })).toBeInTheDocument();
     rerender(<SearchSettingsTab {...props} threadId={1} approvalAvailable={false} onApproval={approve} />);
-    expect(screen.queryByRole('button', { name: 'Approve & Run Search' })).not.toBeInTheDocument();
-    expect(screen.getByText(/no active approval/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Run search' })).not.toBeInTheDocument();
+    expect(screen.getByText(/ask the agent to prepare them again/)).toBeInTheDocument();
     expect(approve).not.toHaveBeenCalled();
   });
   it('shows a recoverable error, not an empty result, and retries read-only', async () => {
@@ -59,9 +59,9 @@ describe('saved lead search-input loading', () => {
 
     render(<SearchSettingsTab {...props} threadId={3} />);
 
-    expect(await screen.findByText('Saved lead cap: 5 leads')).toBeInTheDocument();
+    expect(await screen.findByText('Up to 5 leads')).toBeInTheDocument();
     expect(screen.getByRole('note')).toHaveTextContent(
-      'Provider request limit: 15. The global cap saves up to 5 leads across selected providers; provider usage may be higher.',
+      'The search may look at up to 15 results, but only 5 leads are saved. Credits follow the results looked at.',
     );
   });
 });

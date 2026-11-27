@@ -433,15 +433,15 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
             <Search className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Search Parameters</p>
+            <p className="text-sm font-semibold">Search settings</p>
             <p className="text-xs text-muted-foreground">{platformInputs.length} search{platformInputs.length !== 1 ? 'es' : ''} configured</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
             <TabsList className="h-8 bg-muted/40 p-1 rounded-lg">
-              <TabsTrigger value="table" className="h-6 px-2.5 rounded-md text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><TableIcon className="w-3 h-3" /> Table</TabsTrigger>
-              <TabsTrigger value="json" className="h-6 px-2.5 rounded-md text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><Code className="w-3 h-3" /> JSON</TabsTrigger>
+              <TabsTrigger value="table" className="h-6 px-2.5 rounded-md text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><TableIcon className="w-3 h-3" /> Fields</TabsTrigger>
+              <TabsTrigger value="json" className="h-6 px-2.5 rounded-md text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"><Code className="w-3 h-3" /> Raw data</TabsTrigger>
             </TabsList>
           </Tabs>
           {hasExistingInputs && (
@@ -485,14 +485,14 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
                       )}
                       {platformInput.requestedLeadTotal !== undefined && (
                         <Badge variant="outline" className="h-4 shrink-0 rounded-md border-emerald-500/30 bg-emerald-500/5 px-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
-                          Saved lead cap: {platformInput.requestedLeadTotal} lead{platformInput.requestedLeadTotal === 1 ? '' : 's'}
+                          Up to {platformInput.requestedLeadTotal} lead{platformInput.requestedLeadTotal === 1 ? '' : 's'}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{fieldCount} parameter{fieldCount !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-muted-foreground">{fieldCount} setting{fieldCount !== 1 ? 's' : ''}</p>
                     {providerFetchExceedsSaveCap && (
                       <p role="note" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                        Provider request limit: {providerMaxResults}. The global cap saves up to {platformInput.requestedLeadTotal} leads across selected providers; provider usage may be higher.
+                        The search may look at up to {providerMaxResults} results, but only {platformInput.requestedLeadTotal} leads are saved. Credits follow the results looked at.
                       </p>
                     )}
                   </div>
@@ -563,7 +563,6 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
                         <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" /> Example output
                       </summary>
                       <div className="mt-2 border border-border/30 rounded-lg p-3 bg-card relative">
-                        <Badge variant="outline" className="absolute top-2 right-2 text-[10px] rounded-md border-border/40 text-muted-foreground/40">JSON</Badge>
                         <ScrollArea className="h-[150px]">
                           <pre className="text-xs font-mono text-muted-foreground/60 leading-relaxed">{JSON.stringify(platformInput.example, null, 2)}</pre>
                         </ScrollArea>
@@ -584,13 +583,23 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
                 <Play className="w-4 h-4 text-primary fill-primary/20" />
               </div>
               <div>
-                <p className="text-sm font-medium">{platformInputs.length} search{platformInputs.length !== 1 ? 'es' : ''} {approvalAvailable ? 'ready for review' : 'saved · no active approval'}</p>
-                <p className="text-xs text-muted-foreground">{approvalAvailable ? 'Review the parameters before approving. Search uses credits.' : 'This review is no longer active. Ask the agent to prepare fresh settings before running a search.'}</p>
+                <p className="text-sm font-medium">{platformInputs.length} search{platformInputs.length !== 1 ? 'es' : ''} {approvalAvailable ? 'ready to run' : 'saved'}</p>
+                <p className="text-xs text-muted-foreground">{approvalAvailable ? 'Check the settings, then run the search. Searching uses credits.' : 'To run these searches, ask the agent to prepare them again. You will get a new review to approve.'}</p>
               </div>
             </div>
-            {approvalAvailable && <Button onClick={handleStartLeadGeneration} loading={loading} loadingText="Approve & Run Search" size="sm" className="h-8 px-4 rounded-lg text-xs gap-1.5 shrink-0">
+            {!approvalAvailable && onSendMessage && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 shrink-0 rounded-lg px-4 text-xs"
+                onClick={() => onSendMessage('Prepare the saved lead search settings for this campaign again so I can review and approve the search. Do not run it yet.', 'Prepare the lead search again')}
+              >
+                Ask the agent to prepare it
+              </Button>
+            )}
+            {approvalAvailable && <Button onClick={handleStartLeadGeneration} loading={loading} loadingText="Run search" size="sm" className="h-8 px-4 rounded-lg text-xs gap-1.5 shrink-0">
               <ChevronRight className="w-3.5 h-3.5" />
-              Approve & Run Search
+              Run search
             </Button>}
           </div>
         )}

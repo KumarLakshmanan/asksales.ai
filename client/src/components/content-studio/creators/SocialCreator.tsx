@@ -988,12 +988,16 @@ export default function SocialCreator() {
                   loading={isGenerating}
                   loadingText="Generating..."
                   disabled={isEnhancing || !prompt.trim()}
+                  data-creator-missing={!prompt.trim() ? "Describe what the post should be about to generate it." : undefined}
                   className="h-11 w-full"
                   size="lg"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Generate Post
                 </Button>
+                {!prompt.trim() && !isGenerating && (
+                  <p className="text-xs text-muted-foreground">Describe what the post should be about to generate it.</p>
+                )}
               </>
             )}
           </div>

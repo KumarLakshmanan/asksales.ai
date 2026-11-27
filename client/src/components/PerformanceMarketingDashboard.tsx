@@ -332,7 +332,7 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
       <CardHeader>
         <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-muted-foreground/60">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Performance Analytics
+          Performance Marketing
         </CardTitle>
         <CardDescription>
           Plan budgets, build campaigns, and optimize performance across platforms

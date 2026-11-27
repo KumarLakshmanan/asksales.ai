@@ -50,8 +50,8 @@ describe('lead generation review contract', () => {
   });
 
   it('shows the global save cap alongside provider fetch parameters', () => {
-    expect(inputsSource).toContain('Saved lead cap: {platformInput.requestedLeadTotal} lead');
-    expect(inputsSource).toContain('provider usage may be higher');
+    expect(inputsSource).toContain('Up to {platformInput.requestedLeadTotal} lead');
+    expect(inputsSource).toContain('Credits follow the results looked at.');
   });
 
   it('closes terminal provider failures instead of leaving a stale approval dialog', () => {

@@ -3,7 +3,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 
 import { selectedBusinessProfileId as activeBusinessProfileId } from '@/lib/business-profile';
-import { leadPlatformLabel } from '@/lib/lead-platform';
+import { displayTabLabel } from '@/lib/tabDisplayLabel';
 import { ConversationTurnStatus } from "@/components/conversation/ConversationTurnStatus";
 /* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 
@@ -31,7 +31,6 @@ import LeadsTab from "@/components/tabs/LeadsTab";
 import LeadsInputsTab from "@/components/tabs/LeadsInputsTab";
 import OutreachTab from "@/components/tabs/OutreachTab";
 import CampaignsTab from "@/components/tabs/CampaignsTab";
-import LeadConfigTab from "@/components/tabs/LeadConfigTab";
 import ContentStudioTab from "@/components/tabs/ContentStudioTab";
 import PerformanceMarketingTab from "@/components/tabs/PerformanceMarketingTab";
 import StructuredAnalyticsTab from "@/components/tabs/StructuredAnalyticsTab";
@@ -168,12 +167,6 @@ function ChatContent() {
   const [fitScore, setFitScore] = useState(0);
   const [userIntent, setUserIntent] = useState<string | null>(null);
 
-  const [leadGenConfig, setLeadGenConfig] = useState({
-    keywords: [] as string[],
-    platforms: [] as string[],
-    leadCount: 100,
-    locations: [] as string[],
-  });
   const [leadInputsRevision, setLeadInputsRevision] = useState(0);
 
   const workflowRunSeenRef = useRef(false);
@@ -1773,7 +1766,7 @@ function ChatContent() {
                   return {
                     id: config.tabId,
                     type: tabType,
-                    label: config.tabLabel,
+                    label: displayTabLabel(tabType, config.tabLabel),
                     closeable: tabType === 'overview' ? false : config.closeable !== false
                   };
                 });
@@ -2289,7 +2282,7 @@ function ChatContent() {
       if (activeTab === agentChooseTab.id) triggerTabHighlight(agentChooseTab.id);
       void switchTab(agentChooseTab.id);
     } else {
-      addTab('agentchoose', 'Choose Agent', true);
+      addTab('agentchoose', 'Agents', true);
     }
   };
 
@@ -2348,22 +2341,6 @@ function ChatContent() {
   const handleICPSelect = (icpId: number, icpName: string) => {
     handleSendMessage(`Load ICP "${icpName}" (ID: ${icpId}) for this session.`, false, [], `Use the ICP "${icpName}"`);
     setShowICPSelector(false);
-  };
-
-  const handleStartLeadGeneration = async (config = leadGenConfig) => {
-    const normalizedConfig = {
-      keywords: config.keywords.map(value => value.trim()).filter(Boolean),
-      platforms: [...new Set(config.platforms)],
-      leadCount: Math.min(Math.max(Math.round(config.leadCount), 1), 1000),
-      locations: config.locations.map(value => value.trim()).filter(Boolean),
-    };
-    setLeadGenConfig(normalizedConfig);
-    await handleSendMessage(
-      `Run lead generation with this reviewed configuration:\n${JSON.stringify(normalizedConfig, null, 2)}`,
-      false,
-      [],
-      `Find ${normalizedConfig.leadCount} ${normalizedConfig.leadCount === 1 ? 'lead' : 'leads'}${normalizedConfig.platforms.length ? ` on ${normalizedConfig.platforms.map(leadPlatformLabel).join(', ')}` : ''}`,
-    );
   };
 
   // Initialize with welcome message on mount
@@ -2431,12 +2408,24 @@ function ChatContent() {
           />
         );
 
-      case "search":
-        return <SearchTab onAddTab={addTab} />;
+      case "search": {
+        // The picker is a step, not a destination: close it once a tab is chosen.
+        const pickerTabId = tabs.find(tab => tab.id === activeTab && tab.type === 'search')?.id;
+        return (
+          <SearchTab
+            onAddTab={(tabType) => {
+              void addTab(tabType).then(() => {
+                if (pickerTabId) void removeTab(pickerTabId);
+              });
+            }}
+          />
+        );
+      }
 
       case "agentchoose":
         return (
           <AgentChooseTab
+            activeAgents={usedAgentsInChat.map(agent => agent.id)}
             icpId={icpId || undefined}
             fitScore={fitScore}
             threadId={currentThreadId || undefined}
@@ -2488,6 +2477,8 @@ function ChatContent() {
       case "leads":
         return <LeadsTab key={`leads-${currentThreadId}`} threadId={currentThreadId ?? undefined} onSendMessage={sendTabMessage} />;
 
+      // Lead Config was merged into Search Settings, one place to review the search.
+      case "leadconfig":
       case "lead-inputs":
         return (
           <LeadsInputsTab
@@ -2521,17 +2512,6 @@ function ChatContent() {
             context="chat_sidebar"
             initialTab="ad_copy"
             hideTabBar
-          />
-        );
-
-      case "leadconfig":
-        return (
-          <LeadConfigTab
-            initialConfig={leadGenConfig}
-            onStartGeneration={(config) => {
-              void handleStartLeadGeneration(config);
-            }}
-            isProcessing={isProcessing}
           />
         );
 

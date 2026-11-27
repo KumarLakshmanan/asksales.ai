@@ -11,3 +11,9 @@ export function leadSearchFailureMessage(providerError?: string): string {
       : 'Please try again. If it keeps failing, contact support.';
   return `The lead search could not run, so no leads were saved. ${reason}`;
 }
+
+/** For stored errors: rows saved before this message existed still hold raw provider text. */
+export function plainLeadSearchError(stored?: string | null): string {
+  const text = String(stored || '');
+  return text.startsWith('The lead search could not run') ? text : leadSearchFailureMessage(text);
+}
