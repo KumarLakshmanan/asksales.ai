@@ -184,6 +184,10 @@ export const sendMessageSchema = z.object({
     'orchestrator', 'supervisor', 'icp_generation', 'lead_generation',
     'content_studio', 'outreach', 'performance_marketing',
   ]).optional(),
+  // The app sends these with every HTTP message. The handler checks the
+  // business profile itself so a bad ID gets a clear 400 or 404.
+  idempotencyKey: z.string().min(1).max(255).optional(),
+  businessProfileId: z.unknown().optional(),
 }).passthrough().refine((value) => Boolean(value.message || value.content), {
   message: 'Message is required',
 });

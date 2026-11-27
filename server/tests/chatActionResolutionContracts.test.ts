@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from '@jest/globals';
 
-const readServerSource = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
+// Compare against LF text so the contracts hold on Windows (CRLF) checkouts too.
+const readServerSource = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8').replace(/\r\n/g, '\n');
 
 describe('durable conversation action resolution contracts', () => {
   it('validates durable source identifiers on structured actions', () => {

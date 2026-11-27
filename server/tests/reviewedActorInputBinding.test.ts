@@ -11,7 +11,8 @@ const executor = WorkflowExecutorService as any;
 beforeAll(async () => { await WorkflowExecutorService.initialize(); });
 
 describe('reviewed actor input binding', () => {
-  it('finds actor schemas from the production /app working directory', () => {
+  // A file:///app URL has no drive letter, so this Linux path only resolves on Linux/macOS.
+  (process.platform === 'win32' ? it.skip : it)('finds actor schemas from the production /app working directory', () => {
     expect(resolveActorSchemaDataDirectories('/app', 'file:///app/server/services/workflow/ActorSchemaRegistry.js'))
       .toContain('/app/server/data');
   });

@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const readClientSource = (path: string) =>
-  readFileSync(resolve(process.cwd(), path), "utf8");
+  // LF text, so the contracts also hold on Windows (CRLF) checkouts.
+  readFileSync(resolve(process.cwd(), path), "utf8").replace(/\r\n/g, "\n");
 
 describe("conversation overflow containment", () => {
   it("forces the vertical message viewport to follow the split-pane width", () => {
