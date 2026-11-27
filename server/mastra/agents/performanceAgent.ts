@@ -37,6 +37,7 @@ import { stampPendingApproval } from '../approvalExpiry.js';
 import { toolHasWidget } from '../../shared/toolWidgetMap.js';
 
 import { generateAnalyticsInsights } from '../utils/analyticsInsights.js';
+import { describeSavedBudgetPlan, loadLatestBudgetPlan } from '../utils/savedBudgetPlan.js';
 
 // ── System Prompt ──────────────────────────────────────────────────────
 
@@ -170,13 +171,15 @@ class PerformanceAgent extends BaseAgent {
   private _stopOnly = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _pendingApproval: any = null;
+  // Keyed by thread so a concurrent run never reads another campaign's plan.
+  private _savedBudgetPlanNotes = new Map<number, string>();
 
   protected get intentDomain(): string {
     return 'advertising campaign analytics, paid ads publishing, or marketing budget management';
   }
 
   buildSystemPrompt(state: AgentState): string {
-    return buildPerformanceSystemPrompt(state);
+    return buildPerformanceSystemPrompt(state) + (this._savedBudgetPlanNotes.get(state.threadId) ?? '');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -217,6 +220,9 @@ class PerformanceAgent extends BaseAgent {
     );
     this._requiresApproval = false;
     this._pendingApproval = null;
+    const savedPlan = describeSavedBudgetPlan(await loadLatestBudgetPlan(state.userId, state.icpProfile?.id));
+    if (savedPlan) this._savedBudgetPlanNotes.set(state.threadId, savedPlan);
+    else this._savedBudgetPlanNotes.delete(state.threadId);
     return {};
   }
 

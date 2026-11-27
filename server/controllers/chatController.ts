@@ -1,5 +1,5 @@
 import { threadReporting, threadReportingCrmEnabled } from '../services/ThreadReportingService.js';
-import { threadLeadIds } from '../services/threadLeadCohort.js';
+import { reportingThreadLeadIds, threadLeadIds } from '../services/threadLeadCohort.js';
 import { businessOwnerUserId, requireBusinessScope } from '../tenancy/businessContext.js';
 import { isPostgresIntegerId } from '../utils/postgresIntegerId.js';
 import type { Request, Response } from "express";
@@ -896,7 +896,7 @@ export async function getChatThreadOverviewHandler(req: Request, res: Response) 
         WHERE user_id = ${userId}
         AND deleted_at IS NULL
         AND business_profile_id = ${business}
-        AND id IN (${cohort})
+        AND id IN (${reportingThreadLeadIds(userId, business, threadId)})
       `),
       // Content assets summary
       () => tx.execute(sql`
@@ -2040,7 +2040,12 @@ export async function getLatestScrapingDetailsHandler(
       }
     }
 
-    return res.status(200).json(scrapingDetails);
+    const { presentScrapingDetails } = await import('../services/scrapingDetailsPresentation.js');
+    const presented = await presentScrapingDetails(scrapingDetails, async (platforms) => {
+      const { noLeadProviderForChannels } = await import('../mastra/tools/executors/leadExecutor.js');
+      return noLeadProviderForChannels(Number(userId), platforms);
+    });
+    return res.status(200).json(presented);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error({ err: error }, '[ChatController] Error fetching scraping details');

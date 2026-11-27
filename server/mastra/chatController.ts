@@ -2,6 +2,7 @@ import { businessOwnerUserId } from '../tenancy/businessContext.js';
 import { isPostgresIntegerId } from '../utils/postgresIntegerId.js';
 import { AI_SETUP_UNAVAILABLE } from '../../shared/aiSetupMessage.js';
 import { INBOX_CHANNELS, type InboxChannel } from '../../shared/outreachInbox.js';
+import { outreachPrepareLabel, shortDisplayContent } from './userMessageLabel.js';
 import { conversationRequests, currentConversationRequest, bindConversationRequest, bindConversationWorkflow, checkpointConversationRequest, ConversationRequestError } from '../services/ConversationRequestCoordinator.js';
 import { createConversationClarification, readPendingClarification, answersPendingClarification } from './conversationClarification.js';
 /**
@@ -29,7 +30,7 @@ import {
   type AgentState,
 } from './index.js';
 import { webSocketEmitter } from '../services/agents/WebSocketEmitter.js';
-import { TAB_TYPES, TAB_LABELS } from './tabConfig.js';
+import { TAB_TYPES, TAB_LABELS, getTabLabel } from './tabConfig.js';
 import { ThreadService } from '../services/agents/ThreadService.js';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MessageService, type PendingApprovalDecision } from '../services/agents/MessageService.js';
@@ -638,19 +639,25 @@ function approvalReplayResponse(
   });
 }
 
+const THREAD_TITLE_LIMIT = 50;
+function threadTitleFrom(text: string): string {
+  return text.length > THREAD_TITLE_LIMIT ? text.substring(0, THREAD_TITLE_LIMIT - 3) + '...' : text;
+}
+
 /**
  * Core message processing function — no Express dependency.
  */
 export async function processMessageDirect(
   userId: number, content: string, providedThreadId?: number | null, businessProfileId?: number,
   attachments?: ConversationAttachmentReference[], onThreadResolved?: (threadId: number) => void,
-  routeToAgent?: 'lead_generation', requestId?: string,
+  routeToAgent?: 'lead_generation', requestId?: string, displayContent?: string,
 ): Promise<Awaited<ReturnType<typeof processMessageDirectUncoordinated>>> {
   if (providedThreadId && !isPostgresIntegerId(providedThreadId)) {
     return { message: null, response: null, threadId: 0, error: 'Invalid thread ID', code: 400 };
   }
   const execute = () => processMessageDirectUncoordinated(userId, content, providedThreadId, businessProfileId, attachments,
-    threadId => { const turn = currentConversationRequest(); if (turn) turn.conversationId = threadId; onThreadResolved?.(threadId); }, routeToAgent);
+    threadId => { const turn = currentConversationRequest(); if (turn) turn.conversationId = threadId; onThreadResolved?.(threadId); }, routeToAgent,
+    shortDisplayContent(displayContent, content));
   // Unit callers keep their injected stores. All real API and WS paths acquire
   // the durable turn claim, including legacy clients without an explicit ID.
   if (!requestId) return execute();
@@ -670,6 +677,7 @@ async function processMessageDirectUncoordinated(
   attachments?: ConversationAttachmentReference[],
   onThreadResolved?: (threadId: number) => void,
   routeToAgent?: 'lead_generation',
+  displayContent?: string,
 ): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   message: any;
@@ -733,9 +741,9 @@ async function processMessageDirectUncoordinated(
         const newThread = await createChatThread(userId, undefined, validatedBusinessProfileId);
         threadIdToUse = newThread.id;
         savedThreadId = newThread.id;
-        await updateChatThread(threadIdToUse, content.length > 50 ? content.substring(0, 47) + '...' : content);
+        await updateChatThread(threadIdToUse, threadTitleFrom(displayContent || content));
       }
-      await MessageService.saveMessage({ userId, threadId: threadIdToUse, role: 'user', content, agentType: 'user' });
+      await MessageService.saveMessage({ userId, threadId: threadIdToUse, role: 'user', content, agentType: 'user', ...(displayContent ? { metadata: { displayContent } } : {}) });
       await MessageService.saveMessage({ userId, threadId: threadIdToUse, role: 'system', content: errorText, agentType: 'orchestrator', metadata: { isError: true, errorCode: 402 } });
     // eslint-disable-next-line no-empty
     } catch (_) {}
@@ -803,11 +811,13 @@ async function processMessageDirectUncoordinated(
           role: 'user',
           content,
           agentType: 'user',
+          // Buttons send full instructions to the agent; the chat shows a short label.
+          ...(displayContent ? { metadata: { displayContent } } : {}),
         });
     const browserUserMessage = publicConversationMessage(userMessage);
 
     if (isFirstMessage) {
-      await updateChatThread(threadId, content.length > 50 ? content.substring(0, 47) + '...' : content);
+      await updateChatThread(threadId, threadTitleFrom(displayContent || content));
     }
 
     const llmConfig = await getUserLLMConfig(userId);
@@ -1597,7 +1607,7 @@ export async function langGraphMessageHandler(req: Request, res: Response) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userId = businessOwnerUserId(req);
-    const { content, message, threadId: providedThreadId, businessProfileId, idempotencyKey, attachments } = req.body;
+    const { content, message, threadId: providedThreadId, businessProfileId, idempotencyKey, attachments, displayContent } = req.body;
     const routeToAgent = req.body.routeToAgent === 'lead_generation' ? 'lead_generation' : undefined;
     const normalizedContent = typeof content === 'string' ? content : message;
     const rawIdemKey: string | undefined = (req.headers['idempotency-key'] as string | undefined) || idempotencyKey;
@@ -1615,6 +1625,7 @@ export async function langGraphMessageHandler(req: Request, res: Response) {
       undefined,
       routeToAgent,
       req.body.requestId || rawIdemKey || randomUUID(),
+      typeof displayContent === 'string' ? displayContent : undefined,
     );
     if (result.error) {
       return res.status(result.code || 500).json({ error: result.error });
@@ -2103,8 +2114,9 @@ export async function langGraphActionHandler(req: Request, res: Response) {
     const actionExecutionId = sourceMessageId && buttonId
       ? `lead-action-${threadId}-${sourceMessageId}-${buttonId}`
       : undefined;
-    const sendMessage = (content: string, routeToAgent?: 'lead_generation') => {
+    const sendMessage = (content: string, routeToAgent?: 'lead_generation', displayContent?: string) => {
       req.body.content = content;
+      if (displayContent) req.body.displayContent = displayContent;
       if (routeToAgent) req.body.routeToAgent = routeToAgent;
       if (actionExecutionId && !req.body.idempotencyKey) {
         req.body.idempotencyKey = actionExecutionId;
@@ -2349,7 +2361,9 @@ export async function langGraphActionHandler(req: Request, res: Response) {
         const workflowMsg = data?.message as string || (workflowId
           ? `Use workflow ${workflowId}${workflowTitle ? ` (${workflowTitle})` : ''} for lead generation and generate the lead inputs now.`
           : 'Use the recommended workflow for lead generation and generate the lead inputs now.');
-        return sendMessage(buildLeadStrategySelectionMessage(workflowId, workflowMsg), 'lead_generation');
+        const strategyLabel = typeof data?.displayContent === 'string' ? data.displayContent
+          : `Use ${workflowTitle || 'the recommended lead strategy'} for lead generation`;
+        return sendMessage(buildLeadStrategySelectionMessage(workflowId, workflowMsg), 'lead_generation', strategyLabel);
       }
 
       case 'LEAD_AGENT_APPROVE': {
@@ -2414,7 +2428,8 @@ export async function langGraphActionHandler(req: Request, res: Response) {
               ...(channel ? { channel } : {}),
             },
           });
-          return sendMessage(`Prepare ${channel ? `${channel} ` : ''}outreach for my ${leadIds.length} selected leads. Use exactly these lead IDs: ${leadIds.join(', ')}. Open the shared outreach composer so I can review the account, approved content, schedule and per-outreach follow-up times before confirming. Do not send yet.`);
+          return sendMessage(`Prepare ${channel ? `${channel} ` : ''}outreach for my ${leadIds.length} selected leads. Use exactly these lead IDs: ${leadIds.join(', ')}. Open the shared outreach composer so I can review the account, approved content, schedule and per-outreach follow-up times before confirming. Do not send yet.`, undefined,
+            outreachPrepareLabel(channel, leadIds.length));
         }
         return emitUI('open_modal', { modalType: 'leadSelection' });
       }
@@ -2544,7 +2559,7 @@ export async function langGraphActionHandler(req: Request, res: Response) {
           brandtoolkit: TAB_TYPES.BRAND_TOOLKIT,
         };
         const mappedTab = tabTypeMap[tabType || ''] || tabType;
-        return emitUI('open_tab', { tabType: mappedTab, tabLabel: tabType });
+        return emitUI('open_tab', { tabType: mappedTab, tabLabel: getTabLabel(mappedTab) });
       }
 
       case 'OPEN_OUTREACH_TAB':

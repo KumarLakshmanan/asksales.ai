@@ -3,6 +3,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 
 import { selectedBusinessProfileId as activeBusinessProfileId } from '@/lib/business-profile';
+import { leadPlatformLabel } from '@/lib/lead-platform';
 import { ConversationTurnStatus } from "@/components/conversation/ConversationTurnStatus";
 /* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 
@@ -250,6 +251,10 @@ function ChatContent() {
   const sendAgentRouterMessage = useCallback(async (content: string, bypassProcessingCheck?: boolean) => {
     await handleSendMessage(content, bypassProcessingCheck);
   }, [handleSendMessage]);
+  // Workspace tabs send full instructions to the agent with a short chat label.
+  const sendTabMessage = useCallback((content: string, displayContent?: string) => (
+    handleSendMessage(content, false, [], displayContent)
+  ), [handleSendMessage]);
   const {
     activeAgent,
     setActiveAgent,
@@ -2327,7 +2332,7 @@ function ChatContent() {
   };
 
   const handleBrandToolkitSelect = (toolkitId: number, toolkitName: string) => {
-    handleSendMessage(`I want to use the brand toolkit "${toolkitName}" (ID: ${toolkitId}) for my campaigns.`);
+    handleSendMessage(`I want to use the brand toolkit "${toolkitName}" (ID: ${toolkitId}) for my campaigns.`, false, [], `Use the brand toolkit "${toolkitName}"`);
     setShowBrandToolkitSelector(false);
   };
 
@@ -2341,7 +2346,7 @@ function ChatContent() {
   };
 
   const handleICPSelect = (icpId: number, icpName: string) => {
-    handleSendMessage(`Load ICP "${icpName}" (ID: ${icpId}) for this session.`);
+    handleSendMessage(`Load ICP "${icpName}" (ID: ${icpId}) for this session.`, false, [], `Use the ICP "${icpName}"`);
     setShowICPSelector(false);
   };
 
@@ -2355,6 +2360,9 @@ function ChatContent() {
     setLeadGenConfig(normalizedConfig);
     await handleSendMessage(
       `Run lead generation with this reviewed configuration:\n${JSON.stringify(normalizedConfig, null, 2)}`,
+      false,
+      [],
+      `Find ${normalizedConfig.leadCount} ${normalizedConfig.leadCount === 1 ? 'lead' : 'leads'}${normalizedConfig.platforms.length ? ` on ${normalizedConfig.platforms.map(leadPlatformLabel).join(', ')}` : ''}`,
     );
   };
 
@@ -2419,7 +2427,7 @@ function ChatContent() {
             businessId={selectedBusinessId || undefined}
             fitScore={fitScore}
             onFitScoreUpdate={setFitScore}
-            onSendMessage={handleSendMessage}
+            onSendMessage={sendTabMessage}
           />
         );
 
@@ -2478,7 +2486,7 @@ function ChatContent() {
         );
 
       case "leads":
-        return <LeadsTab key={`leads-${currentThreadId}`} threadId={currentThreadId ?? undefined} onSendMessage={handleSendMessage} />;
+        return <LeadsTab key={`leads-${currentThreadId}`} threadId={currentThreadId ?? undefined} onSendMessage={sendTabMessage} />;
 
       case "lead-inputs":
         return (
@@ -2488,14 +2496,14 @@ function ChatContent() {
             platforms={icp?.sources || []}
             icpData={icp || {}}
             threadId={currentThreadId || undefined}
-            onSendMessage={handleSendMessage}
+            onSendMessage={sendTabMessage}
             onApproval={handleApproveTool}
             approvalAvailable={approvalData?.toolName === 'execute_lead_workflow' && Boolean(approvalData.requestId)}
           />
         );
 
       case "outreach":
-        return <OutreachTab icpId={icpId || undefined} threadId={currentThreadId || undefined} onSendMessage={handleSendMessage} />;
+        return <OutreachTab icpId={icpId || undefined} threadId={currentThreadId || undefined} onSendMessage={sendTabMessage} />;
 
       case "analytics":
         return <StructuredAnalyticsTab data={tabData[activeTab]} />;
@@ -2557,7 +2565,7 @@ function ChatContent() {
                 addTab(tabType, getTabLabel(tabType), true, false);
               }
             }}
-            onSendMessage={handleSendMessage}
+            onSendMessage={sendTabMessage}
           />
         );
       }
@@ -2584,7 +2592,7 @@ function ChatContent() {
             previewData={perTypeData}
             initialTab={contentInitialTab}
             hideTabBar
-            onSendMessage={handleSendMessage}
+            onSendMessage={sendTabMessage}
           />
         );
       }
@@ -2596,18 +2604,18 @@ function ChatContent() {
             icpStatus={icpContextStatus}
             onRetryIcp={() => { if (currentThreadId) void handleThreadSelect(currentThreadId); }}
             threadId={currentThreadId || undefined}
-            onSendMessage={handleSendMessage}
+            onSendMessage={sendTabMessage}
           />
         );
 
       case "crm":
-        return <CRMTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={handleSendMessage} />;
+        return <CRMTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={sendTabMessage} />;
 
       case "support":
-        return <SupportTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={handleSendMessage} />;
+        return <SupportTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={sendTabMessage} />;
 
       case "proposals":
-        return <ProposalsTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={handleSendMessage} />;
+        return <ProposalsTab threadId={currentThreadId ? String(currentThreadId) : undefined} onSendMessage={sendTabMessage} />;
 
       default:
         return <SearchTab onAddTab={addTab} />;

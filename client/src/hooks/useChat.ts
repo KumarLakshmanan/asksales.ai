@@ -137,8 +137,11 @@ export function useChat(
     content: string,
     bypassProcessingCheck = false,
     attachments: ConversationAttachment[] = [],
+    // Short label shown in the chat for a button-sent instruction.
+    displayContent?: string,
   ) => {
     if (!content.trim()) return;
+    const label = displayContent?.trim() || undefined;
 
     if (isProcessing && !bypassProcessingCheck && !currentThreadIdRef.current) {
       toast({
@@ -194,6 +197,7 @@ export function useChat(
       metadata: {
         optimistic: true,
         ...(attachments.length > 0 ? { attachments } : {}),
+        ...(label ? { displayContent: label } : {}),
       },
     };
     setMessages((prev) => [...prev, optimisticUserMessage]);
@@ -216,6 +220,7 @@ export function useChat(
           ? { attachments: attachments.map(({ fileId }) => ({ fileId })) }
           : {}),
         ...(businessProfileId ? { businessProfileId: Number(businessProfileId) } : {}),
+        ...(label ? { displayContent: label } : {}),
       };
       const sendResult = webSocketService.send({
         type: "send_chat_message",

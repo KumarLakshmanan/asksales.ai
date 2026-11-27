@@ -305,7 +305,7 @@ export function setupChatWebSocket(httpServer: HTTPServer): WebSocketServer {
         }
 
         if (message.type === 'send_chat_message') {
-          const { content, threadId, businessProfileId, attachments } = message.data || {};
+          const { content, threadId, businessProfileId, attachments, displayContent } = message.data || {};
           if (businessProfileId && Number(businessProfileId) !== businessScope.businessProfileId) {
             ws.send(JSON.stringify({ type: 'error', data: { code: 'BUSINESS_PROFILE_MISMATCH', message: 'This message belongs to a different business.', ackMessageId: message.messageId, terminal: true } }));
             return;
@@ -373,6 +373,7 @@ export function setupChatWebSocket(httpServer: HTTPServer): WebSocketServer {
               },
               undefined,
               rawIdemKey || randomUUID(),
+              typeof displayContent === 'string' ? displayContent : undefined,
             );
 
             if (!await authorizeBusiness()) { ws.close(1008,'Business access removed'); return; }

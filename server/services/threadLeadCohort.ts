@@ -25,3 +25,25 @@ export function threadLeadIds(userId: number, businessProfileId: number, threadI
       WHERE tl.legacy_campaign_thread_key = ${String(threadId)} AND tl.user_id = ${userId}
         AND tl.business_profile_id = ${businessProfileId} AND tl.deleted_at IS NULL`;
 }
+
+/**
+ * For campaign counts only: the thread's own leads plus account leads the user
+ * selected for this campaign (thread metadata `selectedLeadIds`), so a campaign
+ * that works with existing leads does not show "Leads 0".
+ *
+ * Not for recipient pools, CRM or the Leads tab list: those keep
+ * `threadLeadIds`, so selecting leads never changes who can be messaged.
+ * Selected IDs are re-checked against the owner and business profile.
+ */
+export function reportingThreadLeadIds(userId: number, businessProfileId: number, threadId: number): SQL {
+  return sql`${threadLeadIds(userId, businessProfileId, threadId)}
+    UNION
+    SELECT sl.id FROM chat_threads st
+      CROSS JOIN LATERAL jsonb_array_elements_text(
+        CASE WHEN jsonb_typeof(st.metadata->'selectedLeadIds') = 'array' THEN st.metadata->'selectedLeadIds' ELSE '[]'::jsonb END
+      ) AS selected(lead_id)
+      -- CASE keeps the cast from running on text that is not a lead ID.
+      JOIN leads sl ON sl.id = CASE WHEN selected.lead_id ~ '^[1-9][0-9]{0,8}$' THEN selected.lead_id::int END
+        AND sl.user_id = ${userId} AND sl.business_profile_id = ${businessProfileId} AND sl.deleted_at IS NULL
+      WHERE st.id = ${threadId} AND st.user_id = ${userId}`;
+}

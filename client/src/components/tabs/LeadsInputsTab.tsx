@@ -52,7 +52,8 @@ interface LeadsInputsTabProps {
   platforms: string[];
   icpData: unknown;
   threadId?: number;
-  onSendMessage?: (message: string, bypassProcessingCheck?: boolean) => void;
+  /** The second argument is the short label the chat shows instead of the full instruction. */
+  onSendMessage?: (message: string, displayContent?: string) => void;
   onApproval?: (approved: boolean) => void;
   approvalAvailable?: boolean;
 }
@@ -292,7 +293,7 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
       return;
     }
 
-    onSendMessage(`Regenerate the reviewed lead inputs using only ${exactWorkflows.join(', ')}. Keep the same ICP, geography, and industry targeting, enforce a global cap of exactly ${exactLimit} leads across all selected providers, and show the exact provider parameters for review before execution.`);
+    onSendMessage(`Regenerate the reviewed lead inputs using only ${exactWorkflows.join(', ')}. Keep the same ICP, geography, and industry targeting, enforce a global cap of exactly ${exactLimit} leads across all selected providers, and show the exact provider parameters for review before execution.`, `Regenerate the search settings for ${exactLimit} ${exactLimit === 1 ? 'lead' : 'leads'}`);
     toast({ title: 'Regeneration requested', description: 'The existing parameters remain available until replacements are reviewed.' });
   };
 
@@ -644,7 +645,7 @@ export default function SearchSettingsTab({ icpId: _icpId, platforms, icpData: _
                       return;
                     }
                     const exactLimit = targetInput.requestedLeadTotal || 5;
-                    onSendMessage(`Regenerate the reviewed lead inputs using only ${selectedWorkflow}. Keep the same ICP, geography, and industry targeting, enforce a global cap of exactly ${exactLimit} leads, and show the exact provider parameters for review before execution.`);
+                    onSendMessage(`Regenerate the reviewed lead inputs using only ${selectedWorkflow}. Keep the same ICP, geography, and industry targeting, enforce a global cap of exactly ${exactLimit} leads, and show the exact provider parameters for review before execution.`, `Regenerate the search settings for ${exactLimit} ${exactLimit === 1 ? 'lead' : 'leads'}`);
                     toast({ title: 'Regeneration requested', description: 'The provider-specific parameters must be reviewed again before execution.' });
                     setEditingScrapingPlatform(null);
                   }}>

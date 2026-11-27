@@ -288,6 +288,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
       : typeof value === 'string' && /^[1-9]\d{0,15}$/.test(value) && Number.isSafeInteger(Number(value)) ? value : null;
   const rows = (value: unknown): Record<string, unknown>[] =>
     Array.isArray(value) ? value.filter(row => row !== null && typeof row === 'object' && !Array.isArray(row)).map(row => object(row)) : [];
+  const named = (itemId: string, name: string | null) => name || `#${itemId}`;
   const summarizeItems = (title: string, value: unknown, details: (row: Record<string, unknown>) => string): string => {
     const items = rows(value);
     if (!items.length) return `${title}: none returned.`;
@@ -340,7 +341,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
           if (!itemId) return '';
           const amount = typeof row.total === 'number' && Number.isFinite(row.total) && typeof row.currency === 'string' && /^[A-Z]{3}$/.test(row.currency)
             ? `; total ${row.currency} ${row.total.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : '';
-          return `#${itemId}${label(row.title) ? ` ${label(row.title)}` : ''}${label(row.status) ? ` (status: ${label(row.status)})` : ''}${label(row.recipientName) ? `; for ${label(row.recipientName)}` : ''}${amount}`;
+          return `${named(itemId, label(row.title))}${label(row.status) ? ` (status: ${label(row.status)})` : ''}${label(row.recipientName) ? `; for ${label(row.recipientName)}` : ''}${amount}`;
         }));
         if (output.scope === 'current_campaign') lines.push('This list covers proposals linked to this campaign conversation only. Ask for all proposals to see every saved proposal.');
         break;
@@ -350,7 +351,7 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
           if (!itemId) return '';
           const price = typeof row.unitPrice === 'number' && Number.isFinite(row.unitPrice) && typeof row.currency === 'string' && /^[A-Z]{3}$/.test(row.currency)
             ? ` at ${row.currency} ${row.unitPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}${label(row.unit) ? ` per ${label(row.unit)}` : ''}` : '';
-          return `#${itemId}${label(row.name) ? ` ${label(row.name)}` : ''}${price}`;
+          return `${named(itemId, label(row.name))}${price}`;
         }));
         break;
       case 'list_proposal_templates': {
@@ -358,45 +359,43 @@ function readOnlyFallback(facts: Fact[], results: ToolCallResult[]): string | nu
         const templates = object(results[index]?.result).output;
         lines.push(summarizeItems('Proposal templates', templates, row => {
           const itemId = id(row.id);
-          return itemId ? `#${itemId}${label(row.name) ? ` ${label(row.name)}` : ''}${label(row.category) ? ` (${label(row.category)})` : ''}` : '';
+          return itemId ? `${named(itemId, label(row.name))}${label(row.category) ? ` (${label(row.category)})` : ''}` : '';
         }));
         break;
       }
       case 'get_brandtoolkits':
         lines.push(summarizeItems('Brand toolkits', output.toolkits, row => {
           const itemId = id(row.id);
-          return itemId ? `#${itemId}${label(row.name) ? ` ${label(row.name)}` : ''}${row.isDefault === true ? ' (default)' : ''}` : '';
+          return itemId ? `${named(itemId, label(row.name))}${row.isDefault === true ? ' (default)' : ''}` : '';
         }));
         break;
       case 'get_brandtoolkit': {
         const itemId = id(output.id);
-        lines.push(itemId ? `Brand toolkit #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.voiceType) ? `; voice: ${label(output.voiceType)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No brand toolkit details were found.');
+        lines.push(itemId ? `Brand toolkit ${named(itemId, label(output.name))}${label(output.voiceType) ? `; voice: ${label(output.voiceType)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No brand toolkit details were found.');
         break;
       }
       case 'get_businessprofiles':
         lines.push(summarizeItems('Business profiles', output.profiles, row => {
           const itemId = id(row.id);
-          return itemId ? `#${itemId}${label(row.name) ? ` ${label(row.name)}` : ''}${label(row.industry) ? ` (industry: ${label(row.industry)})` : ''}${row.isDefault === true ? ' (default)' : ''}` : '';
+          return itemId ? `${named(itemId, label(row.name))}${label(row.industry) ? ` (industry: ${label(row.industry)})` : ''}${row.isDefault === true ? ' (default)' : ''}` : '';
         }));
         break;
       case 'get_businessprofile': {
         const itemId = id(output.id);
-        lines.push(itemId ? `Business profile #${itemId}${label(output.name) ? ` ${label(output.name)}` : ''}${label(output.industry) ? `; industry: ${label(output.industry)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No business profile details were found.');
+        lines.push(itemId ? `Business profile ${named(itemId, label(output.name))}${label(output.industry) ? `; industry: ${label(output.industry)}` : ''}${output.isDefault === true ? '; default' : ''}.` : 'No business profile details were found.');
         break;
       }
       case 'query_content_assets': {
         const records = fact.retrievedRecords ?? [];
         const titles = new Map(rows(output.assets).map(row => [id(row.id), label(row.title)]));
         lines.push(records.length ? `Saved content assets: ${records.slice(0, 10).map(record =>
-          `#${record.id}${titles.get(record.id) ? ` ${titles.get(record.id)}` : ''}${record.storedStatus ? ` (stored status: ${record.storedStatus})` : ''}`,
+          `${named(record.id, titles.get(record.id) ?? null)}${record.storedStatus ? ` (${record.storedStatus})` : ''}`,
         ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'No saved content was found.');
         break;
       }
       case 'query_ad_campaigns': {
         const records = fact.retrievedRecords ?? [];
-        lines.push(records.length ? `Saved campaigns: ${records.slice(0, 10).map(record =>
-          `campaign #${record.id}${record.storedStatus ? ` (stored status: ${record.storedStatus})` : ''}`,
-        ).join('; ')}${records.length > 10 ? '; showing the first 10' : ''}.` : 'No saved campaigns were found.');
+        lines.push(records.length ? `Saved campaigns: ${countByStatus(records)}.` : 'No saved campaigns were found.');
         break;
       }
       case 'estimate_lead_search_cost': {
@@ -451,7 +450,7 @@ function generationLines(facts: Fact[]): string[] {
         const series = generation.postCount && generation.postCount > 1
           ? `${generation.savedCount ?? ids.length} of ${generation.postCount} ${fact.toolName === 'generate_email_template' ? 'sequence emails' : 'posts'} were saved as separate drafts`
           : `${label} saved as a draft`;
-        lines.push(`${series} (content ${ids.slice(0, 10).map(id => `#${id}`).join(', ')}${ids.length > 10 ? ', …' : ''}). Open it from the content library to review it before scheduling or publishing.`);
+        lines.push(`${series}. Open it from the content library to review it before scheduling or publishing.`);
       }
       if (generation.failedCount || generation.warningCount) lines.push('Some parts did not complete. The review card lists what to redo.');
     } else if (fact.state === 'failed') {
@@ -463,35 +462,48 @@ function generationLines(facts: Fact[]): string[] {
   return lines;
 }
 
+/** "2 ad campaigns (draft), 1 ad campaign (active)" — counts, not record numbers. */
+function countByStatus(records: Array<{ type: string; storedStatus?: string | null }>): string {
+  const counts = new Map<string, { type: string; status: string; count: number }>();
+  for (const record of records) {
+    const status = record.storedStatus ? String(record.storedStatus) : '';
+    const key = `${record.type}|${status}`;
+    const type = record.type === 'asset' ? 'content item' : String(record.type || 'record').replace(/_/g, ' ');
+    const entry = counts.get(key) ?? { type, status, count: 0 };
+    entry.count += 1;
+    counts.set(key, entry);
+  }
+  return [...counts.values()].map(({ type, status, count }) => `${count} ${type}${count === 1 ? '' : 's'}${status ? ` (${status})` : ''}`).join(', ');
+}
+
 function factualFallback(facts: Fact[], results: ToolCallResult[], reason: 'rejected' | 'unchecked' = 'rejected'): string {
   const readOnly = readOnlyFallback(facts, results);
   if (readOnly) return readOnly;
   const current = facts.filter(fact => fact.scope === 'current');
   const reviews = facts.filter(fact => fact.state === 'review_ready');
   const generated = generationLines(facts);
+  // One short, plain summary. It never claims a send, publish or spend the
+  // receipts do not show, and it does not repeat the same caveat several times.
   const lines = [reason === 'unchecked'
-    ? 'I could not verify my reply against the recorded actions just now, so here is only what the system recorded.'
-    : 'I could not verify some actions described in my reply, so here is only what the system recorded.'];
+    ? 'Here is what the system recorded for this step.'
+    : 'Here is what actually happened in this step.'];
   lines.push(...generated);
-  if (current.some(fact => fact.state === 'review_ready')) lines.push('A review card was prepared in this reply; this does not mean its action ran.');
-  else if (!generated.length) lines.push('No new review card is confirmed for this reply.');
-  if (reviews.some(fact => fact.scope === 'saved')) lines.push('An existing saved review remains available; it was not newly created by this reply.');
+  const newReview = current.some(fact => fact.state === 'review_ready');
+  if (newReview) lines.push('A review card is ready. Nothing runs until you confirm it.');
+  else if (reviews.some(fact => fact.scope === 'saved')) lines.push('Your earlier review is still open.');
   const retrieved = current.flatMap(fact => fact.retrievedRecords ?? []);
-  if (retrieved.length) lines.push('Verified saved records from the current read-only lookup: ' + retrieved.slice(0, 10).map(record =>
-    `${record.type} #${record.id}${record.storedStatus ? ` (stored status: ${record.storedStatus})` : ''}`,
-  ).join('; ') + '. These are local records, not live provider verification. Check the saved review for launch readiness.');
+  if (retrieved.length) lines.push(`Saved records checked: ${countByStatus(retrieved)}. These are saved records, not a live check with the provider.`);
   // Generation outcomes are already described above in plain words.
   const receipts = current.filter(fact => fact.state !== 'review_ready' && fact.state !== 'query_succeeded'
     && !(generationTools.has(fact.toolName) && (fact.generation || ['failed', 'queued', 'running'].includes(fact.state))));
-  if (generated.length && !receipts.length) {
-    lines.push('Nothing was sent or published. Tell me what to change, or ask for the next step.');
-  } else if (receipts.length) {
-    lines.push('Recorded current action statuses: ' + receipts.slice(0, 8).map(fact =>
+  if (receipts.length) {
+    lines.push('Results: ' + receipts.slice(0, 8).map(fact =>
       `${humanizeToolName(fact.toolName)}: ${fact.state.replace(/_/g, ' ')}`,
-    ).join('; ') + '.');
-    lines.push('These statuses do not establish downstream delivery or activation. Check the recorded action details before retrying; completed or queued work has not been undone.');
+    ).join('; ') + '. Check the details before retrying; finished or queued work was not undone.');
   } else {
-    lines.push('This response does not confirm any sending, publishing, ad activation, or spend.');
+    lines.push(generated.length || newReview
+      ? 'Nothing was sent, published or spent. Tell me what to change, or ask for the next step.'
+      : 'Nothing was sent, published or spent.');
   }
   return lines.join('\n\n');
 }

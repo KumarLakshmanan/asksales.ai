@@ -85,6 +85,8 @@ interface PlatformProgress {
  leads: Lead[];
  error?: string;
  executionId?: string;
+ /** False when the server knows a retry would fail the same way. */
+ retryAvailable?: boolean;
 }
 
 interface WorkflowProgress {
@@ -536,6 +538,7 @@ export default function LeadsTab({ threadId, executionId, onSendMessage }: Leads
  leads: matchedLeads,
  error: (r as { error?: string }).error,
  executionId: r.executionId,
+ retryAvailable: (r as { retryAvailable?: boolean }).retryAvailable,
  };
  }),
  };
@@ -967,6 +970,7 @@ export default function LeadsTab({ threadId, executionId, onSendMessage }: Leads
  workflowId: reviewedInput?.workflowId || workflowId,
  platform: reviewedInput?.platform || workflowId,
  // The strategy is bound by workflowId above; this text is shown in the chat.
+ displayContent: `Retry the ${readableToolName(reviewedInput?.workflowId || workflowId)} search for ${reviewedTotal} ${reviewedTotal === 1 ? 'lead' : 'leads'}`,
  message: `Regenerate the reviewed lead inputs using only ${readableToolName(reviewedInput?.workflowId || workflowId)}. Reuse the same ICP, geography, industry, and provider-specific targeting, enforce a global cap of exactly ${reviewedTotal} lead${reviewedTotal === 1 ? '' : 's'}, and show the exact provider parameters for review. Do not execute yet, substitute a broad provider, or create duplicate leads.`,
  },
  });
@@ -1729,19 +1733,22 @@ export default function LeadsTab({ threadId, executionId, onSendMessage }: Leads
                 <AlertCircle className="w-8 h-8 text-destructive" />
               </div>
               <div className="w-full min-w-0 max-w-2xl space-y-2">
-                <p className="text-sm font-semibold text-destructive">Error</p>
+                <p className="text-sm font-semibold text-destructive">Search did not run</p>
                 <p className="w-full break-words text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere] sm:text-[15px]">{platformData.error || 'There was an error searching for leads on this platform.'}</p>
               </div>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={() => handleRetry(platformData.platform)}
-                disabled={retrying}
-                className="h-8 shrink-0 rounded-lg border-destructive/20 text-xs text-destructive hover:bg-destructive/10"
-              >
-                <RotateCcw className="w-4 h-4 mr-3" />
-                Retry
-              </Button>
+              {/* Retry would fail the same way while no lead data provider is connected. */}
+              {platformData.retryAvailable !== false && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => handleRetry(platformData.platform)}
+                  disabled={retrying}
+                  className="h-8 shrink-0 rounded-lg border-destructive/20 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  <RotateCcw className="w-4 h-4 mr-3" />
+                  Retry
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-6">

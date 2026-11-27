@@ -33,6 +33,7 @@ import { randomUUID } from 'node:crypto';
 import { normalizeReviewedLeadIds } from './leadReview.js';
 import { isCurrentIcpRevisionApproved } from '../models/conversationWorkflow/stateMachine.js';
 import { toUserFacingError, userFacingReason } from '../../shared/userFacingError.js';
+import { campaignNextStepButtons, loadCampaignRun } from './utils/campaignStatusContext.js';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -713,7 +714,10 @@ export async function routerLogic(
       || ((analysis.intent === 'conversational' || analysis.intent === 'meta')
         && !analysis.nextAgent && !analysis.hiredAgents.length && analysis.action !== 'continue')) {
       state.messages.push({ role: 'assistant', content: analysis.response, agentType: 'orchestrator' });
-      return { nextAgent: null, stateUpdates: {} };
+      // A status answer offers the matching next step; the buttons only open a tab.
+      const nextSteps = analysis.action === 'question' && !analysis.needsClarification
+        ? campaignNextStepButtons(await loadCampaignRun(state.userId, state.threadId)) : [];
+      return { nextAgent: null, stateUpdates: nextSteps.length ? { actionButtons: nextSteps } : {} };
     }
     if (analysis.action === 'continue' && !analysis.leadSettingsRequested) {
       // "Save draft" deliberately shelves a review without authorizing it. A

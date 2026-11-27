@@ -69,8 +69,8 @@ describe('a completed generation review card', () => {
   it('when the check cannot run, states what was saved and where, in plain words', async () => {
     completion.mockRejectedValue(new Error('provider down'));
     const reply = await groundAgentResponse(continuationState(generated()), 'Your post is ready.', []);
-    expect(reply).toContain('could not verify my reply against the recorded actions just now');
-    expect(reply).toContain('Social post saved as a draft (content #501)');
+    expect(reply).toContain('Here is what the system recorded for this step.');
+    expect(reply).toContain('Social post saved as a draft. Open it from the content library');
     expect(reply).toContain('content library');
     expect(reply).not.toMatch(/No new review card|generate_social_media_post|UNTRUSTED/);
   });
@@ -90,7 +90,7 @@ describe('send and publish continuations stay strict', () => {
       widgetContinuation: { widgetId: 90, toolName: 'publish_social_post', success: true, executionResult: { success: true, output: { status: 'queued' } } } } as unknown as AgentState;
     const reply = await groundAgentResponse(publish, 'Your post is live and the review card is updated.', []);
     expect(purposes()).not.toContain('response_grounding_repair');
-    expect(reply).toContain('could not verify');
+    expect(reply).toMatch(/Here is what (?:actually happened|the system recorded)/);
     expect(reply).not.toContain('is live');
   });
 
@@ -129,7 +129,7 @@ describe('content written in chat with no tool call', () => {
       .mockResolvedValueOnce({ success: true, content: 'All 30 posts are published.' })
       .mockResolvedValueOnce(auditReply([], true));
     const reply = await groundAgentResponse(planState(), 'All 30 posts are published.', []);
-    expect(reply).toContain('could not verify some actions described in my reply');
+    expect(reply).toContain('Here is what actually happened in this step.');
     expect(reply).not.toContain('are published');
   });
 });

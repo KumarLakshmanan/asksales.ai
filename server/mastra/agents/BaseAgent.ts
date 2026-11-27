@@ -288,6 +288,7 @@ export abstract class BaseAgent {
       : '')
       + (dashboardOperationTools(state.intentAnalysis?.semanticRequest?.dashboardOperation) ? '\nDASHBOARD OPERATION: Use the available application tools for fresh saved data. Resolve exact owned file/operation/assistant IDs; never invent them or derive full workbook counts from truncated attachment text. Analysis creates a temporary preview. Review contact import opens its existing confirmation page. Neither imports contacts nor sends messages. Return the result and dashboard link without restarting ICP, search or campaign setup.\n' : '')
       + '\nREPLY PRESENTATION: The chat already displays your name and role above your message. Begin directly with the answer; do not prefix your reply with your name or a speaker label. Preserve names when they are part of requested content, such as a quoted conversation or draft.\n'
+      + 'RECORD IDS: Use record IDs (ICP, lead, review, asset, campaign, workflow) only inside tool calls. In text the user reads, name things by what they are ("your ICP", "the 5 selected leads", "the WhatsApp review") and never quote internal IDs or numbers like "ID 189" or "#321".\n'
       + (state.intentAnalysis?.action === 'question' && (state.intentAnalysis.hiredAgents?.length ?? 0) > 1
         ? `COORDINATED QUESTION: You are ${getPersona(this.agentType).displayName}. Answer only your assigned specialty in your own message. Other specialists produce their own messages. Do not write their answers, a multi-speaker transcript, or a combined team summary.\n`
         : '');

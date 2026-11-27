@@ -73,7 +73,7 @@ describe('specialist final-response grounding boundary', () => {
     expect(text).toContain('numeric budget and currency');
     expect(text).toContain('No matching saved creative');
     expect(text).toContain('draft-only restrictions');
-    expect(text).not.toMatch(/campaign is live|UNTRUSTED|could not verify|Recorded current action statuses/);
+    expect(text).not.toMatch(/campaign is live|UNTRUSTED|Here is what actually happened|Here is what the system recorded|Results: /);
     expect(JSON.stringify(emitChunk.mock.calls)).toContain('numeric budget and currency');
     expect(JSON.stringify(emitChunk.mock.calls)).not.toContain('campaign is live');
     expect(result.toolResults).toEqual(toolResults);
@@ -83,7 +83,7 @@ describe('specialist final-response grounding boundary', () => {
   it.each(['performance_marketing', 'outreach', 'content_studio'] as const)('does not stream or return an invented %s review', async agentType => {
     const result = await new TestAgent(agentType).run({ ...state, currentAgent: agentType });
     const text = result.messages?.[0]?.content ?? '';
-    expect(text).toContain('No new review card');
+    expect(text).toContain('Nothing was sent, published or spent');
     expect(text).not.toContain('I prepared your review card');
     expect(JSON.stringify(emitChunk.mock.calls)).not.toContain('I prepared your review card');
     expect(completion).not.toHaveBeenCalled();
@@ -94,13 +94,13 @@ describe('specialist final-response grounding boundary', () => {
     agent.postProcess = async () => { throw new Error('enrichment failed'); };
     completion.mockRejectedValue(new Error('verifier unavailable'));
     const result = await agent.run(state);
-    expect(result.messages[0].content).toContain('No new review card');
+    expect(result.messages[0].content).toContain('Nothing was sent, published or spent');
     expect(JSON.stringify(emitChunk.mock.calls)).not.toContain('I prepared your review card');
   });
 
   it('keeps read-only questions behind the same factual boundary', async () => {
     const result = await new TestAgent('performance_marketing').run({ ...state, intentAnalysis: { action: 'question' } });
-    expect(result.messages?.[0]?.content).toContain('No new review card');
+    expect(result.messages?.[0]?.content).toContain('Nothing was sent, published or spent');
     expect(JSON.stringify(emitChunk.mock.calls)).not.toContain('I prepared your review card');
   });
 

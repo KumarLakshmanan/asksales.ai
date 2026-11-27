@@ -399,6 +399,11 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** For components that may render outside the conversation page. */
+export function useOptionalWidgets() {
+  return useContext(WidgetContext) ?? null;
+}
+
 export function useWidgets() {
   const context = useContext(WidgetContext);
   if (!context) {

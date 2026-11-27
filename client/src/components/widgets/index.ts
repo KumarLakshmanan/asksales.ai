@@ -1,4 +1,4 @@
-export { WidgetProvider, useWidgets } from './WidgetContext';
+export { WidgetProvider, useWidgets, useOptionalWidgets } from './WidgetContext';
 export { widgetRegistry } from './registry';
 export { toolToWidgetMap, toolHasWidget, getWidgetTypeForTool } from './toolWidgetMap';
 export type { WidgetState, WidgetType, WidgetProps, WidgetDefinition } from './types';

@@ -136,16 +136,20 @@ export default function MessageBubble({
     : [];
 
   if (message.role === "user") {
+    // Buttons send full instructions to the agent and a short label for the chat.
+    const userText = typeof message.metadata?.displayContent === "string" && message.metadata.displayContent.trim()
+      ? message.metadata.displayContent
+      : message.content;
     return (
       <ConversationMessageFrame
         role="user"
         surface="campaign"
         className="mb-4"
-        ariaLabel={`You: ${message.content?.slice(0, 100)}`}
+        ariaLabel={`You: ${userText?.slice(0, 100)}`}
         testId={`message-user-${message.id}`}
         footer={<span className="pr-1 text-[10px] tabular-nums text-muted-foreground">{formatTime(message.timestamp)}</span>}
       >
-        <p className="break-words whitespace-pre-wrap text-[14px] font-medium leading-relaxed [overflow-wrap:anywhere]">{message.content}</p>
+        <p className="break-words whitespace-pre-wrap text-[14px] font-medium leading-relaxed [overflow-wrap:anywhere]">{userText}</p>
         {attachments.length > 0 ? (
           <div className="mt-3 space-y-1.5 border-t border-white/20 pt-2.5" aria-label="Message attachments">
             {attachments.map((attachment) => (

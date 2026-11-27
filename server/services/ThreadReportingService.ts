@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../models/db.js';
 import { requireBusinessScope } from '../tenancy/businessContext.js';
-import { threadLeadIds } from './threadLeadCohort.js';
+import { reportingThreadLeadIds } from './threadLeadCohort.js';
 import { firstWinCtes } from './insights/FirstWinReporting.js';
 import { getEffectiveModuleAccess } from '../models/platformAccess/functions.js';
 import type { ThreadReportingSummary } from '../../shared/threadReporting.js';
@@ -20,7 +20,7 @@ export async function threadReporting(userId: number, threadId: number, executor
   const crmEnabled = crmAccess ?? await threadReportingCrmEnabled(userId);
   const result = await executor.execute(sql`${firstWinCtes(userId, scope.businessProfileId, crmEnabled)}, cohort AS (
     SELECT l.* FROM leads l WHERE l.user_id=${userId} AND l.business_profile_id=${scope.businessProfileId} AND l.deleted_at IS NULL
-      AND l.id IN (${threadLeadIds(userId, scope.businessProfileId, threadId)})
+      AND l.id IN (${reportingThreadLeadIds(userId, scope.businessProfileId, threadId)})
   ), messages AS (
     SELECT sm.* FROM sent_messages sm JOIN cohort l ON l.id=sm.lead_id
       WHERE sm.user_id=${userId} AND sm.business_profile_id=${scope.businessProfileId} AND sm.is_reply IS NOT TRUE

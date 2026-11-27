@@ -56,8 +56,8 @@ describe('action response grounding', () => {
     expect(response).toContain('Confirm the supplied destination');
     expect(response).toContain('draft-only restrictions');
     // A model answer states it in its own words; the recorded-facts summary uses plain wording.
-    expect(response).toMatch(/No new review card is confirmed|Nothing was sent, published, activated or spent in this step\./);
-    expect(response).not.toMatch(/could not verify|Recorded current action statuses|SECRET_|UNTRUSTED_TOOL_PROSE/);
+    expect(response).toMatch(/No new review card is confirmed|Nothing was sent, published or spent|Nothing was sent, published, activated or spent in this step\./);
+    expect(response).not.toMatch(/Here is what actually happened|Here is what the system recorded|Results: |SECRET_|UNTRUSTED_TOOL_PROSE/);
   };
 
   it.each(['unavailable', 'rejected', 'malformed'])('keeps the exact live review-only checklist without an agent suggestion when the auditor is %s', async failure => {
@@ -139,7 +139,7 @@ describe('action response grounding', () => {
     expect(result).toContain('supplied campaign brief');
     expect(result).toContain('draft-only restrictions');
     expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
-    expect(result).not.toMatch(/could not verify|Recorded current action statuses|suggest_switch_agents|Your ads are live|SECRET_|UNTRUSTED_TOOL_PROSE/);
+    expect(result).not.toMatch(/Here is what actually happened|Here is what the system recorded|Results: |suggest_switch_agents|Your ads are live|SECRET_|UNTRUSTED_TOOL_PROSE/);
   });
 
   it.each(['failed', 'queued', 'approval', 'mutation'])('does not hide a %s action behind the read-only handoff summary', async action => {
@@ -149,7 +149,7 @@ describe('action response grounding', () => {
       : action === 'approval' ? receipt('publish_ads', { requiresApproval: true })
       : receipt('publish_ads', { success: true });
     const result = await groundAgentResponse(state(), 'All ready.', [...readinessReceipts(), extra]);
-    expect(result).toContain('Recorded current action statuses');
+    expect(result).toContain('Results: ');
     expect(result).not.toContain('For the requested draft');
   });
 
@@ -262,7 +262,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'Unsupported launch claim.', [
       receipt('query_ad_campaigns', { output: { campaigns: [{ campaignId: 24, localStatus: 'draft', lastRecordedProviderStatus: 'active', content: { campaignId: 99 } }] } }),
     ]);
-    expect(result).toContain('campaign #24 (stored status: draft)');
+    expect(result).toContain('Saved campaigns: 1 campaign (draft)');
     expect(result).not.toContain('#99');
     expect(result).not.toContain('status: active');
   });
@@ -275,11 +275,11 @@ describe('action response grounding', () => {
       receipt('get_businessprofiles', { success: true, output: { profiles: [{ id: 8, name: 'Growth Lab', industry: 'SaaS', isDefault: true }] } }),
       receipt('get_businessprofile', { success: true, output: { id: 8, name: 'Growth Lab', industry: 'SaaS', isDefault: true } }),
     ]);
-    expect(result).toContain('Brand toolkits: 1 returned; #11 "Growth Lab" (default)');
-    expect(result).toContain('Brand toolkit #11 "Growth Lab"; voice: "clear"');
-    expect(result).toContain('Business profiles: 1 returned; #8 "Growth Lab" (industry: "SaaS")');
-    expect(result).toContain('Business profile #8 "Growth Lab"; industry: "SaaS"');
-    expect(result).not.toContain('could not verify');
+    expect(result).toContain('Brand toolkits: 1 returned; "Growth Lab" (default)');
+    expect(result).toContain('Brand toolkit "Growth Lab"; voice: "clear"');
+    expect(result).toContain('Business profiles: 1 returned; "Growth Lab" (industry: "SaaS")');
+    expect(result).toContain('Business profile "Growth Lab"; industry: "SaaS"');
+    expect(result).not.toContain('Here is what actually happened');
     expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
   });
 
@@ -290,12 +290,12 @@ describe('action response grounding', () => {
         { id: 49, title: 'Launch draft', status: 'draft', content: { id: 99, status: 'published' }, lastRecordedProviderStatus: 'active' },
       ] } }),
     ]);
-    expect(result).toContain('Saved content assets: #49 "Launch draft" (stored status: draft)');
+    expect(result).toContain('Saved content assets: "Launch draft" (draft)');
     expect(result).not.toContain('#99');
     expect(result).not.toContain('status: published');
     expect(result).not.toContain('status: active');
     expect(result).not.toContain('The saved draft was published');
-    expect(result).not.toContain('could not verify');
+    expect(result).not.toContain('Here is what actually happened');
   });
 
   it('drops unsupported send, publish, and spend claims even when read-only queries succeed', async () => {
@@ -304,7 +304,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), draft, [
       receipt('get_brandtoolkits', { success: true, output: { toolkits: [{ id: 11, name: 'Growth Lab' }] } }),
     ]);
-    expect(result).toContain('Brand toolkits: 1 returned; #11 "Growth Lab"');
+    expect(result).toContain('Brand toolkits: 1 returned; "Growth Lab"');
     expect(result).not.toContain(draft);
     expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
   });
@@ -314,14 +314,14 @@ describe('action response grounding', () => {
     const failed = await groundAgentResponse(state(), 'I checked the profile.', [
       receipt('get_businessprofile', { success: false, output: { id: 8, name: 'Growth Lab' } }),
     ]);
-    expect(failed).toContain('could not verify');
+    expect(failed).toMatch(/Here is what (?:actually happened|the system recorded)/);
     expect(failed).not.toContain('Business profile #8');
 
     const mixed = await groundAgentResponse(state(), 'I sent the campaign.', [
       receipt('get_businessprofile', { success: true, output: { id: 8, name: 'Growth Lab' } }),
       receipt('send_outreach_messages', { success: false }, false),
     ]);
-    expect(mixed).toContain('could not verify');
+    expect(mixed).toMatch(/Here is what (?:actually happened|the system recorded)/);
     expect(mixed).toContain('the outreach send: failed');
     expect(mixed).not.toContain('I sent the campaign');
   });
@@ -332,7 +332,7 @@ describe('action response grounding', () => {
       receipt('query_content_assets', { output: { assets: [{ id: 165, content: { id: 99 } }] } }),
       receipt('query_ad_campaigns', { output: { campaigns: [{ campaignId: 24 }] } }, false),
     ]);
-    expect(result).toContain('could not verify');
+    expect(result).toMatch(/Here is what (?:actually happened|the system recorded)/);
     expect(result).not.toContain('asset #99');
     expect(result).not.toContain('campaign #24');
   });
@@ -345,7 +345,7 @@ describe('action response grounding', () => {
 
   it('does not confuse a continuation widget ID or generated-copy ID with its saved asset', async () => {
     audit([claim({ toolName: 'generate_ad', state: 'tool_succeeded', action: 'content_generation', resourceId: '55', resourceType: 'asset', evidenceIds: ['continuation'] })]);
-    expect(await groundAgentResponse(state({ widgetContinuation: { widgetId: 55, toolName: 'generate_ad', success: true, executionResult: { output: { assetIds: [165], ad: { assetIds: [55] } } } } }), 'Saved asset 55.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state({ widgetContinuation: { widgetId: 55, toolName: 'generate_ad', success: true, executionResult: { output: { assetIds: [165], ad: { assetIds: [55] } } } } }), 'Saved asset 55.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it.each([
@@ -366,12 +366,12 @@ describe('action response grounding', () => {
     audit([], true);
     const result = await groundAgentResponse(state(), text, []);
     expect(result).not.toContain(text);
-    expect(result).toContain('No new review card is confirmed');
+    expect(result).toContain('Nothing was sent, published or spent');
   });
 
   it('rejects invented evidence even if the auditor marks it supported', async () => {
     audit([claim()]);
-    expect(await groundAgentResponse(state(), 'The review card is ready.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state(), 'The review card is ready.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it.each([
@@ -382,7 +382,7 @@ describe('action response grounding', () => {
     audit([], false);
     const result = await groundAgentResponse(state({ savedToolActions: [{ ...saved('succeeded'), toolName: 'generate_social_media_post' }] }), text, []);
     expect(result).not.toContain(text);
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Nothing was sent, published or spent');
     expect(completion).not.toHaveBeenCalled();
   });
 
@@ -413,7 +413,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'No campaign review card was created.', [receipt('publish_ads', {
       success: true, pendingWidget: true, output: { widgetId: 49 },
     })]);
-    expect(result).toContain('A review card was prepared in this reply');
+    expect(result).toContain('A review card is ready. Nothing runs until you confirm it.');
     expect(completion).toHaveBeenCalledTimes(1);
   });
 
@@ -424,7 +424,7 @@ describe('action response grounding', () => {
       receipt('check_integration_status', { success: true }),
     ]);
     expect(result).toContain('Nothing was sent, published, activated or spent in this step.');
-    expect(result).not.toContain('Recorded current action statuses');
+    expect(result).not.toContain('Results: ');
   });
 
   it('preserves an exactly evidenced retrieval claim', async () => {
@@ -443,7 +443,7 @@ describe('action response grounding', () => {
   it('requires a real widget identity before deriving review-ready evidence', async () => {
     audit([claim()]);
     const result = await groundAgentResponse(state(), 'A card is ready.', [receipt('publish_ads', { success: true, pendingWidget: true })]);
-    expect(result).toContain('No new review card is confirmed');
+    expect(result).not.toContain('A review card is ready');
     expect(result).toContain('the ad publish: tool succeeded');
   });
 
@@ -464,8 +464,8 @@ describe('action response grounding', () => {
   it('does not let saved review evidence establish current-turn creation', async () => {
     audit([claim({ evidenceIds: ['saved:0'] })]);
     const result = await groundAgentResponse(state({ savedToolActions: [saved('active')] }), 'I created a new card.', []);
-    expect(result).toContain('existing saved review');
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Your earlier review is still open');
+    expect(result).toContain('Nothing was sent, published or spent');
   });
 
   it('marks a reused widget as saved, not newly created', async () => {
@@ -473,14 +473,14 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state(), 'I created a new card.', [receipt('publish_ads', {
       pendingWidget: true, output: { widgetId: 49, reusedWidget: true },
     })]);
-    expect(result).toContain('existing saved review');
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Your earlier review is still open');
+    expect(result).toContain('Nothing was sent, published or spent');
   });
 
   it.each(['cancelled', 'failed', 'unknown-status'])('does not make a %s saved review active', async status => {
     audit([claim({ scope: 'saved', evidenceIds: ['saved:0'] })]);
     const result = await groundAgentResponse(state({ savedToolActions: [saved(status)] }), 'Your card is ready for approval.', []);
-    expect(result).not.toContain('existing saved review remains available');
+    expect(result).not.toContain('Your earlier review is still open');
     expect(result).not.toContain('Your card is ready');
   });
 
@@ -492,7 +492,7 @@ describe('action response grounding', () => {
 
   it('validates resource type as well as numeric identity', async () => {
     audit([claim({ scope: 'saved', evidenceIds: ['saved:0'], resourceId: '49', resourceType: 'asset' })]);
-    expect(await groundAgentResponse(state({ savedToolActions: [saved('active')] }), 'Asset 49 is ready.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state({ savedToolActions: [saved('active')] }), 'Asset 49 is ready.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it('does not promote generic pending approval into a widget', async () => {
@@ -500,7 +500,7 @@ describe('action response grounding', () => {
     const result = await groundAgentResponse(state({ pendingApproval: {
       toolName: 'publish_ads', executionId: 'exec-1', args: {}, message: 'Confirm',
     } }), 'A card was prepared.', []);
-    expect(result).toContain('No new review card');
+    expect(result).toContain('Nothing was sent, published or spent');
   });
 
   it('preserves supported content generation from the exact continuation', async () => {
@@ -526,7 +526,7 @@ describe('action response grounding', () => {
       success: true, output: { status: 'queued', campaignId: 9 },
     })]);
     expect(result).toContain('the ad publish: queued');
-    expect(result).toContain('completed or queued work has not been undone');
+    expect(result).toContain('finished or queued work was not undone');
   });
 
   it('preserves an exact queued claim without implying launch or delivery', async () => {
@@ -543,22 +543,22 @@ describe('action response grounding', () => {
     expect(result).toContain('the business profile update: tool succeeded');
     expect(result).not.toContain('No action');
     expect(result).not.toContain('Nothing was');
-    expect(result).toContain('Check the recorded action details before retrying');
+    expect(result).toContain('Check the details before retrying');
   });
 
   it.each(['not-json', '{}', '{"claims":[],"unsupportedClaims":"false"}', '{"claims":[],"unsupportedClaims":false,"rewrite":"Fake card"}'])('fails closed on malformed or unexpected audit output: %s', async content => {
     completion.mockResolvedValue({ success: true, content });
-    expect(await groundAgentResponse(state(), 'I created a card.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state(), 'I created a card.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it('fails closed on an unsuccessful provider result even if it includes text', async () => {
     completion.mockResolvedValue({ success: false, content: '{"unsupportedClaims":false,"claims":[]}' });
-    expect(await groundAgentResponse(state(), 'I created a card.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state(), 'I created a card.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it('does not accept missing evidence IDs', async () => {
     audit([claim({ evidenceIds: [] })]);
-    expect(await groundAgentResponse(state(), 'A card is ready.', [])).toContain('could not verify');
+    expect(await groundAgentResponse(state(), 'A card is ready.', [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 
   it('times out after twenty seconds and fails closed', async () => {
@@ -566,11 +566,11 @@ describe('action response grounding', () => {
     completion.mockImplementation(() => new Promise(() => {}));
     const pending = groundAgentResponse(state(), 'A card is ready.', []);
     await jest.advanceTimersByTimeAsync(20_000);
-    expect(await pending).toContain('could not verify my reply against the recorded actions');
+    expect(await pending).toContain('Here is what the system recorded');
   });
 
   it('does not audit a truncated draft or oversized facts payload', async () => {
-    expect(await groundAgentResponse(state(), 'x'.repeat(60_001), [])).toContain('could not verify');
+    expect(await groundAgentResponse(state(), 'x'.repeat(60_001), [])).toMatch(/Here is what (?:actually happened|the system recorded)/);
     expect(completion).not.toHaveBeenCalled();
   });
 
@@ -599,7 +599,7 @@ it('repairs a rejected read-only explanation once and audits the new answer', as
 it('does not accept an unsupported action in a repaired answer or loop forever', async () => {
   completion.mockReset().mockResolvedValueOnce({ success: true, content: JSON.stringify({ unsupportedClaims: true, claims: [] }) })
     .mockResolvedValueOnce({ success: true, content: 'I prepared the review card.' });
-  expect(await groundAgentResponse(state({ intentAnalysis: intentWith({}, { action: 'question' }) } as any), 'Your sender is ready.', [])).toContain('No new review card is confirmed');
+  expect(await groundAgentResponse(state({ intentAnalysis: intentWith({}, { action: 'question' }) } as any), 'Your sender is ready.', [])).toContain('Nothing was sent, published or spent');
   expect(completion).toHaveBeenCalledTimes(2);
 });
 
@@ -621,7 +621,7 @@ it('fails closed after one repair if the replacement audit is malformed too', as
     .mockResolvedValueOnce({ success: true, content: 'Unsupported replacement prose.' })
     .mockResolvedValueOnce({ success: true, content: 'not JSON' });
   const result = await groundAgentResponse(state({ intentAnalysis: intentWith({}, { action: 'question' }) }), 'Original prose.', []);
-  expect(result).toContain('could not verify');
+  expect(result).toMatch(/Here is what (?:actually happened|the system recorded)/);
   expect(result).not.toContain('replacement prose');
   expect(completion).toHaveBeenCalledTimes(3);
 });
@@ -645,7 +645,7 @@ it('does not use question mode to accept a fabricated positive action claim', as
   completion.mockReset().mockResolvedValue({ success: true, content: JSON.stringify({ unsupportedClaims: true, claims: [] }) });
   const result = await groundAgentResponse(state({ intentAnalysis: intentWith({}, { action: 'question' }) }), 'I sent the messages.', [], false);
   expect(result).not.toContain('I sent the messages.');
-  expect(result).toContain('does not confirm any sending');
+  expect(result).toContain('Nothing was sent, published or spent');
 });
 
 it.each([state(), state({ intentAnalysis: intentWith({}, { action: 'question' }),
@@ -666,7 +666,7 @@ it('gives read-only verification twenty seconds without accepting an unchecked a
   await jest.advanceTimersByTimeAsync(10_000);
   expect(settled).toBe(false);
   await jest.advanceTimersByTimeAsync(10_000);
-  expect(await pending).toContain('could not verify');
+  expect(await pending).toMatch(/Here is what (?:actually happened|the system recorded)/);
   jest.useRealTimers();
 });
 

@@ -110,7 +110,7 @@ describe('a flagged unsaved plan is rewritten, not replaced by a receipt list', 
     completion.mockReset().mockResolvedValue({ success: true, content: JSON.stringify({ unsupportedClaims: true, claims: [] }) });
     const reply = await groundAgentResponse(planState(), 'Done.', []);
     expect(purposes()).toEqual(['response_grounding', 'response_grounding_repair', 'response_grounding']);
-    expect(reply).toContain('could not verify');
+    expect(reply).toMatch(/Here is what (?:actually happened|the system recorded)/);
   });
 });
 
@@ -198,10 +198,10 @@ describe('proposal and lead lookups are read-only lookups with visible results',
       receipt('list_proposal_catalog', { items: [{ id: 3, name: 'Automation audit', currency: 'INR', unitPrice: 25000, unit: 'project' }], total: 1 }),
       receipt('list_proposal_templates', [{ id: 5, name: 'SaaS automation', category: 'services' }]),
     ]);
-    expect(reply).toContain('#12 "AI Ops Retainer" (status: "draft"); for "Asha"; total INR 150,000');
-    expect(reply).toContain('#3 "Automation audit" at INR 25,000 per "project"');
-    expect(reply).toContain('#5 "SaaS automation"');
-    expect(reply).not.toContain('could not verify some actions');
+    expect(reply).toContain('"AI Ops Retainer" (status: "draft"); for "Asha"; total INR 150,000');
+    expect(reply).toContain('"Automation audit" at INR 25,000 per "project"');
+    expect(reply).toContain('"SaaS automation"');
+    expect(reply).not.toContain('Here is what actually happened');
   });
 
   it('shows account-wide lead totals', async () => {

@@ -188,6 +188,8 @@ export const sendMessageSchema = z.object({
   // business profile itself so a bad ID gets a clear 400 or 404.
   idempotencyKey: z.string().min(1).max(255).optional(),
   businessProfileId: z.unknown().optional(),
+  // Short chat label for a button-sent instruction; content still goes to the agent.
+  displayContent: z.string().max(500).optional(),
 }).passthrough().refine((value) => Boolean(value.message || value.content), {
   message: 'Message is required',
 });

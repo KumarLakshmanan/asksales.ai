@@ -6,6 +6,13 @@ export const INBOX_CHANNELS = [
   "sms",
 ] as const;
 export type InboxChannel = (typeof INBOX_CHANNELS)[number];
+export const INBOX_CHANNEL_LABELS: Record<InboxChannel, string> = {
+  email: "Email",
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  facebook: "Messenger",
+  sms: "SMS",
+};
 export type InboxSort = "newest" | "oldest";
 
 /** How a conversation started, from its first message. Exactly one per thread. */

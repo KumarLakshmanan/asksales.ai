@@ -55,6 +55,16 @@ interface BudgetPlan {
   recommendations?: string[];
 }
 
+interface SavedBudgetPlanRow {
+  total_budget: number | string;
+  duration_days: number | string;
+  currency?: string;
+  daily_budget?: number | string;
+  channel_allocation?: BudgetPlan['channel_allocation'];
+  recommendations?: string[];
+  created_at?: string;
+}
+
 interface Campaign {
   id: number;
   platform: string;
@@ -125,6 +135,7 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
   const [budgetDuration, setBudgetDuration] = useState<number>(30);
   const [currency, setCurrency] = useState<string>('INR');
   const [generatedBudgetPlan, setGeneratedBudgetPlan] = useState<BudgetPlan | null>(null);
+  const [savedPlanDate, setSavedPlanDate] = useState<string | null>(null);
 
   // Campaign Builder State
   const [campaignPlatform, setCampaignPlatform] = useState<string>('google');
@@ -158,6 +169,33 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
     void loadCampaigns();
   }, [loadCampaigns]);
 
+  // Start from the plan already saved for this campaign, which Sarah also reads,
+  // instead of fixed numbers the chat knows nothing about.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await api.get(`/api/campaigns/performance/budget-plans?icp_id=${icpId}`) as { budget_plans?: SavedBudgetPlanRow[] };
+        const latest = data.budget_plans?.[0];
+        if (cancelled || !latest) return;
+        const total = Number(latest.total_budget);
+        const days = Number(latest.duration_days);
+        if (Number.isFinite(total) && total > 0) setTotalBudget(total);
+        if (Number.isFinite(days) && days > 0) setBudgetDuration(days);
+        if (latest.currency) setCurrency(String(latest.currency).toUpperCase());
+        setGeneratedBudgetPlan({
+          daily_budget: Number(latest.daily_budget) || undefined,
+          channel_allocation: Array.isArray(latest.channel_allocation) ? latest.channel_allocation : [],
+          recommendations: Array.isArray(latest.recommendations) ? latest.recommendations : [],
+        });
+        setSavedPlanDate(latest.created_at ? new Date(latest.created_at).toLocaleDateString() : null);
+      } catch {
+        // No saved plan yet: keep the starting values.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [icpId]);
+
   const handleGenerateBudgetPlan = async () => {
     if (totalBudget <= 0) {
       toast({
@@ -177,6 +215,7 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
         currency: currency
       });
       setGeneratedBudgetPlan(response.budget_plan);
+      setSavedPlanDate(null);
 
       toast({
         title: 'Budget Plan Generated!',
@@ -382,6 +421,11 @@ export default function PerformanceMarketingDashboard({ icpId }: PerformanceMark
 
             {generatedBudgetPlan && (
               <div className="space-y-4">
+                {savedPlanDate && (
+                  <p className="text-xs text-muted-foreground">
+                    Your saved plan from {savedPlanDate}. The chat uses this budget too.
+                  </p>
+                )}
                 <div className="grid gap-4 md:grid-cols-3">
                   <Card>
                     <CardContent className="pt-6">
