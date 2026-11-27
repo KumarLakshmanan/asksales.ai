@@ -336,6 +336,8 @@ export async function runToolCallingLoop(opts: ToolLoopOptions): Promise<ToolLoo
   ];
 
   const allToolResults: ToolCallResult[] = [];
+  /** Calls that actually ran; refused or invalid calls never count as a repeated failure. */
+  const executedCallIds = new Set<string>();
   /** Reads that already ran (and saved a receipt) ahead of their turn in the batch. */
   const launchedReadIds = new Set<string>();
   /** Calls from a batch that never started because a review ended the turn first. */
@@ -930,6 +932,7 @@ export async function runToolCallingLoop(opts: ToolLoopOptions): Promise<ToolLoo
 
       result = normalizeToolExecutionResult(fnName, result);
       const success = result.success === true;
+      executedCallIds.add(toolCallId);
       allToolResults.push({ toolName: fnName, toolCallId, result, success, error: result?.error });
 
       // A created widget is pending, not completed. Its execution lifecycle is
@@ -1113,7 +1116,7 @@ export async function runToolCallingLoop(opts: ToolLoopOptions): Promise<ToolLoo
       break;
     }
 
-    const repeatedFailure = findRepeatedFailure(allToolResults);
+    const repeatedFailure = findRepeatedFailure(allToolResults.filter(toolResult => executedCallIds.has(toolResult.toolCallId)));
     if (repeatedFailure) {
       stop(new ToolLoopStop('failed', 'repeated_failure',
         `I tried ${humanizeToolName(repeatedFailure.toolName)} twice and it failed the same way both times: ${userFacingReason(repeatedFailure.error)}. `

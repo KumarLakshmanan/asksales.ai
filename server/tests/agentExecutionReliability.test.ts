@@ -54,6 +54,26 @@ describe('agent execution reliability acceptance', () => {
     expect(result.toolResults[0].success).toBe(true);
     expect(result.stopReason).toBe('call_limit');
   });
+  it('stops after the same step fails the same way twice instead of retrying again', async () => {
+    execute.mockResolvedValue({ success: false, error: 'Imported audience not found.' });
+    providerCall.mockResolvedValueOnce(completion([call('mutation', 'first')]))
+      .mockResolvedValueOnce(completion([call('mutation', 'second')]))
+      .mockResolvedValueOnce(completion([call('mutation', 'third')]));
+    const result = await runToolCallingLoop({ ...options, maxIterations: 5, tools: { mutation: { execute } } });
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(result.stopReason).toBe('repeated_failure');
+    expect(result.text).toContain('failed the same way both times: Imported audience not found.');
+  });
+  it('lets the model retry after a different error', async () => {
+    execute.mockResolvedValueOnce({ success: false, error: 'Imported audience not found.' })
+      .mockResolvedValueOnce({ success: false, error: 'Sending account unavailable.' });
+    providerCall.mockResolvedValueOnce(completion([call('mutation', 'first')]))
+      .mockResolvedValueOnce(completion([call('mutation', 'second')]))
+      .mockResolvedValueOnce({ success: true, completion: { choices: [{ message: { content: 'Both attempts failed.' } }] } });
+    const result = await runToolCallingLoop({ ...options, maxIterations: 5, tools: { mutation: { execute } } });
+    expect(execute.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(result.stopReason).not.toBe('repeated_failure');
+  });
   it('does not execute duplicate call identities in the same completion', async () => {
     providerCall.mockResolvedValue(completion([call('mutation'), call('mutation')]));
     const result = await runToolCallingLoop({ ...options, tools: { mutation: { execute } } });
