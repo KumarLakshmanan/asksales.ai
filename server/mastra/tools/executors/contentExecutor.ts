@@ -18,6 +18,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { textDraftMessages, parseTextDraft, persistTextDraft, contentGenerationPolicy, explicitlyRequestedMedia, reviewedContentOptions } from '../../../services/content/TextContentGenerationService.js';
 import { withExactCallToAction } from '../../../utils/exactCallToAction.js';
+import { blogExpansionRequest, blogLengthInstruction, blogLengthTarget, blogNeedsExpansion, countWords } from '../../../services/content/blogLength.js';
 import { buildImageGenerationPrompt } from '../../../services/content/ImagePromptBuilder.js';
 import {
   ContentComplianceError,
@@ -2452,7 +2453,7 @@ Brand Guidelines:
 ${context.brandToolkit.defaultCtas?.length ? `- Preferred CTAs: ${context.brandToolkit.defaultCtas.join(', ')}` : ''}`;
     }
 
-    const lengthInstruction = length === 'short' ? '500-800 words, concise blog post' : length === 'long' ? '2000-3000 words, comprehensive in-depth article' : '1000-1500 words, well-structured blog post';
+    const lengthInstruction = blogLengthInstruction(length);
 
     const prompt = `Generate a high-quality blog post with the following requirements:
 - Topic: ${input.topic}
@@ -2477,12 +2478,17 @@ Return JSON with this canonical Content Studio contract:
   ${includeImagePrompt ? '"featuredImagePrompt": "Detailed prompt for generating a featured blog image"' : '"featuredImagePrompt": ""'}
 }`;
 
+    const blogMessages = [
+      { role: 'system' as const, content: templateMap.contentAgent || 'You are a professional content writer and SEO specialist. Write engaging, well-structured blog posts that provide value to readers. Ensure the content aligns with brand guidelines when provided.' },
+      { role: 'user' as const, content: prompt },
+    ];
+    // Without an explicit budget some providers stop at 2000 output tokens,
+    // which squeezed "1000-1500 word" posts to about 500 words.
+    const maxTokens = blogLengthTarget(length).maxTokens;
     const response = await createCompletionWithProviderFallback(userIdNum, {
-      messages: [
-        { role: 'system', content: templateMap.contentAgent || 'You are a professional content writer and SEO specialist. Write engaging, well-structured blog posts that provide value to readers. Ensure the content aligns with brand guidelines when provided.' },
-        { role: 'user', content: prompt },
-      ],
+      messages: blogMessages,
       temperature: 0.7,
+      max_tokens: maxTokens,
       response_format: { type: 'json_object' },
       loggingContext: {
         userId: context.userId,
@@ -2497,7 +2503,38 @@ Return JSON with this canonical Content Studio contract:
       return { success: false, toolName: 'generate_blog_post', error: 'LLM error' };
     }
 
-    const blogPost = parseStructuredContent('blog', response.content || '{}');
+    let blogPost = parseStructuredContent('blog', response.content || '{}');
+    // One expansion pass when the post is well under the reviewed length.
+    if (blogNeedsExpansion(String(blogPost.content || ''), length)) {
+      const expanded = await createCompletionWithProviderFallback(userIdNum, {
+        messages: [
+          ...blogMessages,
+          { role: 'assistant', content: response.content || '{}' },
+          { role: 'user', content: blogExpansionRequest(String(blogPost.content || ''), length) },
+        ],
+        temperature: 0.7,
+        max_tokens: maxTokens,
+        response_format: { type: 'json_object' },
+        loggingContext: {
+          userId: context.userId,
+          threadId: context.threadId,
+          purpose: 'content_generation',
+          service: 'ContentExecutor',
+          action: 'expand_blog_post',
+        },
+      }).catch((err: unknown) => {
+        logger.warn({ err }, '[Content Executor] Blog expansion failed; keeping the first draft');
+        return null;
+      });
+      if (expanded?.success) {
+        try {
+          const longer = parseStructuredContent('blog', expanded.content || '{}');
+          if (countWords(String(longer.content || '')) > countWords(String(blogPost.content || ''))) blogPost = longer;
+        } catch (err) {
+          logger.warn({ err }, '[Content Executor] Blog expansion was not valid JSON; keeping the first draft');
+        }
+      }
+    }
     if (input.cta_text) blogPost.content = withExactCallToAction(String(blogPost.content || ''), input.cta_text);
     applyReviewedMediaExclusions(blogPost, input);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
