@@ -68,12 +68,18 @@ export function isApifyCredentialCapacityError(error: any): boolean {
 export const APIFY_ACCOUNTS_UNAVAILABLE_MESSAGE =
   'Lead search is unavailable right now because the lead data provider account needs attention from the AskSales team. No leads were saved. Please try again later.';
 
+/** Apify's own words for why it refused a run, e.g. "Too many outstanding invoices". */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function apifyRefusalReason(error: any): string {
+  const raw = error instanceof Error ? error.message : error?.message || error?.error?.message || (typeof error === 'string' ? error : '');
+  return String(raw || '')
+    .replace(/^Actor execution failed:\s*/i, '').replace(/\s+/g, ' ').trim().slice(0, 300) || 'no reason given';
+}
+
 /** Saved on the admin credential so Admin Integrations shows the provider's own reason. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function apifyCredentialRefusalNote(error: any): string {
-  const raw = error instanceof Error ? error.message : error?.message || error?.error?.message || (typeof error === 'string' ? error : '');
-  const providerMessage = String(raw || '')
-    .replace(/^Actor execution failed:\s*/i, '').replace(/\s+/g, ' ').trim().slice(0, 300) || 'no reason given';
+  const providerMessage = apifyRefusalReason(error);
   return `Apify refused a run: ${providerMessage}. Resolve this in the Apify account (billing or plan), then turn this credential back on.`;
 }
 

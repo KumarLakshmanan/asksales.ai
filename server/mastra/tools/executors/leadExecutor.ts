@@ -34,6 +34,7 @@ import {
   FacebookCompetitorPageUrlsRequiredError,
 } from './leadRequestConstraints.js';
 import { toNumber } from './executorValues.js';
+import { findLeadActorsWithoutKey, LeadProviderUnavailableError } from '../../../services/apifyCredentialResolver.js';
 
 export const stoppedThreads = new Set<number>();
 
@@ -1122,6 +1123,24 @@ export async function listWorkflowsForChannels(
   return { success: true, workflows: result };
 }
 
+/**
+ * True when no lead search for these channels has a data provider key, so the
+ * chat can say so before offering a strategy. A failed check returns false.
+ */
+export async function noLeadProviderForChannels(userId: number | undefined, channels: string[]): Promise<boolean> {
+  try {
+    const baseChannels = [...new Set(channels.map(channel => String(channel).split('_')[0].toLowerCase()).filter(Boolean))];
+    const workflows = (await Promise.all(baseChannels.map(channel => getChannelWorkflows(channel)))).flat();
+    const actorIds = workflows.map(workflow => workflow.firstActorId).filter((id): id is string => Boolean(id));
+    if (actorIds.length === 0) return false;
+    const missing = await findLeadActorsWithoutKey(userId, actorIds);
+    return actorIds.every(id => missing.has(id));
+  } catch (error) {
+    logger.warn({ err: error }, '[Lead Executor] Could not check lead data provider keys; offering strategies as usual');
+    return false;
+  }
+}
+
 /** Resolve only exact catalog names; never guess a replacement strategy. */
 export async function resolveCatalogWorkflowIds(names: string[], validPlatforms: Set<string>): Promise<string[]> {
   const channels = [...new Set([...validPlatforms].map(name => name.split('_')[0]))];
@@ -1528,6 +1547,13 @@ export async function executeGenerateLeadInputs(
           selected: selected.map(w => w.title),
         }, '[Lead Executor] Workflow selection complete');
       }
+    }
+
+    // Say so up front when none of the chosen searches has a data provider key,
+    // before any settings are prepared or credits are spent.
+    const actorsWithoutKey = await findLeadActorsWithoutKey(userIdNum, selectedEntries.map(entry => entry.workflow.firstActorId || ''));
+    if (selectedEntries.length > 0 && selectedEntries.every(entry => entry.workflow.firstActorId && actorsWithoutKey.has(entry.workflow.firstActorId))) {
+      throw new LeadProviderUnavailableError();
     }
 
     // ─── Phase 2: Generate lead inputs for each selected workflow ───────────────
@@ -2216,7 +2242,8 @@ CRITICAL RULES:
   } catch (error: any) {
     logger.error({ err: error }, '[Lead Executor] Error');
     const providerFailure = isProviderResponseError(error);
-    const errorCode = providerFailure ? 'LEAD_INPUT_PROVIDER_UNAVAILABLE' : 'LEAD_INPUT_GENERATION_FAILED';
+    const errorCode = error instanceof LeadProviderUnavailableError ? 'LEAD_DATA_PROVIDER_NOT_CONNECTED'
+      : providerFailure ? 'LEAD_INPUT_PROVIDER_UNAVAILABLE' : 'LEAD_INPUT_GENERATION_FAILED';
     const recoveryMessage = providerFailure
       ? 'The AI service could not prepare the selected search settings after retrying. No search was run and no settings were saved. Keep the selected strategy and try preparing its settings again in a moment.'
       : error.message;
@@ -2240,7 +2267,9 @@ CRITICAL RULES:
       try {
         const { createChatMessage } = await import('../../../models/chatMessages/functions');
         const { webSocketEmitter } = await import('../../../services/agents/WebSocketEmitter');
-        const errorMsg = `❌ **Lead parameter generation failed** (${errorCode}): ${recoveryMessage}`;
+        const errorMsg = error instanceof LeadProviderUnavailableError
+          ? recoveryMessage
+          : `I couldn't prepare the search settings. ${recoveryMessage}`;
         await createChatMessage({
           userId: userIdNum,
           threadId: threadIdNum,

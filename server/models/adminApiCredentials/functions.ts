@@ -303,7 +303,8 @@ export async function toggleAdminCredential(id: number): Promise<AdminApiCredent
  */
 export async function markAdminCredentialInactive(
   id: number,
-  reason: string
+  reason: string,
+  providerDetail?: string,
 ): Promise<AdminApiCredentialRecord | null> {
   const [previous] = await db
     .select({ isActive: adminApiCredentialsTable.isActive })
@@ -321,7 +322,9 @@ export async function markAdminCredentialInactive(
     .where(eq(adminApiCredentialsTable.id, id))
     .returning();
 
-  if (updated && previous?.isActive) await alertAdminsCredentialSwitchedOff(updated.platform, reason);
+  if (updated && previous?.isActive) {
+    await alertAdminsCredentialSwitchedOff(updated.platform, reason, { keyName: updated.name, providerDetail });
+  }
   return updated ? decryptAdminCredential(updated) : null;
 }
 
@@ -333,30 +336,50 @@ export async function markAdminCredentialInactive(
 const LASTING_DEACTIVATION_REASONS = new Set(['quota_exceeded', 'billing_or_account_capacity', 'auth_failed', 'invalid_key']);
 const PROVIDER_NAMES: Record<string, string> = {
   openrouter: 'OpenRouter', openai: 'OpenAI', gemini: 'Gemini', vertex_ai: 'Vertex AI', custom_ai: 'Custom AI',
+  apify: 'Apify',
+};
+/** What stops working when no key of this kind is left. */
+const NO_KEY_IMPACT: Record<string, string> = {
+  apify: ' No Apify key is active now, so lead searches cannot run. Customers are told the lead data provider is not connected.',
 };
 
 /**
  * Tell every administrator once when a key is switched off for a lasting reason,
  * so an empty provider account is noticed before customers report failed replies.
  */
-async function alertAdminsCredentialSwitchedOff(platform: string, reason: string): Promise<void> {
+async function alertAdminsCredentialSwitchedOff(
+  platform: string,
+  reason: string,
+  details: { keyName?: string; providerDetail?: string } = {},
+): Promise<void> {
   if (!LASTING_DEACTIVATION_REASONS.has(reason)) return;
   try {
-    const provider = PROVIDER_NAMES[platform] || platform;
+    const provider = PROVIDER_NAMES[platform] || platform.charAt(0).toUpperCase() + platform.slice(1);
     const cause = reason === 'quota_exceeded' || reason === 'billing_or_account_capacity'
       ? 'it ran out of credits or hit its billing limit' : 'the provider rejected the key';
     const isLlm = (LLM_ADMIN_PLATFORMS as readonly string[]).includes(platform);
-    const remaining = isLlm ? (await getActiveLLMAdminCredentials()).length : null;
+    const remaining = isLlm
+      ? (await getActiveLLMAdminCredentials()).length
+      : (await getAllActiveAdminCredentials(platform as AdminApiPlatform)).length;
+    const kind = isLlm ? 'AI provider' : provider;
     const impact = remaining === 0
-      ? ' No AI provider is active now, so AI replies, AI follow-ups and other AI features are paused. Approved WhatsApp templates still send.'
-      : remaining ? ` ${remaining} other AI provider key${remaining === 1 ? ' is' : 's are'} still active.` : '';
+      ? (isLlm
+        ? ' No AI provider is active now, so AI replies, AI follow-ups and other AI features are paused. Approved WhatsApp templates still send.'
+        : NO_KEY_IMPACT[platform] || ` No ${provider} key is active now.`)
+      : ` ${remaining} other ${kind} key${remaining === 1 ? ' is' : 's are'} still active.`;
     const nextStep = isLlm && reason === 'quota_exceeded'
       ? ' Add credits to the provider account: AskSales checks every 5 minutes and switches the key back on by itself. Or add a new key under LLM Providers.'
-      : ' Add credits or a new key under LLM Providers, then switch it back on.';
+      : isLlm
+        ? ' Add credits or a new key under LLM Providers, then switch it back on.'
+        : ` Fix the ${provider} account or add a new key under API Integrations, then switch it back on.`;
+    const detail = details.providerDetail ? ` ${provider} said: ${details.providerDetail.slice(0, 300)}` : '';
+    const keyLabel = details.keyName ? ` "${details.keyName}"` : '';
     const { notifyAllAdmins } = await import('../adminNotifications/functions.js');
     await notifyAllAdmins({
-      title: `${provider} key switched off`,
-      message: `AskSales switched off the ${provider} key because ${cause}.${impact}${nextStep}`,
+      // The key name keeps a second key switched off the same day from being
+      // skipped as a repeat of the first alert.
+      title: `${provider} key${keyLabel} switched off`,
+      message: `AskSales switched off the ${provider} key${keyLabel} because ${cause}.${detail}${impact}${nextStep}`,
       type: 'error',
       category: 'system',
     });

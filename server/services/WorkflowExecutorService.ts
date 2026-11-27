@@ -14,6 +14,7 @@ import { ActorSchemaRegistry } from './workflow/ActorSchemaRegistry';
 import {
   APIFY_ACCOUNTS_UNAVAILABLE_MESSAGE,
   apifyCredentialRefusalNote,
+  apifyRefusalReason,
   isApifyAccountWideCapacityError,
   isApifyCredentialCapacityError,
   isRateLimitError,
@@ -375,7 +376,7 @@ export class WorkflowExecutorService {
       // timer. Actor-plan limits are deliberately excluded: disabling that
       // token globally would break unrelated Actors that can still run.
       try {
-        await markAdminCredentialInactive(currentId, 'billing_or_account_capacity');
+        await markAdminCredentialInactive(currentId, 'billing_or_account_capacity', apifyRefusalReason(error));
         // Keep Apify's own reason (e.g. "Too many outstanding invoices") on the
         // credential and in its audit trail so an admin knows what to fix.
         await updateAdminCredentialValidation({

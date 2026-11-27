@@ -10,6 +10,9 @@ const emitProgressStep = jest.fn();
 const getLatestLeadStrategySelection = jest.fn<any>();
 const createReviewedLeadInputSet = jest.fn<any>();
 const transitionConversationWorkflowRun = jest.fn<any>();
+const findLeadActorsWithoutKey = jest.fn<any>();
+const NOT_CONNECTED = "Lead search isn't available right now because the lead data provider isn't connected.";
+class LeadProviderUnavailableError extends Error { constructor() { super(NOT_CONNECTED); } }
 
 jest.unstable_mockModule('../models/leadInputs/functions', () => ({ createLeadInputs }));
 jest.unstable_mockModule('../models/conversationWorkflow/functions', () => ({
@@ -35,6 +38,7 @@ jest.unstable_mockModule('../services/agents/WebSocketEmitter', () => ({
 jest.unstable_mockModule('../models/chatMessages/functions', () => ({
   createChatMessage,
 }));
+jest.unstable_mockModule('../services/apifyCredentialResolver.js', () => ({ findLeadActorsWithoutKey, LeadProviderUnavailableError }));
 jest.unstable_mockModule('../utils/logger.js', () => ({
   logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
 }));
@@ -71,6 +75,18 @@ describe('lead input generation persistence handoff', () => {
       run: { id: 'run-42', stage: 'lead_inputs_awaiting_approval' },
     }));
     transitionConversationWorkflowRun.mockResolvedValue({});
+    findLeadActorsWithoutKey.mockResolvedValue(new Set());
+  });
+
+  it('says the data provider is not connected before preparing settings when no search has a key', async () => {
+    findLeadActorsWithoutKey.mockImplementation(async (_userId: number, actorIds: string[]) => new Set(actorIds));
+    const result = await executeGenerateLeadInputs(input, context);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(NOT_CONNECTED);
+    expect(result.output).toMatchObject({ errorCode: 'LEAD_DATA_PROVIDER_NOT_CONNECTED' });
+    expect(createChatCompletion).not.toHaveBeenCalled();
+    expect(createLeadInputs).not.toHaveBeenCalled();
+    expect(createChatMessage).toHaveBeenCalledWith(expect.objectContaining({ content: NOT_CONNECTED }));
   });
 
   it('returns the exact saved IDs and workflow IDs needed by the approval action', async () => {
@@ -334,9 +350,11 @@ describe('lead input generation persistence handoff', () => {
     expect(createLeadInputs).not.toHaveBeenCalled();
     expect(emit).not.toHaveBeenCalledWith(1, 'open_tab', expect.anything());
     expect(createChatMessage).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('LEAD_INPUT_PROVIDER_UNAVAILABLE'),
+      content: expect.stringContaining('try preparing its settings again'),
     }));
     expect(JSON.stringify(createChatMessage.mock.calls)).not.toContain('secret upstream detail');
+    // Internal error codes stay out of the chat.
+    expect(JSON.stringify(createChatMessage.mock.calls)).not.toContain('LEAD_INPUT_PROVIDER_UNAVAILABLE');
   });
 
   it('marks a durable run as needing attention instead of creating a review after provider exhaustion', async () => {

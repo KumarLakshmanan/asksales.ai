@@ -25,7 +25,7 @@ beforeEach(() => { jest.clearAllMocks(); nextForActor.mockResolvedValue(null); }
 describe('admin Apify credential refusal', () => {
   it('deactivates the credential and records Apify\'s reason when billing blocks every run', async () => {
     expect(await refuse(context(), new Error('Actor execution failed: Too many outstanding invoices'))).toBeNull();
-    expect(markInactive).toHaveBeenCalledWith(27, 'billing_or_account_capacity');
+    expect(markInactive).toHaveBeenCalledWith(27, 'billing_or_account_capacity', expect.stringContaining('outstanding invoices'));
     expect(recordValidation).toHaveBeenCalledWith({ id: 27, platform: 'apify', status: 'invalid',
       message: expect.stringContaining('Apify refused a run: Too many outstanding invoices') });
   });

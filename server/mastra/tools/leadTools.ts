@@ -32,6 +32,17 @@ export const listAvailableWorkflowsTool = createTool({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toolContext = (mastra as any)?.__toolContext;
 
+    const { noLeadProviderForChannels } = await import('./executors/leadExecutor.js');
+    if (await noLeadProviderForChannels(Number(toolContext?.userId) || undefined, input.platforms)) {
+      const { LEAD_PROVIDER_UNAVAILABLE_MESSAGE } = await import('../../services/apifyCredentialResolver.js');
+      return {
+        success: false,
+        toolName: 'list_available_workflows',
+        error: LEAD_PROVIDER_UNAVAILABLE_MESSAGE,
+        output: { status: 'provider_not_connected', message: LEAD_PROVIDER_UNAVAILABLE_MESSAGE },
+      };
+    }
+
     if (input.show_all) {
       // Return ALL strategies for each channel
       const { listWorkflowsForChannels } = await import('./executors/leadExecutor.js');

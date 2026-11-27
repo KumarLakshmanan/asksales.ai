@@ -380,7 +380,15 @@ class LeadAgent extends BaseAgent {
       const profileChannels = state.icpProfile?.primaryChannels || [];
       const channels = explicitChannels.length > 0 ? explicitChannels : profileChannels;
       if (channels.length > 0) {
-        const { listWorkflowsForChannels, recommendWorkflowsForChannels } = await import('../tools/executors/leadExecutor.js');
+        const { listWorkflowsForChannels, recommendWorkflowsForChannels, noLeadProviderForChannels } = await import('../tools/executors/leadExecutor.js');
+        if (await noLeadProviderForChannels(Number(state.userId) || undefined, channels)) {
+          const { LEAD_PROVIDER_UNAVAILABLE_MESSAGE } = await import('../../services/apifyCredentialResolver.js');
+          return {
+            earlyResponse: LEAD_PROVIDER_UNAVAILABLE_MESSAGE,
+            earlyActionButtons: [],
+            earlyState: { requiresApproval: state.requiresApproval, pendingApproval: state.pendingApproval },
+          };
+        }
         // "Which strategy would you recommend?" gets the best match per
         // channel; only an explicit request for every strategy gets the catalog.
         let toolResults: ToolCallResult[];

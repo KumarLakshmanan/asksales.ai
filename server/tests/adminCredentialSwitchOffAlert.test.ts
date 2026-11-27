@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 const notifyAllAdmins = jest.fn<(...args: any[]) => Promise<void>>();
 let previousActive: boolean;
 let activeCredentials: any[];
+const openRouterRow = { id: 28, platform: 'openrouter', isActive: false, isEncrypted: false, apiKey: 'k', config: {} };
+let updatedRow: any = openRouterRow;
 
 /** A chainable query whose result depends on the calls made on it. */
 function query(kind: 'select' | 'update') {
@@ -12,7 +14,7 @@ function query(kind: 'select' | 'update') {
     get(_target, prop: string) {
       if (prop === 'then') {
         const rows = kind === 'update'
-          ? (calls.includes('returning') ? [{ id: 28, platform: 'openrouter', isActive: false, isEncrypted: false, apiKey: 'k', config: {} }] : [])
+          ? (calls.includes('returning') ? [updatedRow] : [])
           : calls.includes('limit') ? [{ isActive: previousActive }] : activeCredentials.splice(0);
         return (resolve: (value: unknown) => void) => resolve(rows);
       }
@@ -31,6 +33,7 @@ beforeEach(() => {
   notifyAllAdmins.mockReset().mockResolvedValue(undefined);
   previousActive = true;
   activeCredentials = [];
+  updatedRow = openRouterRow;
 });
 
 describe('switching off an AI provider key', () => {
@@ -61,5 +64,18 @@ describe('switching off an AI provider key', () => {
     previousActive = false;
     await markAdminCredentialInactive(28, 'quota_exceeded');
     expect(notifyAllAdmins).not.toHaveBeenCalled();
+  });
+});
+
+describe('switching off an Apify key', () => {
+  it("names the key, gives Apify's reason and points to API Integrations", async () => {
+    updatedRow = { id: 27, name: 'punctilious_lotus', platform: 'apify', isActive: false, isEncrypted: false, apiKey: 'k', config: {} };
+    await markAdminCredentialInactive(27, 'billing_or_account_capacity', 'Too many outstanding invoices');
+    const alert = notifyAllAdmins.mock.calls[0][0] as any;
+    expect(alert.title).toBe('Apify key "punctilious_lotus" switched off');
+    expect(alert.message).toContain('Apify said: Too many outstanding invoices');
+    expect(alert.message).toContain('lead searches cannot run');
+    expect(alert.message).toContain('API Integrations');
+    expect(alert.message).not.toContain('LLM Providers');
   });
 });
