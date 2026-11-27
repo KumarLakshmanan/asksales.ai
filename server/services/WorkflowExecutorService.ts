@@ -11,10 +11,8 @@ import { leadsTable } from '../models/leads/schema';
 import { postsTable } from '../models/posts/schema';
 import { webSocketEmitter } from './agents/WebSocketEmitter';
 import { ActorSchemaRegistry } from './workflow/ActorSchemaRegistry';
-import { getActiveApifyToken } from '../controllers/apifyController';
 import {
   APIFY_ACCOUNTS_UNAVAILABLE_MESSAGE,
-  apifyApiKeys,
   apifyCredentialRefusalNote,
   isApifyAccountWideCapacityError,
   isApifyCredentialCapacityError,
@@ -23,7 +21,6 @@ import {
   ApiKeyResult
 } from './apiKeyFallbackService';
 import {
-  getAdminCredentialForActor,
   getNextAdminCredentialForActor,
   getNextActiveAdminCredential,
   markAdminCredentialInactive,
@@ -41,6 +38,7 @@ import {
 } from '../models/workflowLogs/functions';
 import { logger } from '../utils/logger.js';
 import { leadSearchFailureMessage } from './leadSearchFailureMessage.js';
+import { resolveApifyCredential } from './apifyCredentialResolver.js';
 import { trackGeneratedOutput } from './StorageTrackingHooks.js';
 import { newUsageContext, withUsageContext } from './insights/UsageContext.js';
 import { getRechargeRate, getUsageRate } from '../models/creditPricing/functions.js';
@@ -327,40 +325,14 @@ export class WorkflowExecutorService {
       return new ApifyClient({ token: explicitApiKey });
     }
 
-    // If actorId is provided, try actor-specific admin credential first
-    if (actorId) {
-      try {
-        const actorCredential = await getAdminCredentialForActor(actorId);
-        if (actorCredential && actorCredential.isActive) {
-          if (context) context.apifyKeyInfo = { apiKey: actorCredential.apiKey, credentialId: actorCredential.id, platform: 'apify' };
-          if (context) context.apifyCredentialSource = 'admin';
-          logger.info({ actorId: actorId, id: actorCredential.id }, '[WorkflowExecutor] Using actor-specific Apify key for (credential: )');
-          return new ApifyClient({ token: actorCredential.apiKey });
-        }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        logger.warn({ actorId: actorId }, '[WorkflowExecutor] Failed to get actor-specific key for , falling back');
-      }
-    }
-
-    // Try to get user's active Apify token with tracking
-    if (userId) {
-      const keyInfo = await apifyApiKeys.getWithTracking(userId);
-      if (keyInfo) {
-        if (context) context.apifyKeyInfo = keyInfo;
-        if (context) context.apifyCredentialSource = 'user';
-        logger.info({ userId, credentialId: keyInfo.credentialId }, `[WorkflowExecutor] Using user ${userId}'s Apify token (credential: ${keyInfo.credentialId})`);
-        return new ApifyClient({ token: keyInfo.apiKey });
-      }
-
-      // Also try the legacy method for backwards compatibility
-      const apiKey = await getActiveApifyToken(userId);
-      if (apiKey) {
-        logger.info({ userId }, `[WorkflowExecutor] Using user ${userId}'s Apify token (legacy method)`);
-        if (context) context.apifyKeyInfo = null; // No tracking for legacy
-        if (context) context.apifyCredentialSource = 'legacy';
-        return new ApifyClient({ token: apiKey });
-      }
+    // Same lookup the chat uses before offering a search: admin key for the
+    // actor, then the user's own key, then the legacy token.
+    const resolved = await resolveApifyCredential(userId, actorId);
+    if (resolved) {
+      if (context) context.apifyKeyInfo = resolved.keyInfo;
+      if (context) context.apifyCredentialSource = resolved.source;
+      logger.info({ actorId, userId, source: resolved.source, credentialId: resolved.keyInfo?.credentialId }, '[WorkflowExecutor] Using Apify key');
+      return new ApifyClient({ token: resolved.apiKey });
     }
 
     // No API key available
