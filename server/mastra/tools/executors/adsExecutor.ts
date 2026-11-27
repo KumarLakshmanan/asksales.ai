@@ -858,10 +858,10 @@ Return JSON with: headline, primaryText, description, callToAction, displayUrl, 
         generatedImages,
         generatedVideos,
         message: isPartial
-          ? `📢 ${inputPlatform} ad copy was saved${variationMsg}, but one or more requested media assets could not be completed. Review asset #${assetIds[0]} in Content Studio.`
+          ? `📢 ${inputPlatform} ad copy was saved${variationMsg}, but one or more requested media assets could not be completed. Review it in Content Studio.`
           : videoStatus === 'queued'
-            ? `📢 ${inputPlatform} ad copy was saved${variationMsg} as asset #${assetIds[0]}. Video generation is queued; the finished video will attach to this asset.`
-            : `📢 ${inputPlatform} ad creative was created and saved${variationMsg} as asset #${assetIds[0]}.`,
+            ? `📢 ${inputPlatform} ad copy was saved${variationMsg}. Video generation is queued; the finished video will attach to this ad.`
+            : `📢 ${inputPlatform} ad creative was created and saved${variationMsg}. You can review it in Content Studio.`,
       },
     };
    

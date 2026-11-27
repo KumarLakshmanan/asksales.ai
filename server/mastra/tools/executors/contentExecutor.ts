@@ -864,7 +864,7 @@ export async function executeGenerateImage(
         assetId: savedAssetId,
         assetIds: [savedAssetId],
         createdAt: savedAssetCreatedAt,
-        message: `🖼️ Image generated and saved as asset #${savedAssetId}. You can view it in the Content Preview tab.`,
+        message: `🖼️ Image generated and saved. You can view it in the Generated Image tab.`,
       },
     };
   }
@@ -1016,7 +1016,7 @@ async function executeGenerateImageDirect(
         createdAt: savedAssetCreatedAt,
         brandToolkitUsed: context.brandToolkit?.name || null,
         forContentType: forContentType || 'general',
-        message: `🖼️ Image generated and saved as asset #${savedAssetId}. You can view it in the Content Preview tab.`,
+        message: `🖼️ Image generated and saved. You can view it in the Generated Image tab.`,
       },
     };
    
