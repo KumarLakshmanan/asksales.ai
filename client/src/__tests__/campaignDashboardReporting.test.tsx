@@ -37,6 +37,20 @@ describe('campaign reporting contract', () => {
     expect(screen.queryByText('Conversion')).toBeNull();
   });
 
+  it('counts saved content for a campaign that has no leads yet', async () => {
+    fixture.response = {
+      summary: { leads: 0, contentAssets: 5, messages: 0, sent: 0, pending: 0, contactedLeads: 0, engagedLeads: 0, convertedContacts: 0, crmContacts: 0,
+        bySource: {}, byStatus: {}, byChannel: {}, channels: [], timeline: [] },
+      leads: { total: 0, items: [] },
+    };
+    render(<CampaignDashboardView threadId={240} />);
+    await screen.findByText('Content created');
+    expect(screen.getByText('5', { selector: 'p' })).toBeVisible();
+    expect(screen.getByText('Put the new content to work')).toBeVisible();
+    expect(screen.getByText(/5 content items saved/)).toBeVisible();
+    expect(screen.queryByText('Build the first lead cohort')).toBeNull();
+  });
+
   it('shows an actionable error instead of calculating totals from previews when aggregates are missing', async () => {
     fixture.response = { leads: { total: 500, items: [] }, outreaches: { items: [{ status: 'converted' }] } };
     render(<CampaignDashboardView threadId={42} />);

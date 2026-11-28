@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import {
   BarChart3,
+  FileText,
   TrendingUp,
   Users,
   Target,
@@ -173,7 +174,11 @@ export function CampaignDashboardView({ threadId, campaignName: _campaignName }:
     });
   }, [leadQuery, leads, sourceFilter, statusFilter]);
 
-  const recommendation = stats.totalLeads === 0
+  const contentCount = stats.contentAssetsCount;
+  const contentWord = contentCount === 1 ? "item" : "items";
+  const recommendation = stats.totalLeads === 0 && contentCount > 0
+    ? { title: "Put the new content to work", description: `${contentCount} content ${contentWord} are saved for this campaign. Review them in Content Studio, then ask Sarah to prepare an ad review or Marcus to find leads.` }
+    : stats.totalLeads === 0
     ? { title: "Build the first lead cohort", description: "Ask Marcus to generate and enrich a focused lead list before launching outreach." }
     : stats.outreachRate < 60
       ? { title: "Activate the uncontacted lead pool", description: `${stats.totalLeads - stats.leadsOutreached} leads have not received outreach yet. Review fit and launch a targeted sequence.` }
@@ -210,10 +215,11 @@ export function CampaignDashboardView({ threadId, campaignName: _campaignName }:
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recorded campaign activity</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Performance at a glance</h2>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <InsightMetricCard label="Campaign leads" value={stats.leadsEnriched} detail="Found or selected for this campaign" icon={<Users className="h-4 w-4" />} />
         <InsightMetricCard label="Outreach coverage" value={`${stats.outreachRate}%`} detail={`${stats.leadsOutreached} contacted`} icon={<Send className="h-4 w-4" />} tone="primary" />
         <InsightMetricCard label="Engaged leads" value={stats.engagedLeads} detail="Contacts with recorded opens, reads, or replies" icon={<Target className="h-4 w-4" />} tone="warning" />
+        <InsightMetricCard label="Content created" value={contentCount} detail="Ads, posts, blogs and media saved in this campaign" icon={<FileText className="h-4 w-4" />} />
         <InsightMetricCard label="Recorded CRM wins" value={stats.converted ?? "—"} detail={stats.converted === null ? "CRM reporting requires CRM access" : "First lifetime wins among linked CRM contacts"} icon={<TrendingUp className="h-4 w-4" />} tone="success" />
       </div>
 
@@ -230,8 +236,12 @@ export function CampaignDashboardView({ threadId, campaignName: _campaignName }:
         <Card className="bg-card">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BarChart3 className="w-12 h-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No campaign data yet</h3>
-            <p className="text-sm text-muted-foreground/70 mt-1">Start by generating leads or sending outreach messages</p>
+            <h3 className="text-lg font-medium text-muted-foreground">{contentCount > 0 ? "No lead or outreach results yet" : "No campaign data yet"}</h3>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              {contentCount > 0
+                ? `${contentCount} content ${contentWord} saved. Lead and outreach results appear here once you find leads or send messages.`
+                : "Start by generating leads or sending outreach messages"}
+            </p>
           </CardContent>
         </Card>
       ) : (
