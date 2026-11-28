@@ -45,3 +45,25 @@ describe('AdCopyCard media status', () => {
     expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
   });
 });
+
+describe('AdCopyCard preview layout', () => {
+  const content = JSON.stringify({
+    headline: 'AI Solutions for Indian SMBs',
+    primaryText: 'Struggling with operational bottlenecks?',
+    callToAction: 'Learn More',
+    displayUrl: 'https://www.aimplifylabs.com/offer',
+  });
+
+  it('shows a Meta ad as a feed post with a link bar, not a search result', () => {
+    render(<AdCopyCard title="Meta ad" channel="meta" content={content} />);
+    expect(screen.getByText('aimplifylabs.com')).toBeInTheDocument();
+    expect(screen.queryByText('Ad')).not.toBeInTheDocument();
+    expect(screen.getByText('Struggling with operational bottlenecks?')).toBeInTheDocument();
+  });
+
+  it('keeps the search result layout for Google ads', () => {
+    render(<AdCopyCard title="Google ad" channel="google" content={content} />);
+    expect(screen.getByText('Ad')).toBeInTheDocument();
+    expect(screen.getByText('https://www.aimplifylabs.com/offer')).toBeInTheDocument();
+  });
+});

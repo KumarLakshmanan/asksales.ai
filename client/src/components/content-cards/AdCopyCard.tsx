@@ -13,6 +13,17 @@ import { normalizeUploadUrl } from "@/lib/utils";
 import { buildContentMedia } from "@/lib/contentMedia";
 import { getStringValue } from "@/components/content-cards/cardValues";
 
+/** "https://www.example.com/page" → "example.com" for a feed ad's link bar. */
+export function adDisplayHost(url: string | undefined | null): string {
+  const raw = url?.trim();
+  if (!raw) return '';
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).hostname.replace(/^www\./, '');
+  } catch {
+    return raw;
+  }
+}
+
 // Helper function to safely format dates
 function formatDate(dateValue: string | number | undefined): string | null {
   if (!dateValue) return null;
@@ -242,6 +253,10 @@ export default function AdCopyCard({
   const adDescription = parsedContent.description || propDescription;
   const adBody = parsedContent.body || parsedContent.primaryText || '';
   const adCta = formatCta(parsedContent.callToAction || propCallToAction);
+  // Google ads read as search results; Meta, LinkedIn and other feeds show the
+  // primary text above the media and a link bar with the headline below it.
+  const isSearchAd = (channel || parsedContent.platform)?.toLowerCase() === 'google';
+  const destinationHost = adDisplayHost(parsedContent.displayUrl);
 
   const copyContent = () => [adHeadline, adDescription, adBody, adCta]
     .filter(Boolean)
@@ -410,6 +425,10 @@ export default function AdCopyCard({
             {channel && <span className="capitalize">• {channel}</span>}
           </div>
           
+          {!isSearchAd && adBody && (
+            <p className="px-4 pt-3 pb-2 text-sm text-foreground line-clamp-4 whitespace-pre-line">{adBody}</p>
+          )}
+
           {/* Media Carousel - at top for visual emphasis */}
           {(() => {
             // Build media items for carousel - combine single URL with array URLs
@@ -472,6 +491,22 @@ export default function AdCopyCard({
           })()}
           
           {/* Ad Content */}
+          {!isSearchAd ? (
+            <div className="flex items-center justify-between gap-3 bg-muted/40 px-4 py-3">
+              <div className="min-w-0">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground truncate">
+                  {destinationHost || 'Destination not set'}
+                </div>
+                <div className="text-sm font-semibold text-foreground line-clamp-2">{adHeadline}</div>
+                {adDescription && adDescription !== adBody && (
+                  <div className="text-xs text-muted-foreground line-clamp-1">{adDescription}</div>
+                )}
+              </div>
+              {adCta && (
+                <span className="shrink-0 rounded-md border bg-background px-3 py-1.5 text-sm font-medium">{adCta}</span>
+              )}
+            </div>
+          ) : (
           <div className="p-4">
             {/* Headline */}
             <div className="text-primary text-lg font-medium mb-1 flex items-center gap-1">
@@ -505,6 +540,7 @@ export default function AdCopyCard({
               </div>
             )}
           </div>
+          )}
           
           {/* Auto-generating media indicator */}
           {(() => {
