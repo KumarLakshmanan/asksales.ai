@@ -14,7 +14,7 @@ const { executeCreateBudgetPlan } = await import('../mastra/tools/budgetPlanTool
 const context = { userId: 7, threadId: 240, icpProfile: { id: 191 } } as never;
 
 describe('Sarah saves a budget plan from chat', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); });
 
   it('saves the plan for this campaign and opens the Performance Marketing tab', async () => {
     loadPlanningIcp.mockResolvedValue({ id: 191, userId: 7 });
