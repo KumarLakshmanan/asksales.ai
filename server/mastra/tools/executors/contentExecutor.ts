@@ -1925,7 +1925,7 @@ Return JSON with: title (short, catchy, max 50 chars), caption, keywords[], imag
     webSocketEmitter.emit(userIdNum, 'open_tab', {
       thread_id: toNumber(context.threadId),
       tabType: TAB_TYPES.SOCIAL_POST_PREVIEW,
-      tabLabel: isUniversal ? 'Universal Post' : `${platform} Post`,
+      tabLabel: isUniversal ? 'Universal Post' : `${socialPlatformName(platform)} post`,
       data: { 
         post, 
         platform, 
@@ -2036,7 +2036,7 @@ Return JSON with: title (short, catchy, max 50 chars), caption, keywords[], imag
       : undefined;
 
     // Build detailed success message
-    const platformName = isUniversal ? 'Universal (All Platforms)' : platform.charAt(0).toUpperCase() + platform.slice(1);
+    const platformName = isUniversal ? 'Universal (All Platforms)' : socialPlatformName(platform);
     const hasImage = generatedImages.length > 0;
     const hasVideo = generatedVideos.length > 0 || (post.videoPrompts && post.videoPrompts.length > 0);
     const hasHashtags = post.hashtags?.length > 0;
@@ -2285,7 +2285,7 @@ ${input.include_video_prompt ? '- videoPrompt: Detailed prompt for generating a 
     webSocketEmitter.emit(userIdNum, 'open_tab', {
       thread_id: toNumber(context.threadId),
       tabType: TAB_TYPES.SOCIAL_CHAT_TEMPLATE,
-      tabLabel: `${platform.charAt(0).toUpperCase() + platform.slice(1)} DM`,
+      tabLabel: `${socialPlatformName(platform)} DM`,
       data: { 
         template, 
         platform,

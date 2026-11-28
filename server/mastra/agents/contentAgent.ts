@@ -215,7 +215,7 @@ If the tool reports pendingWidget=true, clearly state that only the settings are
 Prepare these settings for the review card:
 - **prompt** (REQUIRED): The detailed image description
 - **provider/model**: Saved image default, or an explicit Google/OpenRouter model override when requested
-- **aspect_ratio**: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, or 21:9 (default: 1:1)
+- **aspect_ratio**: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, or 21:9 (default: 1:1). Match where the image will run: 1:1 or 3:4 for Facebook, Instagram and LinkedIn feed posts or ads, 9:16 for stories and reels, 16:9 for blog headers and YouTube. Use the user's ratio when they give one.
 - **image_size**: 1K (1024px), 2K (2048px), or 4K (4096px) (default: 1K)
 - **person_generation**: ALLOW_ALL, ALLOW_ADULT, or DONT_ALLOW (default: ALLOW_ALL)
 - **include_brand_logo**: false when the user excludes logos, watermark, branding or text.

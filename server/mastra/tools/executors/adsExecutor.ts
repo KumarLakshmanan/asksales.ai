@@ -8,6 +8,10 @@ import type { ToolContext } from '../toolRegistry.js';
 import type { ToolResult } from '../../state';
 import { logger } from '../../../utils/logger.js';
 import { TAB_TYPES, TAB_LABELS } from '../../tabConfig';
+
+const AD_PLATFORM_NAMES: Record<string, string> = {
+  meta: 'Meta', facebook: 'Facebook', instagram: 'Instagram', google: 'Google', linkedin: 'LinkedIn', tiktok: 'TikTok', twitter: 'X', x: 'X',
+};
 import {
   ContentComplianceError,
   validateGeneratedContent,
@@ -834,6 +838,7 @@ Return JSON with: headline, primaryText, description, callToAction, displayUrl, 
     });
 
     const variationMsg = allVariations.length > 1 ? ` with ${allVariations.length} variations` : '';
+    const platformLabel = AD_PLATFORM_NAMES[String(inputPlatform).toLowerCase()] ?? inputPlatform;
     return {
       success: true,
       toolName: 'generate_ad',
@@ -858,10 +863,10 @@ Return JSON with: headline, primaryText, description, callToAction, displayUrl, 
         generatedImages,
         generatedVideos,
         message: isPartial
-          ? `📢 ${inputPlatform} ad copy was saved${variationMsg}, but one or more requested media assets could not be completed. Review it in Content Studio.`
+          ? `📢 ${platformLabel} ad copy was saved${variationMsg}, but one or more requested media assets could not be completed. Review it in Content Studio.`
           : videoStatus === 'queued'
-            ? `📢 ${inputPlatform} ad copy was saved${variationMsg}. Video generation is queued; the finished video will attach to this ad.`
-            : `📢 ${inputPlatform} ad creative was created and saved${variationMsg}. You can review it in Content Studio.`,
+            ? `📢 ${platformLabel} ad copy was saved${variationMsg}. Video generation is queued; the finished video will attach to this ad.`
+            : `📢 ${platformLabel} ad creative was created and saved${variationMsg}. You can review it in Content Studio.`,
       },
     };
    
